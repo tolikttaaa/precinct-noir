@@ -15,7 +15,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler
 class EchoWebSocketHandler : TextWebSocketHandler() {
 
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
-        val window = session.attributes.getOrPut(WINDOW_KEY) { RateWindow() } as RateWindow
+        val window = session.attributes.getOrPut(WINDOW_KEY) { RateWindow(MAX_MESSAGES_PER_SECOND) } as RateWindow
         if (!window.tryAcquire(System.nanoTime())) {
             session.close(CloseStatus.POLICY_VIOLATION.withReason("rate limit"))
             return
@@ -27,23 +27,8 @@ class EchoWebSocketHandler : TextWebSocketHandler() {
         session.close(CloseStatus.NOT_ACCEPTABLE.withReason("text frames only"))
     }
 
-    /** Fixed one-second window counter; one per session, used only from that session's handler thread. */
-    private class RateWindow {
-        private var windowStart = 0L
-        private var count = 0
-
-        fun tryAcquire(now: Long): Boolean {
-            if (now - windowStart >= ONE_SECOND_NANOS) {
-                windowStart = now
-                count = 0
-            }
-            return ++count <= MAX_MESSAGES_PER_SECOND
-        }
-    }
-
     companion object {
         const val MAX_MESSAGES_PER_SECOND = 20
-        private const val ONE_SECOND_NANOS = 1_000_000_000L
         private const val WINDOW_KEY = "echo.rate"
     }
 }
