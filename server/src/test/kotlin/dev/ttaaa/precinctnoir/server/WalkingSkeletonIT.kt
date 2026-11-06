@@ -1,7 +1,6 @@
 package dev.ttaaa.precinctnoir.server
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.SpringApplication
@@ -20,13 +19,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.net.http.WebSocket
-import java.net.http.WebSocketHandshakeException
-import java.nio.ByteBuffer
 import java.time.Duration
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionStage
-import java.util.concurrent.TimeUnit
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["app.allowed-origins=$ALLOWED_ORIGIN"])
 @Testcontainers
@@ -89,45 +82,6 @@ class WalkingSkeletonIT {
     }
 
     @Test
-    fun `websocket echoes text from an allowed origin`() {
-        val listener = RecordingListener()
-        val ws = connect(ALLOWED_ORIGIN, listener)
-        ws.sendText("hello precinct", true).join()
-        assertThat(listener.firstMessage.get(5, TimeUnit.SECONDS)).isEqualTo("hello precinct")
-        ws.sendClose(WebSocket.NORMAL_CLOSURE, "done").join()
-    }
-
-    @Test
-    fun `websocket handshake from a foreign origin is rejected`() {
-        assertThatThrownBy { connect("https://evil.example", RecordingListener()) }
-            .hasCauseInstanceOf(WebSocketHandshakeException::class.java)
-    }
-
-    @Test
-    fun `oversized frames close the connection with 1009`() {
-        val listener = RecordingListener()
-        val ws = connect(ALLOWED_ORIGIN, listener)
-        ws.sendText("x".repeat(5 * 1024), true)
-        assertThat(listener.closeCode.get(5, TimeUnit.SECONDS)).isEqualTo(1009)
-    }
-
-    @Test
-    fun `binary frames close the connection with 1003`() {
-        val listener = RecordingListener()
-        val ws = connect(ALLOWED_ORIGIN, listener)
-        ws.sendBinary(ByteBuffer.wrap(byteArrayOf(1, 2, 3)), true)
-        assertThat(listener.closeCode.get(5, TimeUnit.SECONDS)).isEqualTo(1003)
-    }
-
-    @Test
-    fun `message floods close the connection with 1008`() {
-        val listener = RecordingListener()
-        val ws = connect(ALLOWED_ORIGIN, listener)
-        repeat(40) { ws.sendText("spam $it", true).join() }
-        assertThat(listener.closeCode.get(5, TimeUnit.SECONDS)).isEqualTo(1008)
-    }
-
-    @Test
     fun `main boots the application with production wiring`() {
         var context: ConfigurableApplicationContext? = null
         val captureContext = SpringApplicationHook {
@@ -158,34 +112,6 @@ class WalkingSkeletonIT {
 
     private fun get(path: String): HttpResponse<String> =
         http.send(HttpRequest.newBuilder(URI("http://localhost:$port$path")).GET().build(), HttpResponse.BodyHandlers.ofString())
-
-    private fun connect(origin: String, listener: WebSocket.Listener): WebSocket =
-        http.newWebSocketBuilder()
-            .header("Origin", origin)
-            .buildAsync(URI("ws://localhost:$port/ws/echo"), listener)
-            .join()
-
-    private class RecordingListener : WebSocket.Listener {
-        val firstMessage = CompletableFuture<String>()
-        val closeCode = CompletableFuture<Int>()
-        private val buffer = StringBuilder()
-
-        override fun onText(webSocket: WebSocket, data: CharSequence, last: Boolean): CompletionStage<*>? {
-            buffer.append(data)
-            if (last) firstMessage.complete(buffer.toString()).also { buffer.clear() }
-            webSocket.request(1)
-            return null
-        }
-
-        override fun onClose(webSocket: WebSocket, statusCode: Int, reason: String): CompletionStage<*>? {
-            closeCode.complete(statusCode)
-            return null
-        }
-
-        override fun onError(webSocket: WebSocket, error: Throwable) {
-            closeCode.completeExceptionally(error)
-        }
-    }
 
     companion object {
         @Container

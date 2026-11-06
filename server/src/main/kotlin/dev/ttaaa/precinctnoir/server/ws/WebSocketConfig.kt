@@ -21,8 +21,6 @@ class WebSocketConfig(
         val origins = props.allowedOrigins.toTypedArray()
         // The guard caps open sockets per client and overall (docs/SECURITY.md).
         registry.addHandler(guard.guard(game), "/ws").addInterceptors(guard).setAllowedOrigins(*origins)
-        // M1 diagnostic endpoint, still used by the landing page's connection check until M4 replaces it.
-        registry.addHandler(guard.guard(EchoWebSocketHandler(props.ws)), "/ws/echo").addInterceptors(guard).setAllowedOrigins(*origins)
     }
 
     /** Container-level limits: oversized frames are rejected (close 1009) before reaching handlers. */
