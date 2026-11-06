@@ -16,6 +16,8 @@ export default defineConfig({
     assetsInlineLimit: 0,
   },
   server: {
+    // The roster lives in shared/ at the repository root, next to the engine that uses the same ids.
+    fs: { allow: ['..'] },
     proxy: {
       '/api': backend,
       '/actuator': backend,

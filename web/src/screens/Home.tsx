@@ -45,56 +45,60 @@ export function Home() {
         <h1 className="home__title">{t('appName')}</h1>
         <p className="home__tagline">{t('home.tagline')}</p>
         <div className="home__choices">
-          <section className="file" aria-labelledby="host-title">
-            <h2 id="host-title" className="file__tab">
-              {t('home.host.title')}
+          <section className="folder" aria-labelledby="host-title">
+            <h2 id="host-title" className="folder__tab">
+              <span className="folder__label">{t('home.host.title')}</span>
             </h2>
-            <p>{t('home.host.body')}</p>
-            <button
-              type="button"
-              className="button"
-              disabled={opening}
-              onClick={() => void openRoom()}
-            >
-              {opening ? t('home.host.working') : t('home.host.action')}
-            </button>
-            {hostError && (
-              <p className="message message--error" role="alert">
-                {hostError}
-              </p>
-            )}
-            <div ref={widget} className="turnstile" />
-          </section>
-          <form className="file" aria-labelledby="join-title" onSubmit={join} noValidate>
-            <h2 id="join-title" className="file__tab">
-              {t('home.join.title')}
-            </h2>
-            <div className="field">
-              <label className="field__label" htmlFor={codeId}>
-                {t('home.join.code')}
-              </label>
-              <input
-                id={codeId}
-                className="typed typed--code"
-                value={code}
-                maxLength={4}
-                autoCapitalize="characters"
-                autoComplete="off"
-                spellCheck={false}
-                aria-describedby={`${codeId}-hint`}
-                aria-invalid={codeError || undefined}
-                onChange={(e) => {
-                  setCode(e.target.value.toUpperCase())
-                  setCodeError(false)
-                }}
-              />
-              <span id={`${codeId}-hint`} className="hint">
-                {codeError ? t('home.join.invalid') : t('home.join.codeHint')}
-              </span>
+            <div className="folder__front">
+              <p>{t('home.host.body')}</p>
+              <button
+                type="button"
+                className="button"
+                disabled={opening}
+                onClick={() => void openRoom()}
+              >
+                {opening ? t('home.host.working') : t('home.host.action')}
+              </button>
+              {hostError && (
+                <p className="message message--error" role="alert">
+                  {hostError}
+                </p>
+              )}
+              <div ref={widget} className="turnstile" />
             </div>
-            <button type="submit" className="button">
-              {t('home.join.action')}
-            </button>
+          </section>
+          <form className="folder" aria-labelledby="join-title" onSubmit={join} noValidate>
+            <h2 id="join-title" className="folder__tab">
+              <span className="folder__label">{t('home.join.title')}</span>
+            </h2>
+            <div className="folder__front">
+              <div className="field">
+                <label className="field__label" htmlFor={codeId}>
+                  {t('home.join.code')}
+                </label>
+                <input
+                  id={codeId}
+                  className="typed typed--code"
+                  value={code}
+                  maxLength={4}
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  spellCheck={false}
+                  aria-describedby={`${codeId}-hint`}
+                  aria-invalid={codeError || undefined}
+                  onChange={(e) => {
+                    setCode(e.target.value.toUpperCase())
+                    setCodeError(false)
+                  }}
+                />
+                <span id={`${codeId}-hint`} className="hint">
+                  {codeError ? t('home.join.invalid') : t('home.join.codeHint')}
+                </span>
+              </div>
+              <button type="submit" className="button">
+                {t('home.join.action')}
+              </button>
+            </div>
           </form>
         </div>
       </main>

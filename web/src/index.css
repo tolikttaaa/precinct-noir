@@ -14,6 +14,7 @@
   --fog: #dde1e6;
   /* Paper */
   --manila: #e2cf9e;
+  --manila-back: #d2bb83;
   --manila-edge: #c9b27c;
   --ribbon: #2a241c;
   --ribbon-faint: #5c5140;
@@ -42,6 +43,8 @@
 
   /* Ink texture for stamps: mostly solid, with the gaps a rubber stamp leaves. */
   --ink-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='i'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.6 2.15'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23i)'/%3E%3C/svg%3E");
+  --fibre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9 0.3' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.28 0 0 0 0 0.12 0 0 0 -1.1 0.5'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23f)'/%3E%3C/svg%3E");
+  --paperclip: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 70'%3E%3Cpath d='M8 58V14a6 6 0 0 1 12 0v46a9 9 0 0 1-18 0V20' fill='none' stroke='%2353585f' stroke-width='2.8' stroke-linecap='round'/%3E%3Cpath d='M8.6 57V14a5.4 5.4 0 0 1 10.8 0' fill='none' stroke='%23d5d8dc' stroke-width='0.9' stroke-linecap='round'/%3E%3C/svg%3E");
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
 
   color-scheme: dark;
@@ -60,13 +63,8 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
+  /* The evidence wall (.wall) paints over this once it is drawn. */
   background-color: var(--ink);
-  /* Light through venetian blinds from the upper left, and the dark gathering at the floor. */
-  background-image:
-    repeating-linear-gradient(-26deg, transparent 0 52px, rgb(221 225 230 / 0.035) 52px 78px),
-    radial-gradient(110% 80% at 10% 0%, rgb(221 225 230 / 0.07), transparent 65%),
-    radial-gradient(140% 100% at 50% 115%, rgb(0 0 0 / 0.6), transparent 60%);
-  background-attachment: fixed;
   color: var(--fog);
   font-family: var(--font-ui);
   font-size: var(--step-0);
@@ -345,54 +343,163 @@ select:disabled,
   opacity: 0.7;
 }
 
-/* ---------- Paper: manila files ---------- */
+/* ---------- Paper: manila folders ----------
+   A real folder from the side we see it: the taller back panel carries the tab, a couple of typed
+   sheets peek out, and the front panel (with its thumb cut) holds what you read. */
 
-.file {
+.folder {
   position: relative;
-  margin-top: 2.2rem;
-  padding: clamp(1.25rem, 3vw, 2.25rem);
-  background: linear-gradient(170deg, #e8d6a8, var(--manila) 40%, #dbc690);
+  isolation: isolate;
+  padding-top: 3.4rem;
   color: var(--ribbon);
-  border-radius: 0 var(--radius) var(--radius) var(--radius);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.35),
-    0 22px 45px rgb(0 0 0 / 0.5);
 }
 
-.file__tab {
+/* The back panel. */
+.folder::before {
+  content: '';
   position: absolute;
-  bottom: 100%;
-  left: 0;
-  padding: 0.45rem 1.1rem 0.3rem;
-  background: #e8d6a8;
-  border-radius: 8px 8px 0 0;
-  font: 700 var(--step-0) / 1.2 var(--font-ui);
-  color: var(--ribbon);
+  inset: 2.3rem 0 0;
+  z-index: -2;
+  background: var(--fibre), linear-gradient(175deg, #dcc68f, var(--manila-back) 55%, #c4ac74);
+  border-radius: 3px 6px 4px 4px;
+  box-shadow:
+    0 28px 46px -16px rgb(0 0 0 / 0.85),
+    0 4px 8px rgb(0 0 0 / 0.45);
 }
 
-.file p {
+/* Two typed sheets inside the folder. */
+.folder::after {
+  content: '';
+  position: absolute;
+  top: 2.8rem;
+  left: 0.9rem;
+  right: 1.8rem;
+  height: 4rem;
+  z-index: -1;
+  background:
+    repeating-linear-gradient(
+        to bottom,
+        transparent 0 0.55rem,
+        rgb(40 40 40 / 0.16) 0.55rem calc(0.55rem + 1px)
+      )
+      1.2rem 0.7rem / 60% 100% no-repeat,
+    #f1eee7;
+  transform: rotate(-0.9deg);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.3),
+    7px -4px 0 -1px #e6e2d8,
+    7px -4px 2px -1px rgb(0 0 0 / 0.18);
+}
+
+.folder__tab {
+  position: absolute;
+  top: 0;
+  left: 1.25rem;
+  height: 2.4rem;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  background: var(--fibre), #dcc68f;
+  clip-path: polygon(0.85rem 0, calc(100% - 0.85rem) 0, 100% 100%, 0 100%);
+  font: 700 var(--step-0) / 1.2 var(--font-ui);
+}
+
+/* A typed label stuck on the tab. */
+.folder__label {
+  padding: 0.12rem 0.6rem;
+  background: #f4f0e6;
+  box-shadow: 0 0 0 1px rgb(60 50 30 / 0.15);
+  font: 400 var(--step--1) / 1.3 var(--font-typed);
+  letter-spacing: 0.02em;
+}
+
+.folder__front {
+  position: relative;
+  margin-top: 1.2rem;
+  padding: clamp(1.5rem, 3vw, 2.4rem) clamp(1.25rem, 3vw, 2.25rem) clamp(1.25rem, 3vw, 2.25rem);
+  background: var(--fibre), linear-gradient(172deg, #ead9ab, var(--manila) 45%, #d8c48f);
+  border-radius: 2px 2px 4px 4px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.45),
+    inset 0 0 0 1px rgb(120 95 40 / 0.2),
+    inset 0 -18px 26px -20px rgb(80 60 20 / 0.55),
+    0 -1px 3px rgb(0 0 0 / 0.2);
+  /* The thumb cut in the middle of the front panel's top edge. */
+  -webkit-mask: radial-gradient(circle 1.15rem at 50% 0, transparent 97%, #000 100%);
+  mask: radial-gradient(circle 1.15rem at 50% 0, transparent 97%, #000 100%);
+}
+
+/* A paperclip holding the sheets to the front panel. */
+.folder__front::before {
+  content: '';
+  position: absolute;
+  top: -1.9rem;
+  right: 2.4rem;
+  width: 0.9rem;
+  height: 2.9rem;
+  background: var(--paperclip) center / contain no-repeat;
+  filter: drop-shadow(1px 2px 1px rgb(0 0 0 / 0.35));
+}
+
+.folder p {
   max-width: 46ch;
   margin-bottom: 1.25rem;
 }
 
-.file .hint {
+.folder .hint {
   color: var(--ribbon-faint);
 }
 
-.file .message--error {
+.folder .message--error {
   color: var(--stamp-red);
   font-weight: 650;
 }
 
-.file .button {
+.folder .button {
   border-color: var(--ribbon);
   background: var(--ribbon);
   color: var(--manila);
 }
 
-.file .button:hover:not(:disabled) {
+.folder .button:hover:not(:disabled) {
   background: #40372b;
   border-color: #40372b;
+}
+
+/* ---------- The evidence wall behind every screen ---------- */
+
+.wall {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+  filter: brightness(0.78);
+}
+
+/* Where text sits straight on the wall: darker and soft, so it sets the mood without competing. */
+.wall--dim {
+  filter: brightness(0.36) blur(2px);
+  transform: scale(1.04);
+}
+
+@media (max-width: 40rem) {
+  .wall {
+    filter: brightness(0.36) blur(2px);
+    transform: scale(1.04);
+  }
+}
+
+/* A slate panel for text that sits on the wall on big screens. */
+.slate {
+  padding: clamp(1.25rem, 2.5vw, 2.25rem);
+  background: rgb(13 16 22 / 0.88);
+  border: 1px solid rgb(221 225 230 / 0.07);
+  border-radius: var(--radius);
+  box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.9);
 }
 
 /* Typed onto the file: inputs read like a typewriter on paper. */
@@ -574,9 +681,21 @@ select:disabled,
 }
 
 .screen--home .home {
+  position: relative;
   max-width: 72rem;
   margin: 0 auto;
   padding-bottom: 4rem;
+}
+
+/* A pool of shadow behind the title, so it reads over the wall. */
+.screen--home .home::before {
+  content: '';
+  position: absolute;
+  inset: -6rem -12vw auto -12vw;
+  height: 34rem;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(55% 60% at 30% 45%, rgb(8 10 14 / 0.82), transparent 72%);
 }
 
 .screen--home .masthead {
@@ -678,8 +797,8 @@ select:disabled,
   padding-top: 2vh;
 }
 
-.tv .file {
-  margin-top: 3rem;
+.tv .folder {
+  margin-top: 1.5rem;
 }
 
 .tv__join {

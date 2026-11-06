@@ -1,3 +1,4 @@
+import { EvidenceWall } from './components/EvidenceWall'
 import { parseRoute, usePath } from './routing'
 import { Home } from './screens/Home'
 import { Missing } from './screens/Missing'
@@ -6,6 +7,15 @@ import { TvScreen } from './screens/TvScreen'
 
 export default function App() {
   const route = parseRoute(usePath())
+  return (
+    <>
+      <EvidenceWall dim={route.page === 'player' || route.page === 'missing'} />
+      <Screen route={route} />
+    </>
+  )
+}
+
+function Screen({ route }: { route: ReturnType<typeof parseRoute> }) {
   switch (route.page) {
     case 'home':
       return <Home />

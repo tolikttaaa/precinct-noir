@@ -68,23 +68,25 @@ function TvRoom({ code, credentials }: { code: string; credentials: Credentials 
         {room.status === 'in_game' ? (
           <GameUnderway room={room} />
         ) : (
-          <section className="file file--folder" aria-labelledby="case-code">
-            <h1 className="file__tab" id="case-code">
-              {t('lobby.codeLabel')}
+          <section className="folder" aria-labelledby="case-code">
+            <h1 className="folder__tab" id="case-code">
+              <span className="folder__label">{t('lobby.codeLabel')}</span>
             </h1>
-            <p className="case-number" aria-label={code.split('').join(' ')}>
-              {code}
-            </p>
-            <div className="tv__join">
-              <QrCode value={`${window.location.origin}/${code}`} label={t('lobby.scan')} />
-              <div>
-                <p className="tv__address">{t('lobby.joinAt', { address })}</p>
-                <p className="hint">{t('lobby.scan')}</p>
+            <div className="folder__front">
+              <p className="case-number" aria-label={code.split('').join(' ')}>
+                {code}
+              </p>
+              <div className="tv__join">
+                <QrCode value={`${window.location.origin}/${code}`} label={t('lobby.scan')} />
+                <div>
+                  <p className="tv__address">{t('lobby.joinAt', { address })}</p>
+                  <p className="hint">{t('lobby.scan')}</p>
+                </div>
               </div>
             </div>
           </section>
         )}
-        <div className="tv__side">
+        <div className="tv__side slate">
           {room.status === 'finished' && <RoundOver room={room} />}
           <StoppedEarly room={room} />
           <Lineup
