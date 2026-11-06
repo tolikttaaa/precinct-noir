@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { AutoEchoWebSocket } from '../test/autoEchoWebSocket'
 import { echoUrl, probeEcho } from './echoProbe'
 
 type Behavior = 'echo' | 'silent'
@@ -61,6 +62,12 @@ describe('echoUrl', () => {
   })
 })
 
+describe('echoUrl defaults', () => {
+  it('uses the current page location when none is given', () => {
+    expect(echoUrl()).toBe(`ws://${window.location.host}/ws/echo`)
+  })
+})
+
 describe('probeEcho', () => {
   afterEach(() => {
     vi.useRealTimers()
@@ -96,5 +103,21 @@ describe('probeEcho', () => {
     socket.open()
     socket.onclose?.()
     await expect(result).rejects.toThrow('closed')
+  })
+
+  it('does not close a socket that is already closed', async () => {
+    const { result, socket } = startProbe('silent')
+    socket.open()
+    socket.readyState = WebSocket.CLOSED
+    socket.onclose?.()
+    await expect(result).rejects.toThrow('closed')
+    expect(socket.closedWith).toBeUndefined()
+  })
+
+  it('defaults to the browser WebSocket and clock', async () => {
+    vi.stubGlobal('WebSocket', AutoEchoWebSocket)
+    const rtt = await probeEcho('ws://test/ws/echo')
+    expect(rtt).toBeGreaterThanOrEqual(0)
+    expect(AutoEchoWebSocket.instances.at(-1)?.readyState).toBe(AutoEchoWebSocket.CLOSED)
   })
 })

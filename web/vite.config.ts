@@ -20,5 +20,14 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     restoreMocks: true,
+    unstubGlobals: true,
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**'],
+      reporter: ['text', 'html', 'lcov'],
+      // The goal is ~100%; these floors stop regressions (see docs/ARCHITECTURE.md → Verification).
+      thresholds: { lines: 95, statements: 95, functions: 95, branches: 90 },
+    },
   },
 })
