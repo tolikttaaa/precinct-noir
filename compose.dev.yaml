@@ -1,0 +1,23 @@
+# Local development database. Start: docker compose -f compose.dev.yaml up -d
+# Matches server/src/main/resources/application-dev.yaml. Never used in production.
+name: precinctnoir-dev
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: precinctnoir
+      POSTGRES_USER: precinctnoir
+      POSTGRES_PASSWORD: precinctnoir
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U precinctnoir -d precinctnoir"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
