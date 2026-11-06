@@ -30,14 +30,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
 
       # Server integration tests start PostgreSQL via Testcontainers (Docker is available on the runner).
-      - run: ./gradlew check --console=plain
+      # `check` includes `koverVerify`: the build fails if coverage drops below the floors in build.gradle.kts.
+      - run: ./gradlew check koverHtmlReport --console=plain
 
-      - name: Upload test reports
-        if: failure()
+      - name: Upload test and coverage reports
+        if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: gradle-test-reports
-          path: "**/build/reports/tests/"
+          name: jvm-reports
+          path: |
+            **/build/reports/tests/
+            build/reports/kover/
 
   web:
     name: Web client
@@ -59,8 +62,16 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+      # Fails if coverage drops below the thresholds in vite.config.ts.
+      - run: npm run test:coverage
       - run: npm run build
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-coverage
+          path: web/coverage/
 
   image:
     name: Docker image (build only)

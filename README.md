@@ -46,7 +46,7 @@ docker compose -f compose.dev.yaml up -d   # local PostgreSQL 18
 cd web && npm install && npm run dev       # client on http://localhost:5173
 ```
 
-- Tests: `./gradlew check` (engine + server, using Testcontainers), then `cd web && npm test`.
+- Tests: `./gradlew check` (engine + server via Testcontainers, with a coverage gate), then `cd web && npm run test:coverage`. Coverage is kept near 100%.
 - Production image: `docker build -t precinctnoir:dev .`
 - Merging to `main` deploys automatically; see [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 

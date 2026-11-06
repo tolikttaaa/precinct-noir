@@ -137,6 +137,10 @@ See **Engine design** below.
 Each mode milestone covers: engine rules + tests → projections → UI panels and tutorial (EN/RU) → E2E → deploy.
 
 ## Verification
+- **Coverage policy:** target ~100%. CI fails below the floors, and new code ships with its tests.
+  - JVM: Kover, aggregated over `:engine` and `:server`, at least 90% lines and 85% branches; part of `./gradlew check`.
+  - Web: Vitest V8, at least 95% lines/statements/functions and 90% branches; `npm run test:coverage`.
+  - The only code left out is test helpers. React Compiler memo branches are covered by re-render tests.
 - **Engine:** `./gradlew :engine:check`, covering example tests per rule, Kotest property tests (shift is a permutation, shift then inverse is the identity, collapse keeps a rectangle, no projection leaks), and scripted scenarios reproducing the rulebook's worked examples.
 - **Server:** `./gradlew :server:check`, using Testcontainers Postgres for snapshot/restore, WS protocol tests, rate-limit and origin/frame-size rejection tests, and restart-mid-game resume.
 - **Web:** `npm run typecheck && npm run lint && npm test`; the protocol-drift check runs in CI.
