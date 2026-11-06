@@ -4,7 +4,7 @@
 > built, and what is next, so development can resume from any point (a new session, a new agent,
 > or after a break). Update it in every milestone PR.
 >
-> **Last updated:** 2026-11-06. M3a (platform) is done on branch `m3/platform` (PR open); M3b (security) is next.
+> **Last updated:** 2026-11-06. M3a (platform) merged and live (PR #11). M3b (security) is done on branch `m3b/security` (PR open).
 >
 > **Legend:** ✅ done and merged · 🟡 done on a branch / PR open · ⬜ not started · ⚠️ known issue or follow-up
 
@@ -66,8 +66,8 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M0 | Repo hygiene & English | ✅ | #1 |
 | M1 | Walking skeleton (build, server, web, image, CI/CD, first deploy) | ✅ (live) | #2, #7 |
 | M2 | Engine core + Shadow Duel (Killer vs Inspector) | ✅ (rules only; not playable yet) | #9 |
-| M3a | Platform: rooms, lobby, WS protocol, persistence, restore, shutdown, codegen | 🟡 PR open | `m3/platform` |
-| M3b | Security: rate limits, Turnstile, WS limits, CSP nonce | ⬜ | – |
+| M3a | Platform: rooms, lobby, WS protocol, persistence, restore, shutdown, codegen | ✅ (live; no UI yet) | #11 |
+| M3b | Security: rate limits, Turnstile, WS limits, CSP nonce | 🟡 PR open | `m3b/security` |
 | M4 | Design system, portraits, lobby UI, i18n | ⬜ | – |
 | M5 | Shadow Duel playable end-to-end → **release v0.1** | ⬜ | – |
 | M6 | Spy Ring | ⬜ | – |
@@ -77,7 +77,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M10 | Casino Heist | ⬜ | – |
 | M11 | Hardening & polish | ⬜ | – |
 
-**Next action:** after the M3a PR merges, start M3b (security) on a new branch; the owner adds Turnstile keys before it merges (see §5, M3b).
+**Next action:** the owner adds the Turnstile keys (RUNBOOK §4.1) and merges M3b; then verify the CSP fix in production with headless Chrome, and start M4 (grill the owner on the design questions first).
 
 ---
 
@@ -145,7 +145,7 @@ Package `dev.ttaaa.precinctnoir.engine`; the full shared core was built now, at 
 
 ## 5. To do: specification of the remaining work
 
-### M3a: platform 🟡 (PR open, branch `m3/platform`)
+### M3a: platform ✅ (PR #11, live)
 **Goal:** a real room lifecycle around the engine, with persistence and reconnects. No new game UI yet.
 Settled with the owner: two PRs (M3a platform, M3b security); seats go to the earliest players and the VIP
 removes players before starting; the VIP can end a running game; a game idle for 2 h ends. The TV gets its
@@ -167,20 +167,22 @@ Done, all in `server/` (details in [PROTOCOL.md](PROTOCOL.md)):
 - [x] **Protocol codegen:** `ProtocolTypesTest` generates and checks `web/src/protocol/generated.ts`; `./gradlew :server:generateProtocol` rewrites it.
 - [x] **Engine API additions:** `AnyMode.view` returns typed `legal` options; `isVisible` takes the audience; `rematchConfig`.
 
-Tests (209 JVM tests; 99.87% lines / 98.41% branches overall): room-service unit tests with fakes (lobby, seats, every refusal, a full game, rematch, dedupe, failed saves, reconnect, TTLs, timer, restore), transport tests with a fake socket, identity tests, and `PlatformIT` against Postgres (HTTP API, a game over real sockets, reconnect, hello rules, origin and frame limits, pings, and a **second app instance restoring the game from the database and closing with 1012 on stop**).
+Tests (209 JVM tests at merge; 99.87% lines / 98.41% branches overall): room-service unit tests with fakes (lobby, seats, every refusal, a full game, rematch, dedupe, failed saves, reconnect, TTLs, timer, restore), transport tests with a fake socket, identity tests, and `PlatformIT` against Postgres (HTTP API, a game over real sockets, reconnect, hello rules, origin and frame limits, pings, and a **second app instance restoring the game from the database and closing with 1012 on stop**).
 
 Not done in M3a (by design): the web client doesn't use the protocol yet (M4/M5), and the uncovered branches are room-closed race guards.
 
-### M3b: security ⬜
-- [ ] **Real client IP:** `CF-Connecting-IP`, else `X-Forwarded-For` (safe: the container is reachable only through Caddy).
-- [ ] **Per-IP rate limits** (Bucket4j + Caffeine): create room 5 / 10 min; join 40 / 10 min; failed code lookups 10 / min then backoff; general `/api` 120 / min.
-- [ ] **WebSocket limits:** a per-socket token bucket (~10 msg/s, burst 20, close 1008) replacing `RateWindow`; ≤ 30 sockets per IP and ≤ 3 000 in total.
-- [ ] **Turnstile** on `POST /api/rooms`: verified server-side, fail-closed in production, Cloudflare's test keys in tests and dev. The owner adds the real keys (RUNBOOK §4.1) before the PR merges; the CSP gains Turnstile's origin in `script-src`/`frame-src`.
-- [ ] ⚠️ **CSP vs Cloudflare "JavaScript Detections":** a per-request nonce in `script-src` (Cloudflare copies it onto the script it injects), `index.html` served `no-store`, verified in production with headless Chrome (no console errors).
-- [ ] **Origin check on `POST /api/*`** (cross-site room creation).
-- [ ] **Ops hygiene:** no tokens in logs; IPs hashed in logs.
-- [ ] `docs/SECURITY.md`.
-- [ ] Tests: rate-limit tests, token-bucket tests, Turnstile verification (success, failure, outage = fail-closed).
+### M3b: security 🟡 (PR open, branch `m3b/security`)
+Everything below is described for readers in [SECURITY.md](SECURITY.md); code in `server/.../security/`.
+- [x] **Client identity** (`ClientIp`): `CF-Connecting-IP`, else the peer; IPv6 grouped by /64; no DNS lookups.
+- [x] **Per-client HTTP limits** (`ApiGuard`, a Spring MVC interceptor; Bucket4j + Caffeine): create room 5 / 10 min, join 40 / 10 min, non-existent codes 10 / min (then every lookup waits), all `/api` 120 / min. `429 rate_limited` + `Retry-After`.
+- [x] **Origin check** on state-changing `/api` requests (`403 forbidden_origin`).
+- [x] **Turnstile** on `POST /api/rooms` (`{turnstileToken}`): siteverify with a hostname check, fail-closed (`503 captcha_unavailable`) without a secret or when Cloudflare is unreachable; Cloudflare's test keys in the dev profile; `GET /api/config` hands the site key to the web client.
+- [x] **WebSocket limits:** a per-socket token bucket (burst 20, then 10 / s → 1008) replaced `RateWindow`; ≤ 30 sockets per client and ≤ 3 000 in total (`SocketGuard`: handshake 429, atomic slot on open, 1013 if a socket loses the race), on both `/ws` and `/ws/echo`.
+- [x] **CSP nonce** per response for Cloudflare's injected bot-detection script; Turnstile's origin in `script-src` and `frame-src`; HTML served `no-store`.
+- [x] **Log privacy:** clients appear as HMAC pseudonyms (key never leaves memory); refusal logs throttled to one line per client per minute; no tokens or bodies logged.
+- [x] `docs/SECURITY.md`; PROTOCOL and RUNBOOK §4 updated.
+- [x] Tests: unit tests for each piece (`ApiGuardTest`, `SocketGuardTest`, `TurnstileTest` against a local siteverify stub, `RateLimiterTest`, `ClientIpTest`) and `SecurityIT` (all limits, Turnstile outcomes, origin check, socket caps, wired into the running app). 235 JVM tests; 99.71% lines / 98.57% branches.
+- [ ] **After merge:** check in production with headless Chrome that the console shows no CSP errors (Cloudflare's script now carries the nonce), and that `/api/config` returns the site key.
 
 ### M4: design system, portraits, lobby UI ⬜
 - [ ] **Design tokens:**
@@ -232,17 +234,18 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 | `new-app.sh precinctnoir` + Caddyfile commit (RUNBOOK §1.1) | ✅ |
 | `HOME_INFRA_DEPLOY_TOKEN` (fine-grained, home-infra only, Actions read/write) (§1.2) | ✅ |
 | Branch protection (§1.3): ruleset *Protect main* | ✅ |
-| Turnstile widget + keys in `/srv/apps/precinctnoir/.env` (§4.1) | ⬜ before M3b merges |
-| Cloudflare rate-limiting rule on `/api/*` (§4.2) | ⬜ with M3b |
+| Turnstile widget + keys in `/srv/apps/precinctnoir/.env` (§4.1) | ⬜ **before M3b merges** (without them, production refuses to create rooms) |
+| Cloudflare rate-limiting rule on `/api/*` (§4.2) | ⬜ optional (edge layer on top of the app's limits) |
 | Delete the history backup `~/Projects/Personal/noir-game-backup-20261106.git` | ⬜ optional |
 
 ---
 
 ## 7. Known issues and follow-ups
 
-- ⚠️ **CSP blocks Cloudflare's injected bot-detection script:** fix in M3b (see §5).
+- ⚠️ **CSP blocks Cloudflare's injected bot-detection script:** fixed in M3b (per-response nonce); confirm in production after the merge.
 - ⚠️ **TypeScript 7 and `typescript-eslint`:** Dependabot ignores `typescript` majors (PR #4 was closed). Upgrade both together once `typescript-eslint` supports TS 7.
-- ⚠️ **Planned docs not written yet:** `docs/SECURITY.md` (M3b), `docs/DESIGN.md` (M4); `e2e/` (M5). `docs/PROTOCOL.md` exists since M3a.
+- ⚠️ **Planned docs not written yet:** `docs/DESIGN.md` (M4); `e2e/` (M5). `docs/PROTOCOL.md` (M3a) and `docs/SECURITY.md` (M3b) exist.
+- ℹ️ **Turnstile and `style-src`:** if the widget needs inline styles, M4 adjusts the CSP (SECURITY.md §10).
 - ℹ️ **Shift options:** `Shift` lists explicit moves (not `amounts` + `forbidden`); the UI should render from `moves`.
 - ℹ️ **Rendering the rulebook PDFs:** poppler isn't installed. Pages can be rendered with a small Swift/PDFKit script, for mechanics only.
 

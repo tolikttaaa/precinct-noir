@@ -16,10 +16,15 @@ How browsers talk to the server. The Kotlin `@Serializable` types in
 
 | Request | Success | Errors (`{"error": code}`) |
 |---|---|---|
-| `POST /api/rooms` | `201 {code, hostToken}` | `503 capacity` (300 rooms), `503 unavailable` (shutting down) |
+| `POST /api/rooms` `{turnstileToken}` | `201 {code, hostToken}` | `403 captcha_failed`, `503 captcha_unavailable`, `503 capacity` (300 rooms), `503 unavailable` (shutting down), `400 malformed` |
 | `POST /api/rooms/{code}/players` `{name}` | `201 {playerId, playerToken}` | `404 room_not_found`, `409 room_locked` (game running), `409 room_full` (9 players), `409 name_taken`, `422 invalid_name`, `400 malformed`, `503 unavailable` |
 | `GET /api/rooms/{code}` | `200 {code, status, players, maxPlayers, mode}` | `404 room_not_found` |
 | `GET /api/modes` | `200 [{id, minPlayers, maxPlayers, config}]` | |
+| `GET /api/config` | `200 {turnstileSiteKey?}` (public settings for the web client) | |
+
+Any API request can also be refused with `429 rate_limited` (with `Retry-After` in seconds), and a
+state-changing request from another site with `403 forbidden_origin`. Limits and the Turnstile check are
+described in [SECURITY.md](SECURITY.md).
 
 - **Room codes:** 4 letters from `BCDFGHJKLMNPQRSTVWXZ`, case-insensitive. With no vowels they can't
   spell words, and there's no I/O to mix up with 1/0. A short blocklist catches the remaining
@@ -31,8 +36,10 @@ How browsers talk to the server. The Kotlin `@Serializable` types in
 
 ## 2. WebSocket (`/ws`)
 
-Only allowed origins may connect. Text frames only (binary → close 1003), at most 4 KB (→ 1009), and at
-most 20 messages per second (→ 1008; M3b replaces this with a token bucket).
+Only allowed origins may connect, and each client may hold at most 30 open sockets (the handshake is
+refused with HTTP 429; a socket that slips past at the same moment is closed with 1013). Text frames
+only (binary → close 1003), at most 4 KB (→ 1009). Messages draw on a token bucket: a burst of 20, then
+10 per second (→ 1008).
 
 ### 2.1 Hello and resume
 The first frame must be a hello, within **5 s**:
@@ -88,6 +95,7 @@ events; events drive the case log, toasts and animations.
 | 1000 | `left` | stay out |
 | 1001 | silent for 60 s (no message, no pong) | reconnect |
 | 1003 / 1008 / 1009 | binary frame / rate limit / frame too big | fix the client |
+| 1013 | too many open sockets | reconnect later, with backoff |
 | 1012 | `restarting` (deploy) | reconnect with jittered backoff and resend the hello |
 | 4001 | `bad_token` | forget the token and rejoin |
 | 4002 | `auth_timeout` | reconnect |

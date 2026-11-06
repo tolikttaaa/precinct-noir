@@ -74,10 +74,12 @@ Postgres and clients reconnect automatically, so a game in progress resumes afte
 
 ---
 
-## 4. Coming in M3: anti-abuse keys
-*Exact variable names are confirmed in the M3 PR; this section is updated then.*
+## 4. Anti-abuse keys (M3b)
+How these fit together: [SECURITY.md](SECURITY.md).
 
 ### 4.1 Cloudflare Turnstile (bot check on "Host a game" only)
+**Required before the M3b PR merges.** Without the secret key, production refuses to create rooms
+(`503 captcha_unavailable`); everything else keeps working.
 1. Cloudflare dashboard → **Turnstile** → **Add widget**: name `Precinct Noir`,
    hostname `precinctnoir.ttaaa.dev`, widget mode **Invisible**.
 2. On the server, add the keys:
@@ -89,6 +91,12 @@ Postgres and clients reconnect automatically, so a game in progress resumes afte
                                               #   APP_TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY}
    docker compose -f /srv/apps/precinctnoir/compose.yaml up -d
    ```
+3. Check that the app picked up the site key (it is public, so this is safe to run anywhere):
+   ```bash
+   curl -sS https://precinctnoir.ttaaa.dev/api/config     # {"turnstileSiteKey":"0x4AAAA..."}
+   ```
+   `{}` means the variables didn't reach the container. The secret key is never exposed; a missing
+   secret shows up as `Turnstile secret key is not set` in the logs at startup.
 
 ### 4.2 Cloudflare rate-limiting rule (edge layer)
 Cloudflare dashboard → `ttaaa.dev` → **Security → WAF → Rate limiting rules → Create rule**:
@@ -98,4 +106,4 @@ Cloudflare dashboard → `ttaaa.dev` → **Security → WAF → Rate limiting ru
 - **Then:** Block for 10 seconds
 
 The free plan allows one rate-limiting rule. If yours is already used, skip this; the app enforces
-its own per-IP limits regardless.
+its own per-client limits regardless (SECURITY.md §3).
