@@ -3,7 +3,7 @@
 # Contract: docs/HOSTING.md §2 (linux/amd64, uid 1000, $SERVER_PORT, stdout logs, 768 MB).
 
 # ---- 1. Web client (React + Vite) -------------------------------------------
-FROM node:24-alpine AS web
+FROM node:25-alpine AS web
 WORKDIR /src/web
 COPY web/package.json web/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
