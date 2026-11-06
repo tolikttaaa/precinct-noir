@@ -8,6 +8,10 @@ plugins {
     alias(libs.plugins.spring.boot)
 }
 
+kover {
+    useJacoco(libs.versions.jacoco.get())
+}
+
 kotlin {
     jvmToolchain(25)
     compilerOptions {

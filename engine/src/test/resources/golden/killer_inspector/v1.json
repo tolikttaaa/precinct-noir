@@ -1,0 +1,246 @@
+{
+    "actionSeq": 12,
+    "rng": {
+        "s": 5475382244658602945
+    },
+    "agenda": {
+        "stack": [],
+        "pending": {
+            "id": 13,
+            "actor": 0,
+            "kind": "turn",
+            "prompt": "turn"
+        },
+        "nextDecisionId": 14
+    },
+    "model": {
+        "config": {
+            "interrogateDeadOnBoard": true,
+            "killerSeat": 1
+        },
+        "killer": 1,
+        "board": {
+            "rows": 5,
+            "cols": 5,
+            "cells": [
+                {
+                    "id": 34,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 11,
+                    "alive": true,
+                    "exonerated": true,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 36,
+                    "alive": false,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 6,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 52,
+                    "alive": false,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 30,
+                    "alive": true,
+                    "exonerated": true,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 39,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 31,
+                    "alive": false,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 10,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 26,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 14,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 59,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 35,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 7,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 45,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 2,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 23,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 53,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 54,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 50,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 4,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 29,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 55,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 47,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                },
+                {
+                    "id": 28,
+                    "alive": true,
+                    "exonerated": false,
+                    "arrested": false,
+                    "tokens": []
+                }
+            ],
+            "removed": []
+        },
+        "deck": {
+            "cards": [
+                36,
+                26,
+                29,
+                39,
+                10,
+                4,
+                50,
+                2,
+                23,
+                55,
+                34,
+                31,
+                7,
+                28,
+                45,
+                59,
+                54
+            ]
+        },
+        "discard": [
+            52
+        ],
+        "outOfPlay": [],
+        "secrets": [
+            {
+                "identity": 47,
+                "hand": [
+                    35,
+                    14,
+                    53
+                ]
+            },
+            {
+                "identity": 6,
+                "hand": []
+            }
+        ],
+        "kills": 3,
+        "turn": 12
+    }
+}

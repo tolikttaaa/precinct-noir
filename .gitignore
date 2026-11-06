@@ -52,3 +52,7 @@ e2e/playwright-report/
 
 ### macOS ###
 .DS_Store
+
+# Editor swap files
+*.swp
+*.swo

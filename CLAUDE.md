@@ -15,7 +15,7 @@ A Jackbox-style hidden-identity deduction party game. The TV shows the board; pl
 - **The server is authoritative.**
   - Clients receive per-viewer projections only. Hidden information must never reach a viewer who may not see it.
   - The server sends i18n keys and params, never prose.
-- **Tests ship with the code.** Coverage is ~100% and CI enforces floors (JVM: Kover, 90% lines / 85% branches,
+- **Tests ship with the code.** Coverage is ~100% and CI enforces floors (JVM: Kover on the JaCoCo engine, 90% lines / 85% branches,
   aggregated over `:engine` and `:server`; web: Vitest V8, 95% lines/statements/functions and 90% branches). Never lower
   a floor to make a build pass. Write the missing test instead.
 - **Git:** one feature branch + PR per milestone. Never push to `main`: merging deploys to production.
@@ -32,3 +32,8 @@ Toolchain: JDK 25 (the Gradle daemon is pinned in `gradle/gradle-daemon-jvm.prop
 | Run web client (http://localhost:5173, proxies `/api`, `/ws`, `/actuator`) | `cd web && npm run dev` |
 | Web checks (coverage report in `web/coverage/`) | `cd web && npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build` |
 | Production image | `docker build -t precinctnoir:dev .` |
+
+## Engine conventions
+- New modes extend `FlowMode` (see `modes/killerinspector/ShadowDuel.kt`) and register in `ModeRegistry`.
+- Tests use the shared fixtures in `engine/src/testFixtures` (`BoardAscii`, `Arbs`, `playout`/`replay`, `CardLedger`). Each mode needs rule tests per action and per edge-case ID, scenarios, random-playout invariants, non-interference (leak) tests and a golden snapshot.
+- Changing a mode's persisted JSON shape means bumping its `schemaVersion` and adding a `Migration`; the golden test fails until you do.
