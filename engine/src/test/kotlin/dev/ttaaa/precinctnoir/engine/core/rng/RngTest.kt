@@ -10,6 +10,8 @@ import io.kotest.property.arbitrary.int
 import io.kotest.property.arbitrary.list
 import io.kotest.property.arbitrary.long
 import io.kotest.property.checkAll
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 
 class RngTest : FunSpec({
 
@@ -46,8 +48,28 @@ class RngTest : FunSpec({
         }
     }
 
+    test("nextInt redraws instead of using the biased tail") {
+        // Craft a state whose next raw output is all ones: r = Long.MAX_VALUE lies in the incomplete
+        // top bucket for bound Int.MAX_VALUE, so the first draw must be rejected and a second one used.
+        val state = RngState(unmix(-1L) - GAMMA)
+        Rng.restore(state).nextLong() shouldBe -1L
+
+        val reference = Rng.restore(state).apply { nextLong() }
+        val expected = ((reference.nextLong() ushr 1) % Int.MAX_VALUE).toInt()
+
+        val rng = Rng.restore(state)
+        rng.nextInt(Int.MAX_VALUE) shouldBe expected
+        rng.state() shouldBe reference.state()
+    }
+
     test("nextInt rejects a non-positive bound") {
         shouldThrow<IllegalArgumentException> { Rng.seeded(1).nextInt(0) }
+    }
+
+    test("RngState round-trips through JSON and rejects incomplete input") {
+        val state = Rng.seeded(7).apply { nextLong() }.state()
+        Json.decodeFromString<RngState>(Json.encodeToString(state)) shouldBe state
+        shouldThrow<SerializationException> { Json.decodeFromString<RngState>("{}") }
     }
 
     test("shuffled is a deterministic permutation and leaves the input untouched") {
@@ -60,3 +82,30 @@ class RngTest : FunSpec({
         }
     }
 })
+
+private val GAMMA = 0x9E3779B97F4A7C15uL.toLong()
+private val MIX_1 = 0xBF58476D1CE4E5B9uL.toLong()
+private val MIX_2 = 0x94D049BB133111EBuL.toLong()
+
+/** Multiplicative inverse modulo 2^64 of an odd number (Newton's iteration doubles correct bits). */
+private fun inverse(m: Long): Long {
+    var x = m
+    repeat(5) { x *= 2 - m * x }
+    return x
+}
+
+/** Inverts `x xor (x ushr shift)`. */
+private fun unXorShift(y: Long, shift: Int): Long {
+    var x = y
+    repeat(64 / shift + 1) { x = y xor (x ushr shift) }
+    return x
+}
+
+/** Inverts SplitMix64's output mixer, so tests can choose the next raw output. */
+private fun unmix(output: Long): Long {
+    var z = unXorShift(output, 31)
+    z *= inverse(MIX_2)
+    z = unXorShift(z, 27)
+    z *= inverse(MIX_1)
+    return unXorShift(z, 30)
+}

@@ -30,8 +30,9 @@ class SpaWebConfig : WebMvcConfigurer {
             .addResolver(SpaFallbackResolver())
     }
 
-    private class SpaFallbackResolver : PathResourceResolver() {
-        override fun getResource(resourcePath: String, location: Resource): Resource? {
+    /** Resolves real files first, then falls back to `index.html` for client-side routes. */
+    internal class SpaFallbackResolver : PathResourceResolver() {
+        public override fun getResource(resourcePath: String, location: Resource): Resource? {
             val requested = location.createRelative(resourcePath)
             if (requested.exists() && requested.isReadable) return requested
             if (isBackendPath(resourcePath) || looksLikeFile(resourcePath)) return null

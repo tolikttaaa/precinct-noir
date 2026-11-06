@@ -3,6 +3,7 @@ kotlin = "2.4.21"
 spring-boot = "4.1.2"
 kotlinx-serialization = "1.12.0"
 kotest = "6.2.6"
+kover = "0.9.11"
 
 [libraries]
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
@@ -15,3 +16,4 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

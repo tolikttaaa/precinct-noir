@@ -4,10 +4,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.SpringApplication
+import org.springframework.boot.SpringApplicationHook
+import org.springframework.boot.SpringApplicationRunListener
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
+import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -18,6 +22,8 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.net.http.WebSocket
 import java.net.http.WebSocketHandshakeException
+import java.nio.ByteBuffer
+import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.TimeUnit
@@ -56,9 +62,17 @@ class WalkingSkeletonIT {
     }
 
     @Test
+    fun `existing static files are served directly`() {
+        val res = get("/index.html")
+        assertThat(res.statusCode()).isEqualTo(200)
+        assertThat(res.body()).contains("spa-shell")
+    }
+
+    @Test
     fun `backend paths and missing files are not rewritten to the SPA`() {
-        assertThat(get("/api/does-not-exist").statusCode()).isEqualTo(404)
-        assertThat(get("/missing-bundle.js").statusCode()).isEqualTo(404)
+        listOf("/api", "/api/does-not-exist", "/ws/unknown", "/actuator/nope", "/missing-bundle.js").forEach { path ->
+            assertThat(get(path).statusCode()).describedAs(path).isEqualTo(404)
+        }
     }
 
     @Test
@@ -95,11 +109,48 @@ class WalkingSkeletonIT {
     }
 
     @Test
+    fun `binary frames close the connection with 1003`() {
+        val listener = RecordingListener()
+        val ws = connect(ALLOWED_ORIGIN, listener)
+        ws.sendBinary(ByteBuffer.wrap(byteArrayOf(1, 2, 3)), true)
+        assertThat(listener.closeCode.get(5, TimeUnit.SECONDS)).isEqualTo(1003)
+    }
+
+    @Test
     fun `message floods close the connection with 1008`() {
         val listener = RecordingListener()
         val ws = connect(ALLOWED_ORIGIN, listener)
         repeat(40) { ws.sendText("spam $it", true).join() }
         assertThat(listener.closeCode.get(5, TimeUnit.SECONDS)).isEqualTo(1008)
+    }
+
+    @Test
+    fun `main boots the application with production wiring`() {
+        var context: ConfigurableApplicationContext? = null
+        val captureContext = SpringApplicationHook {
+            object : SpringApplicationRunListener {
+                override fun ready(ctx: ConfigurableApplicationContext, timeTaken: Duration?) {
+                    context = ctx
+                }
+            }
+        }
+        SpringApplication.withHook(captureContext, Runnable {
+            main(
+                arrayOf(
+                    "--server.port=0",
+                    "--spring.datasource.url=${postgres.jdbcUrl}",
+                    "--spring.datasource.username=${postgres.username}",
+                    "--spring.datasource.password=${postgres.password}",
+                ),
+            )
+        })
+        val booted = checkNotNull(context) { "application never became ready" }
+        try {
+            assertThat(booted.isActive).isTrue()
+            assertThat(booted.getBean(PrecinctNoirApplication::class.java)).isNotNull()
+        } finally {
+            booted.close()
+        }
     }
 
     private fun get(path: String): HttpResponse<String> =

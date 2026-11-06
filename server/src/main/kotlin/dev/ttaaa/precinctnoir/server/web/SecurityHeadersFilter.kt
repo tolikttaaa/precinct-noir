@@ -20,30 +20,28 @@ import org.springframework.web.filter.OncePerRequestFilter
 class SecurityHeadersFilter : OncePerRequestFilter() {
 
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
-        HEADERS.forEach(response::setHeader)
+        SECURITY_HEADERS.forEach(response::setHeader)
         chain.doFilter(request, response)
     }
-
-    private companion object {
-        val HEADERS = mapOf(
-            "Content-Security-Policy" to listOf(
-                "default-src 'self'",
-                "script-src 'self'",
-                "style-src 'self'",
-                "img-src 'self' data:",
-                "font-src 'self'",
-                "connect-src 'self'",
-                "object-src 'none'",
-                "base-uri 'self'",
-                "form-action 'self'",
-                "frame-ancestors 'none'",
-            ).joinToString("; "),
-            "X-Content-Type-Options" to "nosniff",
-            "X-Frame-Options" to "DENY",
-            "Referrer-Policy" to "no-referrer",
-            "Permissions-Policy" to "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
-            "Cross-Origin-Opener-Policy" to "same-origin",
-            "Strict-Transport-Security" to "max-age=31536000",
-        )
-    }
 }
+
+private val SECURITY_HEADERS = mapOf(
+    "Content-Security-Policy" to listOf(
+        "default-src 'self'",
+        "script-src 'self'",
+        "style-src 'self'",
+        "img-src 'self' data:",
+        "font-src 'self'",
+        "connect-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+    ).joinToString("; "),
+    "X-Content-Type-Options" to "nosniff",
+    "X-Frame-Options" to "DENY",
+    "Referrer-Policy" to "no-referrer",
+    "Permissions-Policy" to "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    "Cross-Origin-Opener-Policy" to "same-origin",
+    "Strict-Transport-Security" to "max-age=31536000",
+)
