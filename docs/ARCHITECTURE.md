@@ -28,6 +28,7 @@
 | Engine scope in M2 | The full shared core for all six modes, plus Shadow Duel |
 | M3 delivery | Two PRs: M3a platform (rooms, lobby, protocol, persistence, restore, shutdown, codegen, basic caps); M3b security (rate limits, Turnstile, WS token bucket and socket caps, CSP nonce) |
 | Who plays | The earliest players up to the mode's maximum; the rest watch. The VIP removes players before starting |
+| UI order | Playable first (portraits after v0.1); every mode ships with its UI; TV + phones polished first, remote play last |
 | Ending games | The VIP can end a running game; a game idle for 2 h ends automatically |
 
 ## Architecture
@@ -137,8 +138,9 @@ See **Engine design** below.
    - Postgres snapshots + restore, graceful shutdown
    - full security layer
    - Spring integration tests with Testcontainers Postgres
-4. **M4 Design system + portraits + lobby UI:** tokens, fonts, roster (~60), portrait generator, TV/phone/laptop shells, join flow with QR, i18n EN/RU. **Portrait/design review with the user.**
-5. **M5 Mode 1 playable end-to-end:** board UI, decisions, animations, game-over screens, Playwright E2E (TV + 2 players). **Release v0.1.**
+4. **M4 Look and feel + lobby UI:** tokens, fonts, TV/phone shells, join flow with QR, i18n EN/RU ([DESIGN.md](DESIGN.md)). *Changed 2026-11-06: portraits moved to right after v0.1 (playable first).*
+5. **M5 Mode 1 playable end-to-end:** case-file suspect cards (silhouettes), board UI, decisions, animations, game-over screens, Playwright E2E (TV + 2 players). **Release v0.1.**
+   - **P, right after v0.1:** the portrait generator for the roster (~60), with the owner's review.
 6. **M6 Spy Games** (3–6, 8, 9 players; free-for-all + teams of 2/3; trophies). Release.
 7. **M7 Hitman vs Sleuth** (hit list, escape, expose). Release.
 8. **M8 Master Thief vs Chief** (treasure tokens, uniformed officers, quick disguise, swear-in + free grab). Release.

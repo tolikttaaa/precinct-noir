@@ -8,7 +8,13 @@ const backend = 'http://localhost:8080'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
+  // The React Compiler only memoizes. Tests run the plain components, so coverage counts our branches
+  // rather than the compiler's cache checks; the production build (and M5's E2E tests) run compiled.
+  plugins: [react(), ...(process.env.VITEST ? [] : [babel({ presets: [reactCompilerPreset()] })])],
+  build: {
+    // Emit every asset as a file: inlined data: URIs (small font subsets) would break the CSP's font-src 'self'.
+    assetsInlineLimit: 0,
+  },
   server: {
     proxy: {
       '/api': backend,

@@ -50,6 +50,8 @@ private const val SITE = "http://allowed.test"
         "app.limits.api.per=1h",
         "app.limits.sockets-per-client=2",
         "app.limits.sockets-total=4",
+        // The cap test opens sockets without saying hello; keep them open while it runs.
+        "app.ws.auth-timeout=1m",
     ],
 )
 @Testcontainers
@@ -162,7 +164,7 @@ class SecurityIT {
     private fun socket(client: String): WebSocket = http.newWebSocketBuilder()
         .header("Origin", SITE)
         .header(ClientIp.HEADER, client)
-        .buildAsync(URI("ws://localhost:$port/ws/echo"), object : WebSocket.Listener {})
+        .buildAsync(URI("ws://localhost:$port/ws"), object : WebSocket.Listener {})
         .join()
 
     private fun handshakeStatus(connect: () -> Unit): Int {

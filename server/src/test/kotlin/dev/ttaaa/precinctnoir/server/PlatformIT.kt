@@ -152,6 +152,15 @@ class PlatformIT {
     }
 
     @Test
+    fun `a client that floods the socket is closed with 1008`() {
+        val room = createRoom()
+        val tv = Client(port).apply { send(ClientMessage.Hello(room.code, room.hostToken)) }
+        tv.await<ServerMessage.Welcome>()
+        repeat(40) { tv.socket.sendText("{}", true).join() }
+        assertThat(tv.closed.get(5, TimeUnit.SECONDS)).isEqualTo(1008)
+    }
+
+    @Test
     fun `the server pings connected sockets to keep them alive through Cloudflare`() {
         val room = createRoom()
         val tv = Client(port).apply { send(ClientMessage.Hello(room.code, room.hostToken)) }

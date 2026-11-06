@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Caps open sockets: at most [perClient] per client and [total] overall, across `/ws` and `/ws/echo`.
+ * Caps open game sockets (`/ws`): at most [perClient] per client and [total] overall.
  *
  * The handshake check turns most excess sockets away with HTTP 429 before any upgrade. It can't reserve
  * a slot (a handshake may still fail later), so the binding count happens when a socket opens, in

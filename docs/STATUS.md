@@ -4,7 +4,7 @@
 > built, and what is next, so development can resume from any point (a new session, a new agent,
 > or after a break). Update it in every milestone PR.
 >
-> **Last updated:** 2026-11-06. M3a (platform) merged and live (PR #11). M3b (security) is done on branch `m3b/security` (PR open).
+> **Last updated:** 2026-11-06. M3 merged and live (PRs #11, #12). M4 (look and feel, lobby, join flow) is done on branch `m4/lobby-ui` (PR open).
 >
 > **Legend:** ✅ done and merged · 🟡 done on a branch / PR open · ⬜ not started · ⚠️ known issue or follow-up
 
@@ -67,17 +67,20 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M1 | Walking skeleton (build, server, web, image, CI/CD, first deploy) | ✅ (live) | #2, #7 |
 | M2 | Engine core + Shadow Duel (Killer vs Inspector) | ✅ (rules only; not playable yet) | #9 |
 | M3a | Platform: rooms, lobby, WS protocol, persistence, restore, shutdown, codegen | ✅ (live; no UI yet) | #11 |
-| M3b | Security: rate limits, Turnstile, WS limits, CSP nonce | 🟡 PR open | `m3b/security` |
-| M4 | Design system, portraits, lobby UI, i18n | ⬜ | – |
-| M5 | Shadow Duel playable end-to-end → **release v0.1** | ⬜ | – |
+| M3b | Security: rate limits, Turnstile, WS limits, CSP nonce | ✅ (live) | #12 |
+| M4 | Look and feel, home, join flow, lobby on TV and phone, EN/RU | 🟡 PR open | `m4/lobby-ui` |
+| M5 | Shadow Duel board and game UI → **release v0.1, first playable** | ⬜ | – |
+| P | Portrait generator + owner review (moved here from M4) | ⬜ | – |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
 | M9 | Feds vs. Mob | ⬜ | – |
 | M10 | Casino Heist | ⬜ | – |
-| M11 | Hardening & polish | ⬜ | – |
+| M11 | Hardening & polish, incl. remote-play polish | ⬜ | – |
 
-**Next action:** the owner adds the Turnstile keys (RUNBOOK §4.1) and merges M3b; then verify the CSP fix in production with headless Chrome, and start M4 (grill the owner on the design questions first).
+**Next action:** the owner reviews and merges M4; then build M5 (the Shadow Duel board), which makes the game playable.
+
+**Order of the next steps** (owner's choice, 2026-11-06): playable first. M5 makes Shadow Duel playable with case-file cards and simple silhouettes. The full portraits (P) follow right after v0.1, before Spy Ring. Every later mode ships with its own UI in its milestone. TV + phones get the polish first; remote play on one's own device is polished last (M11).
 
 ---
 
@@ -95,9 +98,9 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
   - Spring Boot 4.1.2, virtual threads, graceful shutdown, Flyway (`V1__app_meta.sql`), actuator `health` only.
   - SPA hosting with client-route fallback; hashed assets cached for a year.
   - `SecurityHeadersFilter`: strict CSP, nosniff, frame deny, HSTS, Referrer and Permissions policies.
-  - `/ws/echo` diagnostic: origin allowlist, 4 KB frames, 20 msg/s, binary refused. The landing page's "Wire is live" check uses it; it goes away in M4 (the game socket is `/ws` since M3a).
+  - `/ws/echo` diagnostic (removed in M4; the game socket is `/ws` since M3a).
   - Config: production values from env (no default credentials); `dev` profile matches `compose.dev.yaml`.
-- [x] **Web** (`web/`): Vite 8, React 19 with the React Compiler, ESLint, Prettier, Vitest; a placeholder noir landing page with a live "wire check" over the WebSocket.
+- [x] **Web** (`web/`): Vite 8, React 19 with the React Compiler, ESLint, Prettier, Vitest; a placeholder landing page (replaced in M4).
 - [x] **Image:** 3-stage `Dockerfile` (node → JDK 25 → JRE 25), uid 1000, Spring Boot layers, a `bash /dev/tcp` health check (the JRE image has no curl), linux/amd64.
 - [x] **CI/CD:**
   - `ci.yml`: three required checks, *Engine & server (Gradle)*, *Web client* and *Docker image (build only)*.
@@ -158,7 +161,7 @@ Done, all in `server/` (details in [PROTOCOL.md](PROTOCOL.md)):
   - Seats: the earliest players up to the mode's maximum; everyone else gets the spectator view.
   - "Play again" swaps Shadow Duel roles through the engine's new `rematchConfig` hook, only for the same mode and line-up.
   - `clientSeq` deduplication per sender, persisted so it survives restarts.
-- [x] **WebSocket gateway at `/ws`** (`ws/GameWebSocketHandler.kt`): hello within 5 s, origin allowlist, 4 KB frames, text only, 20 msg/s per socket, pings every 25 s and a 60 s dead timeout, `ConcurrentWebSocketSessionDecorator` send limits. `/ws/echo` stays until M4 replaces the landing page.
+- [x] **WebSocket gateway at `/ws`** (`ws/GameWebSocketHandler.kt`): hello within 5 s, origin allowlist, 4 KB frames, text only, 20 msg/s per socket, pings every 25 s and a 60 s dead timeout, `ConcurrentWebSocketSessionDecorator` send limits. (`/ws/echo` was removed in M4.)
 - [x] **Persistence** (`V2__rooms.sql`, `room/JdbcRoomRepository.kt`): `rooms` (snapshot JSONB), `room_commands` (append-only), `room_events` (case log with audiences), one transaction per change, saved before anyone is told.
 - [x] **Restore at startup** before the web server accepts connections; unreadable games end with `restore_failed`, and unknown lobby modes fall back to the default.
 - [x] **Graceful shutdown** (`config/PlatformConfig.kt`): every socket closes with 1012 before Tomcat's graceful shutdown.
@@ -171,41 +174,58 @@ Tests (209 JVM tests at merge; 99.87% lines / 98.41% branches overall): room-ser
 
 Not done in M3a (by design): the web client doesn't use the protocol yet (M4/M5), and the uncovered branches are room-closed race guards.
 
-### M3b: security 🟡 (PR open, branch `m3b/security`)
+### M3b: security ✅ (PR #12, live)
 Everything below is described for readers in [SECURITY.md](SECURITY.md); code in `server/.../security/`.
 - [x] **Client identity** (`ClientIp`): `CF-Connecting-IP`, else the peer; IPv6 grouped by /64; no DNS lookups.
 - [x] **Per-client HTTP limits** (`ApiGuard`, a Spring MVC interceptor; Bucket4j + Caffeine): create room 5 / 10 min, join 40 / 10 min, non-existent codes 10 / min (then every lookup waits), all `/api` 120 / min. `429 rate_limited` + `Retry-After`.
 - [x] **Origin check** on state-changing `/api` requests (`403 forbidden_origin`).
 - [x] **Turnstile** on `POST /api/rooms` (`{turnstileToken}`): siteverify with a hostname check, fail-closed (`503 captcha_unavailable`) without a secret or when Cloudflare is unreachable; Cloudflare's test keys in the dev profile; `GET /api/config` hands the site key to the web client.
-- [x] **WebSocket limits:** a per-socket token bucket (burst 20, then 10 / s → 1008) replaced `RateWindow`; ≤ 30 sockets per client and ≤ 3 000 in total (`SocketGuard`: handshake 429, atomic slot on open, 1013 if a socket loses the race), on both `/ws` and `/ws/echo`.
+- [x] **WebSocket limits:** a per-socket token bucket (burst 20, then 10 / s → 1008) replaced `RateWindow`; ≤ 30 sockets per client and ≤ 3 000 in total (`SocketGuard`: handshake 429, atomic slot on open, 1013 if a socket loses the race), on `/ws` (and on `/ws/echo` until M4 removed it).
 - [x] **CSP nonce** per response for Cloudflare's injected bot-detection script; Turnstile's origin in `script-src` and `frame-src`; HTML served `no-store`.
 - [x] **Log privacy:** clients appear as HMAC pseudonyms (key never leaves memory); refusal logs throttled to one line per client per minute; no tokens or bodies logged.
 - [x] `docs/SECURITY.md`; PROTOCOL and RUNBOOK §4 updated.
 - [x] Tests: unit tests for each piece (`ApiGuardTest`, `SocketGuardTest`, `TurnstileTest` against a local siteverify stub, `RateLimiterTest`, `ClientIpTest`) and `SecurityIT` (all limits, Turnstile outcomes, origin check, socket caps, wired into the running app). 235 JVM tests; 99.71% lines / 98.57% branches.
-- [ ] **After merge:** check in production with headless Chrome that the console shows no CSP errors (Cloudflare's script now carries the nonce), and that `/api/config` returns the site key.
+- [x] **Checked in production after the merge:** headless Chrome shows no console errors (Cloudflare's injected script carries the nonce); `/api/config` returns the site key; a forged token gets `403 captcha_failed`.
 
-### M4: design system, portraits, lobby UI ⬜
-- [ ] **Design tokens:**
-  - Colours: ink black, smoke greys, cream case-file cards, blood red (kills), evidence blue (exonerated), brass (tokens).
-  - Film grain and venetian-blind light.
-- [ ] **Self-hosted fonts with Cyrillic support:** e.g. Playfair Display / Oswald for display, IBM Plex Sans for body, IBM Plex Mono for case-file text (via `@fontsource`).
-- [ ] **Deterministic layered SVG portrait generator** driven by `shared/roster.json`: gender, age, archetype, plus traits.
-  - **Owner review checkpoint** before any gameplay UI.
-- [ ] **Three layouts from one component set:**
-  - TV: 10-foot UI, 5% overscan margins, QR code + room code.
-  - Laptop: board plus a side panel.
-  - Phone: compact board, a dossier drawer, a thumb-zone action bar.
-- [ ] **Join flow:** QR code, then name.
-- [ ] **i18n:** EN and RU via i18next, with RU transliterations of character names.
-- [ ] **Accessibility:** WCAG AA, reduced motion, touch targets ≥ 44 px, states shown by icon + colour.
+### M4: look and feel, lobby, join flow 🟡 (PR open, branch `m4/lobby-ui`)
+Design system and reasoning: [DESIGN.md](DESIGN.md). Code: `web/src/`.
+- [x] **Design tokens and type:**
+  - Night ink, manila case files, stamp red, evidence blue, brass; blind-light and film grain.
+  - Self-hosted Sofia Sans (+ Extra Condensed) and Cousine, all with Cyrillic.
+  - Assets are never inlined, because of the CSP.
+- [x] **Home** (`/`): host a game (Turnstile, invisible) or join by code.
+- [x] **Board screen** (`/tv/CODE`): the stamped room code, a QR code and the join address, the line-up (join order = who plays; VIP stamp; offline), status, and the mode summary. Shows "game on" and "case closed" states.
+- [x] **Phone** (`/CODE`):
+  - Join form (room lookup, name), then the lobby.
+  - The VIP edits the game, house rules and turn timer, removes players and starts. Everyone else sees the rules read-only.
+  - Two-tap Leave, End game and Remove; Play again.
+  - Endings: removed, left, closed, gone.
+  - A game that stops early (the VIP ends it, idle timeout, failed restore) drops everyone back to the lobby with a note saying why.
+- [x] **Connection client** (`net/roomSocket.ts`):
+  - Hello and resume from the last event.
+  - Jittered backoff reconnects (deploys, drops, overload); stops for good on kick, leave, close or bad token.
+  - Numbered commands, resent after a reconnect. The command counter is saved per room.
+- [x] **i18n:** English and Russian (i18next, typed keys, Russian plural forms); the language follows the browser and can be switched.
+- [x] **Accessibility:** visible focus, reduced motion, 44px targets, hints as descriptions, live regions for status.
+- [x] **`/ws/echo` removed** (its flood check moved to `/ws`).
+- [x] **Tests:**
+  - 64 web tests; 100% lines, 98.88% branches.
+  - The React Compiler is skipped under Vitest so coverage counts our branches, not its cache checks.
+  - Checked in headless Chrome against the Spring-served build: no console errors under the real CSP, including Turnstile.
+- [ ] Laptop-specific polish → M11 (owner's choice: TV + phones first).
 
 ### M5: Shadow Duel playable end-to-end → v0.1 ⬜
+- [ ] **Suspect cards:** case-file cards with name, number and a simple silhouette by gender and archetype (from `shared/roster.json`), plus Russian name transliterations.
 - [ ] **Board UI:** a CSS grid keyed by suspect id; Motion `layout` animations for shifts, swaps and collapses.
 - [ ] **Interaction:** legal targets highlighted, edge arrows for shifts with the forbidden undo greyed out, and two-tap confirmation for kill/accuse.
-- [ ] **Generic decision panels** rendered from `Opt`; game-over and reveal screens; case log.
+- [ ] **Decision panels** rendered from `Opt` (generic); game-over and reveal screens; case log; turn-timer nudge.
 - [ ] **"How to play" (EN/RU, own wording)** and a "your possible actions" helper on the phone.
-- [ ] **Playwright E2E** (`e2e/`): a seeded game (seed endpoint only in the `test` profile) with one TV + 2 players at phone, laptop and 1080p viewports.
+- [ ] **Playwright E2E** (`e2e/`): a seeded game (seed endpoint only in the `test` profile) with one TV + 2 players at phone and 1080p viewports.
 - [ ] **Release v0.1**, then a real session with phones and the TV.
+
+### P: portraits (right after v0.1) ⬜
+- [ ] **Deterministic layered SVG portrait generator** driven by `shared/roster.json` (gender, age, archetype, traits), replacing the silhouettes.
+- [ ] **Owner review checkpoint.**
 
 ### M6–M10: remaining modes ⬜
 Each mode follows the same recipe: engine rules + tests (every pinned ID) → projections → UI panels + tutorial (EN/RU) → E2E → deploy. Follow `CLAUDE.md` → *Engine conventions*.
@@ -223,6 +243,7 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 - [ ] `/security-review` before release.
 - [ ] Accessibility pass and TV overscan check.
 - [ ] Optional synthesized SFX.
+- [ ] Remote play on one's own laptop or phone: polish the layouts for playing without a shared TV.
 - [ ] Docs finalised.
 
 ---
@@ -234,7 +255,7 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 | `new-app.sh precinctnoir` + Caddyfile commit (RUNBOOK §1.1) | ✅ |
 | `HOME_INFRA_DEPLOY_TOKEN` (fine-grained, home-infra only, Actions read/write) (§1.2) | ✅ |
 | Branch protection (§1.3): ruleset *Protect main* | ✅ |
-| Turnstile widget + keys in `/srv/apps/precinctnoir/.env` (§4.1) | ⬜ **before M3b merges** (without them, production refuses to create rooms) |
+| Turnstile widget + keys in `/srv/apps/precinctnoir/.env` (§4.1) | ✅ |
 | Cloudflare rate-limiting rule on `/api/*` (§4.2) | ⬜ optional (edge layer on top of the app's limits) |
 | Delete the history backup `~/Projects/Personal/noir-game-backup-20261106.git` | ⬜ optional |
 
@@ -244,8 +265,8 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 
 - ⚠️ **CSP blocks Cloudflare's injected bot-detection script:** fixed in M3b (per-response nonce); confirm in production after the merge.
 - ⚠️ **TypeScript 7 and `typescript-eslint`:** Dependabot ignores `typescript` majors (PR #4 was closed). Upgrade both together once `typescript-eslint` supports TS 7.
-- ⚠️ **Planned docs not written yet:** `docs/DESIGN.md` (M4); `e2e/` (M5). `docs/PROTOCOL.md` (M3a) and `docs/SECURITY.md` (M3b) exist.
-- ℹ️ **Turnstile and `style-src`:** if the widget needs inline styles, M4 adjusts the CSP (SECURITY.md §10).
+- ⚠️ **Planned, not written yet:** `e2e/` (M5).
+- ℹ️ **Turnstile and `style-src`:** the invisible test widget runs without CSP errors locally; confirm with the real widget in production after the M4 merge.
 - ℹ️ **Shift options:** `Shift` lists explicit moves (not `amounts` + `forbidden`); the UI should render from `moves`.
 - ℹ️ **Rendering the rulebook PDFs:** poppler isn't installed. Pages can be rendered with a small Swift/PDFKit script, for mechanics only.
 
@@ -272,3 +293,6 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 | 2026-11-06 | The VIP can end a running game (UI confirms); a game idle for 2 h ends automatically |
 | 2026-11-06 | Turnstile: build with Cloudflare's test keys; the owner adds real keys before M3b merges |
 | 2026-11-06 | Room codes use consonants only (no words); the TV has its own host token; expired rooms are deleted |
+| 2026-11-06 | Playable first: v0.1 uses case-file cards with silhouettes; the portrait generator and its review move to right after v0.1 |
+| 2026-11-06 | Every mode ships with its own UI in its milestone |
+| 2026-11-06 | Layout priority: TV + phones in one room first; remote play polished last (M11) |
