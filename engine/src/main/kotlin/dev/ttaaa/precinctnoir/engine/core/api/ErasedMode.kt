@@ -9,10 +9,8 @@ import dev.ttaaa.precinctnoir.engine.core.legal.Opt
 import dev.ttaaa.precinctnoir.engine.core.persist.EngineJson
 import dev.ttaaa.precinctnoir.engine.core.persist.Migrations
 import dev.ttaaa.precinctnoir.engine.core.view.Viewer
-import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 
 /** A game of some mode, opaque to the server. */
@@ -28,6 +26,9 @@ sealed interface AnyResult {
 
 data class GameStatus(val actionSeq: Long, val pending: Pending?, val outcome: Outcome?)
 
+/** One viewer's projection (mode-specific JSON) and the legal options it allows. */
+data class AnyView(val view: JsonElement, val legal: List<Opt>)
+
 /** The JSON-in/JSON-out boundary the server talks to; it never sees mode types. */
 interface AnyMode {
     val id: String
@@ -41,10 +42,9 @@ interface AnyMode {
     /** Malformed JSON is rejected with [Rejection.MALFORMED]; it never throws. */
     fun apply(game: AnyGame, command: JsonElement): AnyResult
 
-    /** `{"view": …, "legal": [...]}` for [viewer]. */
-    fun view(game: AnyGame, viewer: Viewer): JsonObject
+    fun view(game: AnyGame, viewer: Viewer): AnyView
 
-    fun isVisible(game: AnyGame, event: AnyEvent, viewer: Viewer): Boolean
+    fun isVisible(game: AnyGame, audience: Audience, viewer: Viewer): Boolean
 
     fun status(game: AnyGame): GameStatus
 
@@ -54,12 +54,13 @@ interface AnyMode {
     fun decode(json: JsonObject, schemaVersion: Int): AnyGame
 
     fun nudge(game: AnyGame): JsonElement?
+
+    /** Server-only config to merge into the next game when the same players play again. */
+    fun rematchConfig(game: AnyGame): JsonObject
 }
 
 class ErasedMode<M : Any, St : Any, E : Any, V : Any>(private val mode: GameMode<M, St, E, V>) : AnyMode {
     private val stateSerializer = GameState.serializer(mode.serializers.model, mode.serializers.step)
-    private val legalSerializer = ListSerializer(Opt.serializer())
-
     override val id: String get() = mode.id
     override val schemaVersion: Int get() = mode.schemaVersion
     override val players: IntRange get() = mode.players
@@ -80,17 +81,14 @@ class ErasedMode<M : Any, St : Any, E : Any, V : Any>(private val mode: GameMode
         }
     }
 
-    override fun view(game: AnyGame, viewer: Viewer): JsonObject {
+    override fun view(game: AnyGame, viewer: Viewer): AnyView {
         val view = mode.project(typed(game), viewer)
-        return buildJsonObject {
-            put("view", EngineJson.encodeToJsonElement(mode.serializers.view, view))
-            put("legal", EngineJson.encodeToJsonElement(legalSerializer, mode.legalFor(view)))
-        }
+        return AnyView(EngineJson.encodeToJsonElement(mode.serializers.view, view), mode.legalFor(view))
     }
 
-    override fun isVisible(game: AnyGame, event: AnyEvent, viewer: Viewer): Boolean {
+    override fun isVisible(game: AnyGame, audience: Audience, viewer: Viewer): Boolean {
         val state = typed(game)
-        return event.audience.visibleTo(viewer) { mode.teamOf(state, it) }
+        return audience.visibleTo(viewer) { mode.teamOf(state, it) }
     }
 
     override fun status(game: AnyGame): GameStatus =
@@ -105,6 +103,8 @@ class ErasedMode<M : Any, St : Any, E : Any, V : Any>(private val mode: GameMode
 
     override fun nudge(game: AnyGame): JsonElement? =
         mode.onTimer(typed(game))?.let { EngineJson.encodeToJsonElement(mode.serializers.event, it) }
+
+    override fun rematchConfig(game: AnyGame): JsonObject = mode.rematchConfig(typed(game))
 
     private fun accepted(result: ApplyResult.Accepted<GameState<M, St>, E>) =
         AnyResult.Accepted(AnyGame(id, result.state), result.events.map(::erase))

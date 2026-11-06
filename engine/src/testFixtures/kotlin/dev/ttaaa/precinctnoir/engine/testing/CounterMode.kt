@@ -1,4 +1,10 @@
-package dev.ttaaa.precinctnoir.engine.core.api
+package dev.ttaaa.precinctnoir.engine.testing
+
+import dev.ttaaa.precinctnoir.engine.core.api.ConfigOption
+import dev.ttaaa.precinctnoir.engine.core.api.ConfigSpec
+import dev.ttaaa.precinctnoir.engine.core.api.FlowMode
+import dev.ttaaa.precinctnoir.engine.core.api.ModeSerializers
+import dev.ttaaa.precinctnoir.engine.core.api.Tx
 
 import dev.ttaaa.precinctnoir.engine.core.events.Audience
 import dev.ttaaa.precinctnoir.engine.core.flow.GameState
@@ -19,7 +25,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
-/** Players take turns adding one until [target]; seats are in teams by parity. Exercises the generic flow. */
+/**
+ * A tiny test game: players take turns adding one until [target]; seats are in teams by parity.
+ * Exercises the generic flow in engine and server tests.
+ */
 @Serializable
 data class CounterModel(val players: Int, val target: Int, val count: Int = 0, val broken: Boolean = false)
 

@@ -3,10 +3,10 @@ package dev.ttaaa.precinctnoir.engine.core
 import dev.ttaaa.precinctnoir.engine.core.api.ApplyResult
 import dev.ttaaa.precinctnoir.engine.core.api.ConfigOption
 import dev.ttaaa.precinctnoir.engine.core.api.ConfigSpec
-import dev.ttaaa.precinctnoir.engine.core.api.CounterMode
-import dev.ttaaa.precinctnoir.engine.core.api.CounterModel
-import dev.ttaaa.precinctnoir.engine.core.api.CounterStep
-import dev.ttaaa.precinctnoir.engine.core.api.CounterEvent
+import dev.ttaaa.precinctnoir.engine.testing.CounterMode
+import dev.ttaaa.precinctnoir.engine.testing.CounterModel
+import dev.ttaaa.precinctnoir.engine.testing.CounterStep
+import dev.ttaaa.precinctnoir.engine.testing.CounterEvent
 import dev.ttaaa.precinctnoir.engine.core.api.Rejection
 import dev.ttaaa.precinctnoir.engine.core.api.Tx
 import dev.ttaaa.precinctnoir.engine.core.board.Board
