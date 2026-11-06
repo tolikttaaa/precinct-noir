@@ -139,8 +139,8 @@ See **Engine design** below.
    - full security layer
    - Spring integration tests with Testcontainers Postgres
 4. **M4 Look and feel + lobby UI:** tokens, fonts, TV/phone shells, join flow with QR, i18n EN/RU ([DESIGN.md](DESIGN.md)). *Changed 2026-11-06: portraits moved to right after v0.1 (playable first).*
-5. **M5 Mode 1 playable end-to-end:** case-file suspect cards (silhouettes), board UI, decisions, animations, game-over screens, Playwright E2E (TV + 2 players). **Release v0.1.**
-   - **P, right after v0.1:** the portrait generator for the roster (~60), with the owner's review.
+5. **M5 Mode 1 playable end-to-end:** case-file suspect cards with the portraits, board UI, decisions, animations, game-over screens, Playwright E2E (TV + 2 players). **Release v0.1.**
+   - **P, before M5 (changed 2026-11-07):** the portrait generator for the roster (60), the evidence-wall background and realistic folders, reviewed by the owner.
 6. **M6 Spy Games** (3–6, 8, 9 players; free-for-all + teams of 2/3; trophies). Release.
 7. **M7 Hitman vs Sleuth** (hit list, escape, expose). Release.
 8. **M8 Master Thief vs Chief** (treasure tokens, uniformed officers, quick disguise, swear-in + free grab). Release.

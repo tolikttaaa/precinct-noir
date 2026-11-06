@@ -4,7 +4,7 @@
 > built, and what is next, so development can resume from any point (a new session, a new agent,
 > or after a break). Update it in every milestone PR.
 >
-> **Last updated:** 2026-11-06. M3 merged and live (PRs #11, #12). M4 (look and feel, lobby, join flow) is done on branch `m4/lobby-ui` (PR open).
+> **Last updated:** 2026-11-07. M4 merged and live (PR #13). P (portraits, evidence wall, realistic folders) is done on branch `p/portraits-evidence-wall` (PR open).
 >
 > **Legend:** ✅ done and merged · 🟡 done on a branch / PR open · ⬜ not started · ⚠️ known issue or follow-up
 
@@ -68,9 +68,9 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M2 | Engine core + Shadow Duel (Killer vs Inspector) | ✅ (rules only; not playable yet) | #9 |
 | M3a | Platform: rooms, lobby, WS protocol, persistence, restore, shutdown, codegen | ✅ (live; no UI yet) | #11 |
 | M3b | Security: rate limits, Turnstile, WS limits, CSP nonce | ✅ (live) | #12 |
-| M4 | Look and feel, home, join flow, lobby on TV and phone, EN/RU | 🟡 PR open | `m4/lobby-ui` |
+| M4 | Look and feel, home, join flow, lobby on TV and phone, EN/RU | ✅ (live) | #13 |
+| P | Suspect portraits, evidence-wall background, realistic folders | 🟡 PR open | `p/portraits-evidence-wall` |
 | M5 | Shadow Duel board and game UI → **release v0.1, first playable** | ⬜ | – |
-| P | Portrait generator + owner review (moved here from M4) | ⬜ | – |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
@@ -78,9 +78,9 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M10 | Casino Heist | ⬜ | – |
 | M11 | Hardening & polish, incl. remote-play polish | ⬜ | – |
 
-**Next action:** the owner reviews and merges M4; then build M5 (the Shadow Duel board), which makes the game playable.
+**Next action:** the owner merges P; then build M5 (the Shadow Duel board, with the portraits on its cards), which makes the game playable.
 
-**Order of the next steps** (owner's choice, 2026-11-06): playable first. M5 makes Shadow Duel playable with case-file cards and simple silhouettes. The full portraits (P) follow right after v0.1, before Spy Ring. Every later mode ships with its own UI in its milestone. TV + phones get the polish first; remote play on one's own device is polished last (M11).
+**Order of the next steps** (owner's choice, 2026-11-06; changed 2026-11-07): portraits first after all, because the owner asked for an evidence-wall background with the suspects on it, then the playable board. M5 then makes Shadow Duel playable, with the portraits on its case-file cards. Every later mode ships with its own UI in its milestone. TV + phones get the polish first; remote play on one's own device is polished last (M11).
 
 ---
 
@@ -187,7 +187,7 @@ Everything below is described for readers in [SECURITY.md](SECURITY.md); code in
 - [x] Tests: unit tests for each piece (`ApiGuardTest`, `SocketGuardTest`, `TurnstileTest` against a local siteverify stub, `RateLimiterTest`, `ClientIpTest`) and `SecurityIT` (all limits, Turnstile outcomes, origin check, socket caps, wired into the running app). 235 JVM tests; 99.71% lines / 98.57% branches.
 - [x] **Checked in production after the merge:** headless Chrome shows no console errors (Cloudflare's injected script carries the nonce); `/api/config` returns the site key; a forged token gets `403 captcha_failed`.
 
-### M4: look and feel, lobby, join flow 🟡 (PR open, branch `m4/lobby-ui`)
+### M4: look and feel, lobby, join flow ✅ (PR #13, live)
 Design system and reasoning: [DESIGN.md](DESIGN.md). Code: `web/src/`.
 - [x] **Design tokens and type:**
   - Night ink, manila case files, stamp red, evidence blue, brass; blind-light and film grain.
@@ -215,7 +215,7 @@ Design system and reasoning: [DESIGN.md](DESIGN.md). Code: `web/src/`.
 - [ ] Laptop-specific polish → M11 (owner's choice: TV + phones first).
 
 ### M5: Shadow Duel playable end-to-end → v0.1 ⬜
-- [ ] **Suspect cards:** case-file cards with name, number and a simple silhouette by gender and archetype (from `shared/roster.json`), plus Russian name transliterations.
+- [ ] **Suspect cards:** case-file cards with the portrait (`portraitUri`), name and number, plus Russian name transliterations.
 - [ ] **Board UI:** a CSS grid keyed by suspect id; Motion `layout` animations for shifts, swaps and collapses.
 - [ ] **Interaction:** legal targets highlighted, edge arrows for shifts with the forbidden undo greyed out, and two-tap confirmation for kill/accuse.
 - [ ] **Decision panels** rendered from `Opt` (generic); game-over and reveal screens; case log; turn-timer nudge.
@@ -223,9 +223,23 @@ Design system and reasoning: [DESIGN.md](DESIGN.md). Code: `web/src/`.
 - [ ] **Playwright E2E** (`e2e/`): a seeded game (seed endpoint only in the `test` profile) with one TV + 2 players at phone and 1080p viewports.
 - [ ] **Release v0.1**, then a real session with phones and the TV.
 
-### P: portraits (right after v0.1) ⬜
-- [ ] **Deterministic layered SVG portrait generator** driven by `shared/roster.json` (gender, age, archetype, traits), replacing the silhouettes.
-- [ ] **Owner review checkpoint.**
+### P: portraits, evidence wall, realistic folders 🟡 (PR open, branch `p/portraits-evidence-wall`)
+The owner asked for this after seeing M4 (2026-11-07): a background like a detective's evidence wall with
+the suspects on it, and folders that look real. Design notes: [DESIGN.md](DESIGN.md) §5–6.
+- [x] **Portrait generator** (`web/src/portraits/portrait.ts`):
+  - Original "bold ink" busts for all 60 roster suspects, with one look per job and the face varied by id.
+  - Deterministic, and nestable with unique ids.
+- [x] **Evidence wall** (`portraits/wall.ts`, `components/EvidenceWall.tsx`):
+  - A corkboard with twelve suspect cards, a district map, clippings, polaroids, a fingerprint card and red string, under venetian-blind light.
+  - Shown behind every screen; dimmed and blurred on phones (owner's choice).
+- [x] **Realistic folders:** back panel with a labelled tab, peeking sheets, a thumb cut, a paperclip and paper fibre. A dark slate sits behind the TV line-up.
+- [x] **Roster in the web client:** imports `shared/roster.json` (`resolveJsonModule`; Vite `server.fs.allow`).
+- [x] **Tests:**
+  - 80 web tests; 100% lines, 99.23% branches.
+  - Every part (hats, hair in each tone, outfits, facial hair, props) is drawn on both sides of the light and parsed as SVG. A single bad attribute would silently blank the image.
+- [x] **Speed:** the wall builds in about 1 ms of script. Chrome draws it off the main thread, and the page is ready in 0.25 s even at 6× slower CPU.
+- [ ] Check the wall on a real smart-TV browser after deploying. If it draws slowly there, pre-render it into an image at build time.
+- [x] **Game name:** stays "Precinct Noir" in Latin letters in Russian too (owner asked; never «Нуар», the Russian title of another game).
 
 ### M6–M10: remaining modes ⬜
 Each mode follows the same recipe: engine rules + tests (every pinned ID) → projections → UI panels + tutorial (EN/RU) → E2E → deploy. Follow `CLAUDE.md` → *Engine conventions*.
@@ -296,3 +310,5 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 | 2026-11-06 | Playable first: v0.1 uses case-file cards with silhouettes; the portrait generator and its review move to right after v0.1 |
 | 2026-11-06 | Every mode ships with its own UI in its milestone |
 | 2026-11-06 | Layout priority: TV + phones in one room first; remote play polished last (M11) |
+| 2026-11-07 | Portraits pulled forward (bold ink style) for an evidence-wall background; phones get a dimmed wall |
+| 2026-11-07 | The game's name stays "Precinct Noir" in Latin letters in Russian too |
