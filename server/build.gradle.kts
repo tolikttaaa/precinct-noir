@@ -42,8 +42,25 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+val repoRoot: String = rootProject.layout.projectDirectory.asFile.absolutePath
+
 tasks.test {
     useJUnitPlatform()
+    // Lets tests find repo-level files such as web/src/protocol/generated.ts.
+    systemProperty("precinctnoir.repoRoot", repoRoot)
+}
+
+// Rewrites web/src/protocol/generated.ts from the Kotlin protocol types. `check` fails while it's stale.
+tasks.register<Test>("generateProtocol") {
+    description = "Regenerates the TypeScript protocol types for the web client."
+    group = "build"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform()
+    filter { includeTestsMatching("*ProtocolTypesTest") }
+    systemProperty("precinctnoir.repoRoot", repoRoot)
+    systemProperty("protocol.update", "true")
+    outputs.upToDateWhen { false }
 }
 
 // Bundle the built web client (web/dist, produced by `npm run build`) as static resources when present.

@@ -24,7 +24,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**'],
+      // generated.ts holds types only (no runtime code).
+      exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**', 'src/protocol/generated.ts'],
       reporter: ['text', 'html', 'lcov'],
       // The goal is ~100%; these floors stop regressions (see docs/ARCHITECTURE.md → Verification).
       thresholds: { lines: 95, statements: 95, functions: 95, branches: 90 },
