@@ -32,6 +32,9 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("tools.jackson.module:jackson-module-kotlin")
+    // Per-client rate limits: token buckets kept in a bounded, self-expiring cache.
+    implementation(libs.bucket4j.core)
+    implementation("com.github.ben-manes.caffeine:caffeine")
     runtimeOnly("org.postgresql:postgresql")
 
     testImplementation(testFixtures(project(":engine")))

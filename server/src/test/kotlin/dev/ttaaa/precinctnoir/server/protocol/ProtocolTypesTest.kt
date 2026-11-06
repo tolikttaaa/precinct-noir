@@ -78,12 +78,14 @@ class ProtocolTypesTest {
         val ROOTS = listOf(
             ClientMessage::class,
             ServerMessage::class,
+            CreateRoomRequest::class,
             CreateRoomResponse::class,
             JoinRequest::class,
             JoinResponse::class,
             RoomSummary::class,
             ModeInfo::class,
             ApiError::class,
+            ClientConfig::class,
             ShadowDuelView::class,
             ShadowDuelEvent::class,
         )

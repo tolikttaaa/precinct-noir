@@ -1,6 +1,7 @@
 package dev.ttaaa.precinctnoir.server.ws
 
 import dev.ttaaa.precinctnoir.server.config.AppProperties
+import dev.ttaaa.precinctnoir.server.security.SocketGuard
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.socket.config.annotation.EnableWebSocket
@@ -10,13 +11,18 @@ import org.springframework.web.socket.server.standard.ServletServerContainerFact
 
 @Configuration
 @EnableWebSocket
-class WebSocketConfig(private val props: AppProperties, private val game: GameWebSocketHandler) : WebSocketConfigurer {
+class WebSocketConfig(
+    private val props: AppProperties,
+    private val game: GameWebSocketHandler,
+    private val guard: SocketGuard,
+) : WebSocketConfigurer {
 
     override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
         val origins = props.allowedOrigins.toTypedArray()
-        registry.addHandler(game, "/ws").setAllowedOrigins(*origins)
+        // The guard caps open sockets per client and overall (docs/SECURITY.md).
+        registry.addHandler(guard.guard(game), "/ws").addInterceptors(guard).setAllowedOrigins(*origins)
         // M1 diagnostic endpoint, still used by the landing page's connection check until M4 replaces it.
-        registry.addHandler(EchoWebSocketHandler(), "/ws/echo").setAllowedOrigins(*origins)
+        registry.addHandler(guard.guard(EchoWebSocketHandler(props.ws)), "/ws/echo").addInterceptors(guard).setAllowedOrigins(*origins)
     }
 
     /** Container-level limits: oversized frames are rejected (close 1009) before reaching handlers. */

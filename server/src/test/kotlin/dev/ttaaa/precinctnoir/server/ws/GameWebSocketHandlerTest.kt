@@ -8,9 +8,11 @@ import dev.ttaaa.precinctnoir.server.protocol.ProtocolError
 import dev.ttaaa.precinctnoir.server.protocol.ProtocolJson
 import dev.ttaaa.precinctnoir.server.protocol.ServerMessage
 import dev.ttaaa.precinctnoir.server.room.RoomService
+import dev.ttaaa.precinctnoir.server.security.tokenBucket
 import dev.ttaaa.precinctnoir.server.testing.FakeRepository
 import dev.ttaaa.precinctnoir.server.testing.MutableClock
 import dev.ttaaa.precinctnoir.server.testing.SeededRandomness
+import io.github.bucket4j.TimeMeter
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -101,7 +103,7 @@ class GameWebSocketHandlerTest {
     private val clock = MutableClock()
     private val rooms = RoomService(FakeRepository(), clock, SeededRandomness(3), RoomLimits())
     private val scheduler = ManualScheduler()
-    private val settings = WsSettings(maxMessagesPerSecond = 5)
+    private val settings = WsSettings(messagesPerSecond = 1, messageBurst = 5)
     private val handler = GameWebSocketHandler(rooms, scheduler, settings, clock)
     private val created = rooms.create()
 
@@ -146,7 +148,7 @@ class GameWebSocketHandlerTest {
     }
 
     @Test
-    fun `floods close with 1008 and binary frames with 1003`() {
+    fun `emptying the message bucket closes with 1008, binary frames close with 1003`() {
         val flood = open("flood").apply { hello() }
         repeat(5) { flood.receive("{}") }
         assertThat(flood.closedWith).isEqualTo(CloseStatus.POLICY_VIOLATION.withReason("rate limit"))
@@ -190,7 +192,7 @@ class GameWebSocketHandlerTest {
 
     @Test
     fun `a socket that fails to send or close is handled without throwing`() {
-        val rate = RateWindow(10)
+        val rate = tokenBucket(10, 10, Duration.ofSeconds(1), TimeMeter.SYSTEM_NANOTIME)
         val broken = FakeSession("broken").apply { sendFailure = IOException("reset") }
         LiveSession(broken, 0, rate).send(ServerMessage.Error(ProtocolError.MALFORMED))
         assertThat(broken.closedWith).isEqualTo(CloseStatus.SESSION_NOT_RELIABLE)
@@ -207,12 +209,5 @@ class GameWebSocketHandlerTest {
         val stubborn = FakeSession("stubborn").apply { closeFailure = IOException("gone") }
         LiveSession(stubborn, 0, rate).close(CloseReason.KICKED)
         assertThat(stubborn.closedWith).isNull()
-    }
-
-    @Test
-    fun `the rate window allows a burst per second`() {
-        val window = RateWindow(2)
-        assertThat(listOf(0L, 1L, 2L).map(window::tryAcquire)).containsExactly(true, true, false)
-        assertThat(window.tryAcquire(1_000_000_000L)).isTrue()
     }
 }

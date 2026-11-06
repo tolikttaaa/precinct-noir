@@ -370,6 +370,10 @@ export interface You {
 
 export type Role = 'host' | 'player'
 
+export interface CreateRoomRequest {
+  turnstileToken: string
+}
+
 export interface CreateRoomResponse {
   code: string
   hostToken: string
@@ -423,6 +427,10 @@ export interface ConfigOptionToggle {
 
 export interface ApiError {
   error: string
+}
+
+export interface ClientConfig {
+  turnstileSiteKey?: string
 }
 
 export interface ShadowDuelView {

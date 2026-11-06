@@ -10,3 +10,9 @@ app:
   allowed-origins:
     - http://localhost:5173
     - http://localhost:8080
+  turnstile:
+    # Cloudflare's public test keys: the invisible widget always passes and siteverify accepts its dummy
+    # token. Test keys report hostname example.com, so the hostname check is off here.
+    site-key: 1x00000000000000000000BB
+    secret-key: 1x0000000000000000000000000000000AA
+    expected-hostname: ""

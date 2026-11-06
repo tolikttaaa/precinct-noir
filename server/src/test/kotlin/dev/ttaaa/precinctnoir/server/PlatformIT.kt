@@ -22,6 +22,7 @@ import dev.ttaaa.precinctnoir.server.room.PersistedRoom
 import dev.ttaaa.precinctnoir.server.room.RoomSnapshot
 import dev.ttaaa.precinctnoir.server.room.RoomStatus
 import dev.ttaaa.precinctnoir.server.room.StoredEvent
+import dev.ttaaa.precinctnoir.server.testing.TurnstileStub
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -42,6 +43,8 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.boot.web.server.context.WebServerApplicationContext
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.jdbc.core.simple.JdbcClient
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
@@ -66,6 +69,9 @@ private const val ORIGIN = "http://allowed.test"
         "app.ws.auth-timeout=500ms",
         "app.ws.ping-interval=200ms",
         "app.rooms.sweep-interval=1h",
+        // Many rooms come from one test client here; SecurityIT covers the limits.
+        "app.limits.create-room.requests=1000",
+        "app.limits.create-room.per=1m",
     ],
 )
 @Testcontainers
@@ -97,6 +103,7 @@ class PlatformIT {
         val modes = ProtocolJson.decodeFromString(ListSerializer(ModeInfo.serializer()), get("/api/modes").body())
         assertThat(modes.map { it.id }).containsExactly("killer_inspector")
         assertThat(get("/api/modes").body()).contains(""""t":"toggle","key":"interrogateDeadOnBoard"""")
+        assertThat(get("/api/config").body()).isEqualTo("{}") // no Turnstile site key configured here
     }
 
     @Test
@@ -242,12 +249,22 @@ class PlatformIT {
         @ServiceConnection
         @JvmStatic
         val postgres = PostgreSQLContainer("postgres:18-alpine")
+
+        @DynamicPropertySource
+        @JvmStatic
+        fun turnstile(registry: DynamicPropertyRegistry) {
+            registry.add("app.turnstile.verify-url") { TurnstileStub.url.toString() }
+            registry.add("app.turnstile.secret-key") { "test-secret" }
+        }
     }
 }
 
 private fun createRoom(http: HttpClient, port: Int): CreateRoomResponse {
     val res = http.send(
-        HttpRequest.newBuilder(URI("http://localhost:$port/api/rooms")).POST(HttpRequest.BodyPublishers.noBody()).build(),
+        HttpRequest.newBuilder(URI("http://localhost:$port/api/rooms"))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString("""{"turnstileToken":"${TurnstileStub.PASS}"}"""))
+            .build(),
         HttpResponse.BodyHandlers.ofString(),
     )
     assertThat(res.statusCode()).isEqualTo(201)
