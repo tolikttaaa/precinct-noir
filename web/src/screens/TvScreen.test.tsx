@@ -46,6 +46,12 @@ describe('TvScreen', () => {
     })
     expect(screen.getByText('The game is over.')).toBeInTheDocument()
     expect(screen.getByText('Waiting for Ann to start the next round')).toBeInTheDocument()
+
+    push(ws, {
+      t: 'room',
+      room: roomView({ round: 2, lastResult: { round: 2, kind: 'idle_timeout' } }),
+    })
+    expect(screen.getByText('The game ended after two hours without a move.')).toBeInTheDocument()
   })
 
   it('offers a new room when this one closes', () => {

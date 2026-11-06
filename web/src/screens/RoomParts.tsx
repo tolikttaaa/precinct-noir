@@ -59,6 +59,17 @@ export function GameUnderway({ room, seated }: { room: RoomView; seated?: boolea
   )
 }
 
+/**
+ * Back in the lobby because a game stopped early (the VIP ended it, it sat idle, or it couldn't be restored):
+ * says so, since everyone's screen just jumped back. A game that finished normally already had its own screen.
+ */
+export function StoppedEarly({ room }: { room: RoomView }) {
+  const { t } = useTranslation()
+  const kind = room.lastResult?.kind
+  if (room.status !== 'lobby' || kind === undefined || kind === 'finished') return null
+  return <p className="stopped-early">{t(`results.${kind}`)}</p>
+}
+
 /** After a game: how it ended. */
 export function RoundOver({ room }: { room: RoomView }) {
   const { t } = useTranslation()

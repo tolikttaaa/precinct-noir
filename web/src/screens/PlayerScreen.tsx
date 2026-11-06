@@ -17,7 +17,7 @@ import {
 } from '../net/credentials'
 import type { RoomSummary } from '../protocol/generated'
 import { navigate } from '../routing'
-import { Connecting, Ended, GameUnderway, RoundOver } from './RoomParts'
+import { Connecting, Ended, GameUnderway, RoundOver, StoppedEarly } from './RoomParts'
 
 /** A player's phone at `/CODE`: the join form, then the room. */
 export function PlayerScreen({ code }: { code: string }) {
@@ -174,6 +174,7 @@ function PlayerRoom({
       <main className="room">
         {room.status === 'lobby' && (
           <>
+            <StoppedEarly room={room} />
             {isVip && <p className="lede">{t('lobby.youAreVip')}</p>}
             <Lineup
               members={room.members}

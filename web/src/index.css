@@ -766,6 +766,16 @@ select:disabled,
   max-width: 40ch;
 }
 
+.stopped-early {
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--stamp-red-light);
+  color: var(--fog);
+}
+
+.screen--tv .stopped-early {
+  font-size: var(--step-1);
+}
+
 .round-over .stamp {
   font-size: var(--step-3);
 }

@@ -200,6 +200,7 @@ Design system and reasoning: [DESIGN.md](DESIGN.md). Code: `web/src/`.
   - The VIP edits the game, house rules and turn timer, removes players and starts. Everyone else sees the rules read-only.
   - Two-tap Leave, End game and Remove; Play again.
   - Endings: removed, left, closed, gone.
+  - A game that stops early (the VIP ends it, idle timeout, failed restore) drops everyone back to the lobby with a note saying why.
 - [x] **Connection client** (`net/roomSocket.ts`):
   - Hello and resume from the last event.
   - Jittered backoff reconnects (deploys, drops, overload); stops for good on kick, leave, close or bad token.
@@ -208,7 +209,7 @@ Design system and reasoning: [DESIGN.md](DESIGN.md). Code: `web/src/`.
 - [x] **Accessibility:** visible focus, reduced motion, 44px targets, hints as descriptions, live regions for status.
 - [x] **`/ws/echo` removed** (its flood check moved to `/ws`).
 - [x] **Tests:**
-  - 63 web tests; 100% lines, 98.85% branches.
+  - 64 web tests; 100% lines, 98.88% branches.
   - The React Compiler is skipped under Vitest so coverage counts our branches, not its cache checks.
   - Checked in headless Chrome against the Spring-served build: no console errors under the real CSP, including Turnstile.
 - [ ] Laptop-specific polish → M11 (owner's choice: TV + phones first).

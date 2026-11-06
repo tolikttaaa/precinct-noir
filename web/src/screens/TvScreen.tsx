@@ -10,7 +10,7 @@ import { useRoom } from '../hooks/useRoom'
 import { modeName, modeSummary } from '../i18n/text'
 import { forgetCredentials, loadCredentials, type Credentials } from '../net/credentials'
 import { navigate } from '../routing'
-import { Connecting, Ended, GameUnderway, RoundOver } from './RoomParts'
+import { Connecting, Ended, GameUnderway, RoundOver, StoppedEarly } from './RoomParts'
 
 /** The board screen at `/tv/CODE`. Only the screen that opened the room has its host token. */
 export function TvScreen({ code }: { code: string }) {
@@ -86,6 +86,7 @@ function TvRoom({ code, credentials }: { code: string; credentials: Credentials 
         )}
         <div className="tv__side">
           {room.status === 'finished' && <RoundOver room={room} />}
+          <StoppedEarly room={room} />
           <Lineup
             members={room.members}
             playing={playingIds(room.members, room.seats, max)}

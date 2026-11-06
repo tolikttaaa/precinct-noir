@@ -160,15 +160,29 @@ describe('in the room', () => {
       room: roomView({
         status: 'finished',
         round: 1,
-        lastResult: { round: 1, kind: 'ended_by_host' },
+        lastResult: { round: 1, kind: 'finished' },
       }),
     })
     expect(screen.getByText('Case closed')).toBeInTheDocument()
-    expect(screen.getByText('The VIP ended the game.')).toBeInTheDocument()
+    expect(screen.getByText('The game is over.')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Play again' }))
     expect(ws.commands()).toEqual([{ t: 'play_again', clientSeq: 1 }])
     push(ws, { t: 'room', room: roomView({ status: 'finished', vip: 2 }) })
     expect(screen.getByText('Waiting for Bob to start the next round')).toBeInTheDocument()
+  })
+
+  it('says why everyone is back in the lobby when a game stopped early, but not after a normal finish', async () => {
+    const ws = await enter()
+    push(ws, {
+      t: 'room',
+      room: roomView({ round: 1, lastResult: { round: 1, kind: 'ended_by_host' } }),
+    })
+    expect(screen.getByText('The VIP ended the game.')).toBeInTheDocument()
+    push(ws, {
+      t: 'room',
+      room: roomView({ round: 1, lastResult: { round: 1, kind: 'finished' } }),
+    })
+    expect(screen.queryByText('The game is over.')).toBeNull()
   })
 
   it('offers to join again after being removed', async () => {
