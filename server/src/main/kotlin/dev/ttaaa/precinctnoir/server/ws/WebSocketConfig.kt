@@ -10,13 +10,13 @@ import org.springframework.web.socket.server.standard.ServletServerContainerFact
 
 @Configuration
 @EnableWebSocket
-class WebSocketConfig(private val props: AppProperties) : WebSocketConfigurer {
+class WebSocketConfig(private val props: AppProperties, private val game: GameWebSocketHandler) : WebSocketConfigurer {
 
     override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
-        // M1 diagnostic endpoint: proves WebSockets survive Cloudflare → tunnel → Caddy → app.
-        // M3 replaces it with the authenticated game gateway.
-        registry.addHandler(EchoWebSocketHandler(), "/ws/echo")
-            .setAllowedOrigins(*props.allowedOrigins.toTypedArray())
+        val origins = props.allowedOrigins.toTypedArray()
+        registry.addHandler(game, "/ws").setAllowedOrigins(*origins)
+        // M1 diagnostic endpoint, still used by the landing page's connection check until M4 replaces it.
+        registry.addHandler(EchoWebSocketHandler(), "/ws/echo").setAllowedOrigins(*origins)
     }
 
     /** Container-level limits: oversized frames are rejected (close 1009) before reaching handlers. */
@@ -30,6 +30,8 @@ class WebSocketConfig(private val props: AppProperties) : WebSocketConfigurer {
     companion object {
         const val MAX_TEXT_MESSAGE_BYTES = 4 * 1024
         const val MAX_BINARY_MESSAGE_BYTES = 1024
-        const val IDLE_TIMEOUT_MS = 60_000L
+
+        /** Longer than the ping interval, so live sockets never look idle to the container. */
+        const val IDLE_TIMEOUT_MS = 90_000L
     }
 }

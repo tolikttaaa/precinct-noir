@@ -9,6 +9,10 @@ import dev.ttaaa.precinctnoir.engine.core.ids.Seat
 import dev.ttaaa.precinctnoir.engine.core.legal.SimpleChoice
 import dev.ttaaa.precinctnoir.engine.core.rng.Rng
 import dev.ttaaa.precinctnoir.engine.core.view.Viewer
+import dev.ttaaa.precinctnoir.engine.testing.CounterEvent
+import dev.ttaaa.precinctnoir.engine.testing.CounterMode
+import dev.ttaaa.precinctnoir.engine.testing.CounterModel
+import dev.ttaaa.precinctnoir.engine.testing.CounterStep
 import dev.ttaaa.precinctnoir.engine.modes.killerinspector.ShadowDuel
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -106,17 +110,18 @@ class FlowModeTest : FunSpec({
         test("views carry the projection plus the viewer's legal options") {
             val game = erased.setup(2, noConfig, 1).game
             val mine = erased.view(game, Viewer.Player(Seat(0)))
-            mine["view"]!!.jsonObject["count"]!!.jsonPrimitive.int shouldBe 0
-            (mine["legal"] as JsonArray).size shouldBe 1
-            (erased.view(game, Viewer.Spectator)["legal"] as JsonArray).size shouldBe 0
+            mine.view.jsonObject["count"]!!.jsonPrimitive.int shouldBe 0
+            mine.legal shouldBe listOf(dev.ttaaa.precinctnoir.engine.core.legal.SimpleOpt("inc"))
+            erased.view(game, Viewer.Spectator).legal shouldBe emptyList()
         }
 
         test("team events are visible to that team only; status, nudge and metadata pass through") {
             val start = erased.setup(3, noConfig, 1).game
             val result = erased.apply(start, command(0, 1)) as AnyResult.Accepted
             val note = result.events.single { it.audience is Audience.ToTeam }
-            erased.isVisible(result.game, note, Viewer.Player(Seat(2))).shouldBeTrue()
-            erased.isVisible(result.game, note, Viewer.Player(Seat(1))).shouldBeFalse()
+            erased.isVisible(result.game, note.audience, Viewer.Player(Seat(2))).shouldBeTrue()
+            erased.isVisible(result.game, note.audience, Viewer.Player(Seat(1))).shouldBeFalse()
+            erased.rematchConfig(result.game) shouldBe JsonObject(emptyMap())
             erased.status(result.game).let { it.actionSeq shouldBe 1; it.pending!!.actor shouldBe Seat(1); it.outcome.shouldBeNull() }
             erased.nudge(result.game).shouldNotBeNull()
             erased.id shouldBe "counter"

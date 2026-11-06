@@ -56,6 +56,8 @@ import dev.ttaaa.precinctnoir.engine.modes.killerinspector.ShadowDuelStep.BeginT
 import dev.ttaaa.precinctnoir.engine.modes.killerinspector.ShadowDuelStep.EndTurn
 import dev.ttaaa.precinctnoir.engine.modes.killerinspector.ShadowDuelStep.Start
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 
 private typealias DuelTx = Tx<ShadowDuelModel, ShadowDuelStep, ShadowDuelEvent>
 
@@ -152,6 +154,10 @@ object ShadowDuel : FlowMode<ShadowDuelModel, ShadowDuelStep, ShadowDuelEvent, S
     }
 
     override fun nudged(seat: Seat): ShadowDuelEvent = Nudged(seat)
+
+    /** "Play again" swaps roles: the Inspector becomes the Killer. */
+    override fun rematchConfig(state: GameState<ShadowDuelModel, ShadowDuelStep>): JsonObject =
+        buildJsonObject { put("killerSeat", JsonPrimitive(state.model.inspector.index)) }
 
     override fun project(state: GameState<ShadowDuelModel, ShadowDuelStep>, viewer: Viewer): ShadowDuelView {
         val m = state.model

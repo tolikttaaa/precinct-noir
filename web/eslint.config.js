@@ -7,7 +7,8 @@ import prettier from 'eslint-config-prettier'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage']),
+  // The protocol types are generated from Kotlin (./gradlew :server:generateProtocol).
+  globalIgnores(['dist', 'coverage', 'src/protocol/generated.ts']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

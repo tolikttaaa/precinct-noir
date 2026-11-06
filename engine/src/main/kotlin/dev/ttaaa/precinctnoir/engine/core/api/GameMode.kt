@@ -113,6 +113,12 @@ interface GameMode<M : Any, St : Any, E : Any, V : Any> {
     /** A turn-timer nudge for the pending actor. Never changes state. */
     fun onTimer(state: GameState<M, St>): E?
 
+    /**
+     * Server-only config for the next game when the same players, in the same seats, play again
+     * (e.g. Shadow Duel swaps roles). Merged over the lobby config.
+     */
+    fun rematchConfig(state: GameState<M, St>): JsonObject = JsonObject(emptyMap())
+
     /** Team of [seat] for team-audience events; `null` in modes without teams. */
     fun teamOf(state: GameState<M, St>, seat: Seat): Int? = null
 }

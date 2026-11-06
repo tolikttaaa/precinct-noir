@@ -344,6 +344,15 @@ class ShadowDuelRulesTest : FunSpec({
                 .actions() shouldBe listOf(Actions.ACCUSE)
         }
 
+        test("play again swaps roles: the rematch config makes the Inspector the Killer") {
+            for (seat in 0..1) {
+                val first = ShadowDuel.setup(2, buildJsonObject { put("killerSeat", JsonPrimitive(seat)) }, 5).state
+                val hint = ShadowDuel.rematchConfig(first)
+                hint shouldBe buildJsonObject { put("killerSeat", JsonPrimitive(1 - seat)) }
+                ShadowDuel.setup(2, hint, 6).state.model.killer shouldBe first.model.inspector
+            }
+        }
+
         test("the turn timer only nudges the pending actor") {
             ShadowDuel.onTimer(duel(killer = 12, inspector = 0, toMove = INSPECTOR)) shouldBe Nudged(INSPECTOR)
         }
