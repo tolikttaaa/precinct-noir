@@ -7,7 +7,7 @@ One screen (TV or laptop) shows the city: a grid of suspects that slides, shifts
 collapses as the night goes on. Players join from their phones with a room code,
 secretly become one of the suspects, and hunt each other through the crowd.
 
-> Status: **in development.** See the milestone plan in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+> Status: **in development.** Progress: [`docs/STATUS.md`](docs/STATUS.md). Milestone plan: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 > It will be playable at `https://precinctnoir.ttaaa.dev`.
 
 ## How it plays

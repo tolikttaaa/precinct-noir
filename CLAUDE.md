@@ -3,6 +3,7 @@
 A Jackbox-style hidden-identity deduction party game. The TV shows the board; players act from phones and laptops.
 
 **Read first**
+- [docs/STATUS.md](docs/STATUS.md): what's done, what's next, and how to resume. Update it in every milestone PR.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): decisions, architecture, milestones M0–M11, engine design.
 - [docs/RULES.md](docs/RULES.md): the rules, which are also the engine spec. Edge-case IDs (`KI-2`, `FM-6`…) are pinned by tests.
 - [docs/HOSTING.md](docs/HOSTING.md): the hosting contract for the home server. Merging to `main` deploys.
