@@ -21,7 +21,14 @@ dependencies {
 }
 
 kover {
+    useJacoco(libs.versions.jacoco.get())
     reports {
+        filters {
+            excludes {
+                // Shared test helpers (engine testFixtures) are not production code.
+                packages("dev.ttaaa.precinctnoir.engine.testing")
+            }
+        }
         verify {
             rule("Minimum coverage") {
                 // The goal is ~100%; these floors stop regressions (see docs/ARCHITECTURE.md → Verification).
