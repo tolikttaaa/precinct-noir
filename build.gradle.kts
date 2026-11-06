@@ -1,38 +1,37 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
 
 plugins {
-    id("org.springframework.boot") version "2.7.5"
-    id("io.spring.dependency-management") version "1.0.15.RELEASE"
-    kotlin("jvm") version "1.6.21"
-    kotlin("plugin.spring") version "1.6.21"
+    base
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.spring) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.kover)
 }
 
-group = "com.ttaaa"
-version = "0.0.1-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_17
-
-repositories {
-    mavenCentral()
+allprojects {
+    group = "dev.ttaaa.precinctnoir"
+    version = "0.1.0-SNAPSHOT"
 }
 
+// Aggregated coverage over all JVM modules: `./gradlew koverHtmlReport` / `koverXmlReport`.
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-web-services")
-    implementation("org.springframework.boot:spring-boot-starter-websocket")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    kover(project(":engine"))
+    kover(project(":server"))
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "17"
+kover {
+    reports {
+        verify {
+            rule("Minimum coverage") {
+                // The goal is ~100%; these floors stop regressions (see docs/ARCHITECTURE.md → Verification).
+                minBound(90, CoverageUnit.LINE)
+                minBound(85, CoverageUnit.BRANCH)
+            }
+        }
     }
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+tasks.check {
+    dependsOn(tasks.koverVerify)
 }

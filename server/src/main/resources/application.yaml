@@ -1,0 +1,44 @@
+# Production defaults. The server's compose file provides SERVER_PORT and SPRING_DATASOURCE_*.
+spring:
+  application:
+    name: precinctnoir
+  threads:
+    virtual:
+      enabled: true
+  lifecycle:
+    # Docker gives 10 s between SIGTERM and SIGKILL.
+    timeout-per-shutdown-phase: 8s
+  web:
+    resources:
+      # Static files are served by SpaWebConfig (SPA fallback + cache policy).
+      add-mappings: false
+  flyway:
+    enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  # Behind Cloudflare -> cloudflared -> Caddy; trust X-Forwarded-* (the app has no published ports).
+  forward-headers-strategy: framework
+  shutdown: graceful
+  compression:
+    enabled: true
+  error:
+    whitelabel:
+      enabled: false
+    include-stacktrace: never
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+app:
+  allowed-origins:
+    - https://precinctnoir.ttaaa.dev

@@ -1,0 +1,15 @@
+# Keep the build context small and free of local-only material.
+.git
+.github
+.gradle
+.idea
+**/build
+web/node_modules
+web/dist
+e2e
+docs
+reference
+*.md
+compose*.yaml
+.env
+.env.*

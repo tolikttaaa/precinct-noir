@@ -137,6 +137,10 @@ See **Engine design** below.
 Each mode milestone covers: engine rules + tests → projections → UI panels and tutorial (EN/RU) → E2E → deploy.
 
 ## Verification
+- **Coverage policy:** target ~100%. CI fails below the floors, and new code ships with its tests.
+  - JVM: Kover, aggregated over `:engine` and `:server`, at least 90% lines and 85% branches; part of `./gradlew check`.
+  - Web: Vitest V8, at least 95% lines/statements/functions and 90% branches; `npm run test:coverage`.
+  - The only code left out is test helpers. React Compiler memo branches are covered by re-render tests.
 - **Engine:** `./gradlew :engine:check`, covering example tests per rule, Kotest property tests (shift is a permutation, shift then inverse is the identity, collapse keeps a rectangle, no projection leaks), and scripted scenarios reproducing the rulebook's worked examples.
 - **Server:** `./gradlew :server:check`, using Testcontainers Postgres for snapshot/restore, WS protocol tests, rate-limit and origin/frame-size rejection tests, and restart-mid-game resume.
 - **Web:** `npm run typecheck && npm run lint && npm test`; the protocol-drift check runs in CI.
@@ -150,7 +154,7 @@ Each mode milestone covers: engine rules + tests → projections → UI panels a
 
 ---
 ## Engine design (`engine/`, package `dev.ttaaa.precinctnoir.engine`)
-Pure Kotlin + kotlinx.serialization only. Deterministic: a SplitMix64 `Rng` whose state is persisted and **never** projected. No clock, no `kotlin.random`, no HashMap iteration order. Simultaneous effects resolve in row-major order. The old `Area.kt` is reference only; it is deleted in M2.
+Pure Kotlin + kotlinx.serialization only. Deterministic: a SplitMix64 `Rng` whose state is persisted and **never** projected. No clock, no `kotlin.random`, no HashMap iteration order. Simultaneous effects resolve in row-major order. The legacy Spring Boot 2.7 model (`Area.kt` etc.) was removed in M1 when the multi-module build replaced it. It is still in git history, and M2 adds regression tests for its known shift/collapse bugs.
 
 **Core types**
 - **Board** (row-major `cells: List<SuspectId>`, `tiles`, `removed`):
