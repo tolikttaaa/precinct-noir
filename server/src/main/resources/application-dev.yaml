@@ -1,0 +1,12 @@
+# Local development (`./gradlew :server:bootRun` activates this profile).
+# Matches compose.dev.yaml; these credentials exist only on your machine.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/precinctnoir
+    username: precinctnoir
+    password: precinctnoir
+
+app:
+  allowed-origins:
+    - http://localhost:5173
+    - http://localhost:8080
