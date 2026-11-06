@@ -1,4 +1,6 @@
 # Weekly dependency updates. Minor/patch bumps are grouped to keep PR noise low.
+# Runtime lines stay on LTS (Node 24, JDK 25) and move deliberately, together with CI and Docker,
+# so their majors (and the type packages tied to them) are ignored here.
 version: 2
 updates:
   - package-ecosystem: gradle
@@ -16,6 +18,13 @@ updates:
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
+    ignore:
+      # Must match the Node major we run (24 LTS in Docker and CI).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # Upgrade together with typescript-eslint once it supports the new major.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
@@ -26,3 +35,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Stay on LTS lines: Node 24 and Temurin (JDK) 25. Odd/non-LTS majors are skipped.
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eclipse-temurin"
+        update-types: ["version-update:semver-major"]
