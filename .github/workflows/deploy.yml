@@ -75,7 +75,9 @@ jobs:
           REQUEST_ID: ${{ github.repository }}#${{ github.run_id }}.${{ github.run_attempt }}
         run: |
           set -euo pipefail
-          gh workflow run deploy.yml -R "$INFRA_REPO" \
+          # --ref skips gh's default-branch lookup, which would need Contents:read on home-infra;
+          # the deploy token is deliberately limited to Actions:read/write.
+          gh workflow run deploy.yml -R "$INFRA_REPO" --ref main \
             -f app="$APP_NAME" -f tag="$GITHUB_SHA" -f request_id="$REQUEST_ID"
 
           # Find the dispatched run by the request id in its run-name.
