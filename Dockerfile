@@ -8,6 +8,8 @@ WORKDIR /src/web
 COPY web/package.json web/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 COPY web/ ./
+# The client imports the suspect roster from shared/, next to the engine that uses the same ids.
+COPY shared/ ../shared/
 RUN npm run build
 
 # ---- 2. Server (Gradle on JDK 25) -------------------------------------------
