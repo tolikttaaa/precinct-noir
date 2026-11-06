@@ -86,7 +86,8 @@ announced on the TV and in the case log.
 A **Killer** hides in the crowd; an **Inspector** hunts them. Each is also the other's prey.
 
 **Setup**
-- Roles are random. The Killer secretly draws 1 evidence card: their identity.
+- Roles are random. In a rematch ("Play again") the two players swap roles.
+- The Killer secretly draws 1 evidence card: their identity.
 - The Inspector starts with nothing.
 
 **First round**
