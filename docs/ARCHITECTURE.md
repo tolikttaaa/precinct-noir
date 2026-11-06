@@ -150,7 +150,7 @@ Each mode milestone covers: engine rules + tests → projections → UI panels a
 
 ---
 ## Engine design (`engine/`, package `dev.ttaaa.precinctnoir.engine`)
-Pure Kotlin + kotlinx.serialization only. Deterministic: a SplitMix64 `Rng` whose state is persisted and **never** projected. No clock, no `kotlin.random`, no HashMap iteration order. Simultaneous effects resolve in row-major order. The old `Area.kt` is reference only; it is deleted in M2.
+Pure Kotlin + kotlinx.serialization only. Deterministic: a SplitMix64 `Rng` whose state is persisted and **never** projected. No clock, no `kotlin.random`, no HashMap iteration order. Simultaneous effects resolve in row-major order. The legacy Spring Boot 2.7 model (`Area.kt` etc.) was removed in M1 when the multi-module build replaced it. It is still in git history, and M2 adds regression tests for its known shift/collapse bugs.
 
 **Core types**
 - **Board** (row-major `cells: List<SuspectId>`, `tiles`, `removed`):

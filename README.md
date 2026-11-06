@@ -37,6 +37,19 @@ Full rules, written for this project: [`docs/RULES.md`](docs/RULES.md).
 - **Client:** React + TypeScript (Vite), one responsive UI for TV, laptop and phone, in English and Russian.
 - **Hosting:** a single container on a home server behind Cloudflare, with rate limiting and abuse protection built in.
 
+## Development
+You need JDK 25, Node 24 and Docker.
+
+```bash
+docker compose -f compose.dev.yaml up -d   # local PostgreSQL 18
+./gradlew :server:bootRun                  # API + WebSockets on :8080 (dev profile)
+cd web && npm install && npm run dev       # client on http://localhost:5173
+```
+
+- Tests: `./gradlew check` (engine + server, using Testcontainers), then `cd web && npm test`.
+- Production image: `docker build -t precinctnoir:dev .`
+- Merging to `main` deploys automatically; see [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
+
 ## Acknowledgements
 Precinct Noir is an independent, unofficial fan project. Its mechanics are inspired by the
 deduction card game *Noir* by D. Brad Talton Jr. (Level 99 Games). All characters, artwork,
