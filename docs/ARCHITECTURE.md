@@ -71,6 +71,7 @@ Player     ──{act, clientSeq, decisionId, choice}──► Room actor ─►
 See **Engine design** below.
 
 ## Security & anti-DDoS (docs/SECURITY.md)
+> Built in M3b. [SECURITY.md](SECURITY.md) describes what exists; the plan below is kept for context.
 **Edge (Cloudflare):** proxied DNS gives the default L3/4/7 DDoS protection. **Turnstile** (invisible) runs on room creation only, verified server-side, fail-closed in prod. One free-plan **rate-limit rule** on `/api/*` is documented in the runbook for the user to apply. There are no inbound ports (tunnel only).
 
 **App (always on):**

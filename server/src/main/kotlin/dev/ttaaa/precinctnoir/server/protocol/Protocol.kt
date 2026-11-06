@@ -252,6 +252,10 @@ enum class CloseReason(val code: Int) {
 
 // --- HTTP API (/api) ---
 
+/** [turnstileToken] comes from the Turnstile widget on the TV (docs/SECURITY.md). */
+@Serializable
+data class CreateRoomRequest(val turnstileToken: String)
+
 @Serializable
 data class CreateRoomResponse(val code: String, val hostToken: String)
 
@@ -269,3 +273,7 @@ data class ModeInfo(val id: String, val minPlayers: Int, val maxPlayers: Int, va
 
 @Serializable
 data class ApiError(val error: String)
+
+/** Public settings the web client needs at startup. */
+@Serializable
+data class ClientConfig(val turnstileSiteKey: String? = null)

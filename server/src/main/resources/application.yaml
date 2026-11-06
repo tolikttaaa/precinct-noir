@@ -42,3 +42,7 @@ management:
 app:
   allowed-origins:
     - https://precinctnoir.ttaaa.dev
+  turnstile:
+    # Keys come from the server's environment (APP_TURNSTILE_SITE_KEY, APP_TURNSTILE_SECRET_KEY; RUNBOOK §4.1).
+    # Without the secret, room creation is refused (fail-closed).
+    expected-hostname: precinctnoir.ttaaa.dev

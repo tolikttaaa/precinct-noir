@@ -11,8 +11,9 @@ import java.time.Duration
 /**
  * Serves the React single-page app from `classpath:/static`.
  *
- * Content-hashed build assets under `/assets` are cached for a year. Everything else is
- * revalidated. Unknown client-side routes (e.g. `/play/ABCD`) fall back to `index.html`.
+ * Content-hashed build assets under `/assets` are cached for a year. Everything else, `index.html`
+ * above all, is `no-store`: every page load gets a fresh CSP nonce (see [SecurityHeadersFilter]), and a
+ * cached page would carry an old one. Unknown client-side routes (e.g. `/play/ABCD`) fall back to `index.html`.
  * Backend paths and missing files are never rewritten, so they still 404.
  */
 @Configuration
@@ -25,7 +26,7 @@ class SpaWebConfig : WebMvcConfigurer {
 
         registry.addResourceHandler("/**")
             .addResourceLocations("$STATIC/")
-            .setCacheControl(CacheControl.noCache())
+            .setCacheControl(CacheControl.noStore())
             .resourceChain(true)
             .addResolver(SpaFallbackResolver())
     }

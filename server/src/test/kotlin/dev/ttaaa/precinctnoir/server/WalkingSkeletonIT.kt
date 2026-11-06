@@ -58,7 +58,7 @@ class WalkingSkeletonIT {
         val res = get("/play/ABCD")
         assertThat(res.statusCode()).isEqualTo(200)
         assertThat(res.body()).contains("spa-shell")
-        assertThat(res.headers().firstValue("Cache-Control")).hasValue("no-cache")
+        assertThat(res.headers().firstValue("Cache-Control")).hasValue("no-store")
     }
 
     @Test
@@ -78,8 +78,11 @@ class WalkingSkeletonIT {
     @Test
     fun `responses carry security headers`() {
         val headers = get("/").headers()
-        assertThat(headers.firstValue("Content-Security-Policy").orElseThrow())
-            .contains("default-src 'self'", "frame-ancestors 'none'", "object-src 'none'")
+        val csp = headers.firstValue("Content-Security-Policy").orElseThrow()
+        assertThat(csp).contains("default-src 'self'", "frame-ancestors 'none'", "object-src 'none'", "frame-src https://challenges.cloudflare.com")
+        // A fresh nonce per response, for the script Cloudflare's bot detection injects into the page.
+        val nonce = Regex("script-src 'self' 'nonce-([A-Za-z0-9+/]{22}==)' https://challenges.cloudflare.com;").find(csp)!!.groupValues[1]
+        assertThat(get("/").headers().firstValue("Content-Security-Policy").orElseThrow()).doesNotContain(nonce)
         assertThat(headers.firstValue("X-Content-Type-Options")).hasValue("nosniff")
         assertThat(headers.firstValue("X-Frame-Options")).hasValue("DENY")
         assertThat(headers.firstValue("Referrer-Policy")).hasValue("no-referrer")

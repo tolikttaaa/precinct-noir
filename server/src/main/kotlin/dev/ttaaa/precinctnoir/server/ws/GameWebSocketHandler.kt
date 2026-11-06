@@ -8,6 +8,9 @@ import dev.ttaaa.precinctnoir.server.protocol.ProtocolJson
 import dev.ttaaa.precinctnoir.server.protocol.ServerMessage
 import dev.ttaaa.precinctnoir.server.room.Connection
 import dev.ttaaa.precinctnoir.server.room.RoomService
+import dev.ttaaa.precinctnoir.server.security.ClockTimeMeter
+import dev.ttaaa.precinctnoir.server.security.tokenBucket
+import io.github.bucket4j.Bucket
 import org.springframework.web.socket.BinaryMessage
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.PingMessage
@@ -19,6 +22,7 @@ import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorato
 import org.springframework.web.socket.handler.TextWebSocketHandler
 import java.io.IOException
 import java.time.Clock
+import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -43,7 +47,8 @@ class GameWebSocketHandler(
             return
         }
         val decorated = ConcurrentWebSocketSessionDecorator(session, settings.sendTimeLimit.toMillis().toInt(), settings.sendBufferBytes)
-        val live = LiveSession(decorated, clock.millis(), RateWindow(settings.maxMessagesPerSecond))
+        val rate = tokenBucket(settings.messageBurst, settings.messagesPerSecond, Duration.ofSeconds(1), ClockTimeMeter(clock))
+        val live = LiveSession(decorated, clock.millis(), rate)
         sessions[session.id] = live
         scheduler.schedule({ if (!live.helloReceived) live.close(CloseReason.AUTH_TIMEOUT) }, settings.authTimeout.toMillis(), TimeUnit.MILLISECONDS)
     }
@@ -51,7 +56,7 @@ class GameWebSocketHandler(
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
         val live = sessions[session.id] ?: return
         live.lastSeen = clock.millis()
-        if (!live.rate.tryAcquire(System.nanoTime())) {
+        if (!live.rate.tryConsume(1)) {
             live.close(CloseStatus.POLICY_VIOLATION.withReason("rate limit"))
             return
         }
@@ -100,7 +105,7 @@ class GameWebSocketHandler(
 }
 
 /** A socket as a [Connection]. Sends never throw: a failed send closes the socket instead. */
-class LiveSession(private val session: WebSocketSession, @Volatile var lastSeen: Long, val rate: RateWindow) : Connection {
+class LiveSession(private val session: WebSocketSession, @Volatile var lastSeen: Long, val rate: Bucket) : Connection {
     override val id: String = session.id
 
     @Volatile
