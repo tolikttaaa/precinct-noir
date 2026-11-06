@@ -52,10 +52,12 @@ gh api repos/tolikttaaa/precinct-noir/rules/branches/main
    ```bash
    curl -sS https://precinctnoir.ttaaa.dev/actuator/health        # {"groups":[...],"status":"UP"}
    ```
-3. Open https://precinctnoir.ttaaa.dev. It should say **"Wire is live · N ms"**, which proves WebSockets
-   pass through Cloudflare → tunnel → Caddy → app. Optional CLI check:
+3. Open https://precinctnoir.ttaaa.dev and press **Open a room**. The board screen should show a stamped
+   room code. Join it from a phone: the name appearing on the board proves WebSockets pass through
+   Cloudflare → tunnel → Caddy → app. Optional CLI check (the socket closes with 4002 after 5 s
+   because it never says hello):
    ```bash
-   websocat wss://precinctnoir.ttaaa.dev/ws/echo     # type a line; it is echoed back
+   websocat -H 'Origin: https://precinctnoir.ttaaa.dev' wss://precinctnoir.ttaaa.dev/ws
    ```
 4. On the server:
    ```bash

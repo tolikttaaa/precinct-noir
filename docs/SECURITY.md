@@ -43,8 +43,8 @@ raw URL.
 - **Capacity:** ≤ 300 rooms in total, and ≤ 9 players per room.
 
 ## 4. Bot check on room creation (Cloudflare Turnstile)
-`POST /api/rooms` needs `{"turnstileToken": …}` from the Turnstile widget on the TV. The widget is
-invisible and is added to the UI in M4. The server checks the token with Cloudflare's siteverify
+`POST /api/rooms` needs `{"turnstileToken": …}` from the Turnstile widget on the home page ("Open a
+room"). The widget is invisible. The server checks the token with Cloudflare's siteverify
 before creating anything:
 - **Pass:** Cloudflare says `success`, and the token was issued on `precinctnoir.ttaaa.dev`.
 - **Fail → `403 captcha_failed`:** a rejected token, a token from another hostname, or an empty or
@@ -76,7 +76,7 @@ Joining needs no bot check: it already requires a live room code, and §3 limits
 | Liveness | server ping every 25 s; silent for 60 s | close 1001 |
 | Slow readers | 5 s send time or 512 KB buffered | dropped, so they can't stall their room |
 
-- **Socket caps** cover `/ws` and `/ws/echo` together (`security/SocketGuard.kt`). A slot is taken
+- **Socket caps** cover the game socket `/ws` (`security/SocketGuard.kt`). A slot is taken
   atomically when the socket opens and released when it closes.
 - **Malformed messages** after the hello get an `error` reply. The first message must be a valid hello.
 
@@ -130,5 +130,5 @@ Joining needs no bot check: it already requires a live room code, and §3 limits
   - The Cloudflare WAF rule is optional, as an extra edge layer.
 - **Dependabot** watches Gradle, npm, GitHub Actions and Docker base images.
 - **Follow-ups:**
-  - M4 adds the Turnstile widget and checks whether it needs any `style-src` allowance.
+  - The Turnstile widget (M4) ran without CSP errors with the test keys; confirm with the real widget in production.
   - M11 adds a local k6 load test of these limits and a `/security-review` pass before release.

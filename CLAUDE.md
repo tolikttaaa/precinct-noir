@@ -8,6 +8,7 @@ A Jackbox-style hidden-identity deduction party game. The TV shows the board; pl
 - [docs/RULES.md](docs/RULES.md): the rules, which are also the engine spec. Edge-case IDs (`KI-2`, `FM-6`…) are pinned by tests.
 - [docs/PROTOCOL.md](docs/PROTOCOL.md): the HTTP API and WebSocket protocol, close codes and room rules.
 - [docs/SECURITY.md](docs/SECURITY.md): abuse limits, Turnstile, origin checks, CSP and log privacy.
+- [docs/DESIGN.md](docs/DESIGN.md): the look (tokens, type, layouts) and the UI rules to keep.
 - [docs/HOSTING.md](docs/HOSTING.md): the hosting contract for the home server. Merging to `main` deploys.
 - [docs/RUNBOOK.md](docs/RUNBOOK.md): one-time server and credential steps. The repo owner runs these, not agents.
 
