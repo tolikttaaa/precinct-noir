@@ -31,23 +31,19 @@ The same fine-grained PAT can serve every app repo. If you already have one, reu
    gh secret set HOME_INFRA_DEPLOY_TOKEN -R tolikttaaa/precinct-noir
    ```
 
-### 1.3 Recommended: require green CI before merging
+### 1.3 Branch protection (done: ruleset "Protect main")
+`main` is protected by the repository ruleset **Protect main**
+(Settings → Rules → Rulesets; id `26715638`). It is the only protection; there is no classic branch protection.
+- **Pull request required:** no direct pushes. 0 approvals, because GitHub doesn't let you approve your own PR.
+- **Required status checks** (from GitHub Actions): `Engine & server (Gradle)`, `Web client`, `Docker image (build only)`.
+  `build-and-deploy` is deliberately excluded because it runs after the merge.
+- **Blocked:** deleting `main` and force-pushes.
+- **Bypass:** repository admins may merge a PR despite failing checks, for emergencies only. They still can't push directly.
+
+If you rename a CI job in `.github/workflows/ci.yml`, update the ruleset's required checks too,
+or PRs will wait forever for a check that no longer exists. Inspect the rules with:
 ```bash
-gh api -X PUT repos/tolikttaaa/precinct-noir/branches/main/protection --input - <<'EOF'
-{
-  "required_status_checks": {
-    "strict": true,
-    "checks": [
-      { "context": "Engine & server (Gradle)" },
-      { "context": "Web client" },
-      { "context": "Docker image (build only)" }
-    ]
-  },
-  "enforce_admins": false,
-  "required_pull_request_reviews": null,
-  "restrictions": null
-}
-EOF
+gh api repos/tolikttaaa/precinct-noir/rules/branches/main
 ```
 
 ## 2. Verify a deploy
