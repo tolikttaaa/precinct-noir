@@ -6,6 +6,7 @@ A Jackbox-style hidden-identity deduction party game. The TV shows the board; pl
 - [docs/STATUS.md](docs/STATUS.md): what's done, what's next, and how to resume. Update it in every milestone PR.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): decisions, architecture, milestones M0–M11, engine design.
 - [docs/RULES.md](docs/RULES.md): the rules, which are also the engine spec. Edge-case IDs (`KI-2`, `FM-6`…) are pinned by tests.
+- [docs/PROTOCOL.md](docs/PROTOCOL.md): the HTTP API and WebSocket protocol, close codes and room rules.
 - [docs/HOSTING.md](docs/HOSTING.md): the hosting contract for the home server. Merging to `main` deploys.
 - [docs/RUNBOOK.md](docs/RUNBOOK.md): one-time server and credential steps. The repo owner runs these, not agents.
 
@@ -33,6 +34,7 @@ Toolchain: JDK 25 (the Gradle daemon is pinned in `gradle/gradle-daemon-jvm.prop
 | Run web client (http://localhost:5173, proxies `/api`, `/ws`, `/actuator`) | `cd web && npm run dev` |
 | Web checks (coverage report in `web/coverage/`) | `cd web && npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build` |
 | Production image | `docker build -t precinctnoir:dev .` |
+| Regenerate `web/src/protocol/generated.ts` after changing protocol, view or event types (`check` fails while stale) | `./gradlew :server:generateProtocol` |
 
 ## Engine conventions
 - New modes extend `FlowMode` (see `modes/killerinspector/ShadowDuel.kt`) and register in `ModeRegistry`.

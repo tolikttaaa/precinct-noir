@@ -26,6 +26,9 @@
 | Server setup | User runs it; I prepare a runbook with copy-paste commands |
 | Shadow Duel roles | Random for the first game; "Play again" swaps them (the server passes `killerSeat`) |
 | Engine scope in M2 | The full shared core for all six modes, plus Shadow Duel |
+| M3 delivery | Two PRs: M3a platform (rooms, lobby, protocol, persistence, restore, shutdown, codegen, basic caps); M3b security (rate limits, Turnstile, WS token bucket and socket caps, CSP nonce) |
+| Who plays | The earliest players up to the mode's maximum; the rest watch. The VIP removes players before starting |
+| Ending games | The VIP can end a running game; a game idle for 2 h ends automatically |
 
 ## Architecture
 
@@ -46,16 +49,22 @@ precinct-noir/
 ```
 TV browser ──HTTP POST /api/rooms (Turnstile)──► server ──► {code, hostToken}
 Phone      ──HTTP POST /api/rooms/{code}/players {name}──► {playerId, playerToken}
-All        ──WS /ws ── first frame {hello, token, lastSeq} (5 s deadline) ──► session bound to room
-Player     ──{act, decisionId, choice, clientSeq}──► Room actor ─► engine.apply ─► snapshot to PG
-                                                     └─► per-viewer projection ─► {state, seq} to each socket
+All        ──WS /ws ── first frame {hello, room, token, lastEventSeq} (5 s deadline) ──► socket bound to room
+Player     ──{act, clientSeq, decisionId, choice}──► Room actor ─► engine.apply ─► save to PG
+                                                     └─► per-viewer {game: view + legal} and {events} to each socket
 ```
 - **Room = actor.** Each room handles commands one at a time under a per-room lock, on virtual threads (`spring.threads.virtual.enabled=true`). Within a room: validate → `engine.apply` → persist snapshot → fan out projections. Sends go through `ConcurrentWebSocketSessionDecorator` (send-time and buffer limits drop slow consumers).
 - **The server sends full per-viewer projections** (a 7×7 board is a few KB), plus a separate event stream for the log, toasts and animations. Clients never derive hidden state.
 - **Generic decision protocol.** The engine exposes the current `PendingDecision`(s) with the legal options per viewer. The UI renders only what is legal and replies `{decisionId, choice}`. The server re-validates everything. `clientSeq` dedupes replays after a reconnect.
-- **Room lifecycle:** `LOBBY → IN_GAME → FINISHED → (Play again) LOBBY`. Rooms are locked once a game starts: only token reconnects are allowed. TTLs: lobby idle 30 min, game idle 2 h, finished 15 min.
-- **Persistence:** Flyway `V1__rooms.sql` creates `rooms(code pk, status, state jsonb, schema_version, updated_at)` via Spring `JdbcClient` (no JPA). Every snapshot carries a `schemaVersion`; a mismatch on restore ends the room gracefully with a message. On SIGTERM: stop accepting, flush, close sockets with **1012**. Clients reconnect with jittered backoff and resume via token + `lastSeq`.
-- **Protocol types:** Kotlin `@Serializable` sealed classes are the source of truth. A small Gradle task walks the `SerialDescriptor`s and generates `web/src/protocol/generated.ts` (discriminated unions). CI fails if the generated file drifts.
+- **Room lifecycle:** `LOBBY → IN_GAME → FINISHED → (Play again) LOBBY`. Rooms are locked once a game starts: only token reconnects are allowed. TTLs: lobby idle 30 min, game idle 2 h (the game ends, the room returns to the lobby), finished 15 min.
+  - Seats go to the earliest players, up to the mode's maximum; the rest watch. The VIP (earliest player) removes players before starting, and can end a running game.
+  - Full protocol, close codes and rules: [PROTOCOL.md](PROTOCOL.md).
+- **Persistence:** Flyway `V2__rooms.sql` (V1 is `app_meta`) via Spring `JdbcClient` (no JPA). Every change is saved *before* clients hear about it, in one transaction:
+  - `rooms(code pk, status, snapshot jsonb, mode, schema_version, action_seq, …)`: the room snapshot plus the engine's own JSON for the game;
+  - `room_commands` (append-only, per round) and `room_events` (the current game's case log with audiences).
+  - Restore runs at startup, before the web server accepts connections. A game whose schema has no migration ends with `restore_failed`; its room stays open.
+  - On SIGTERM: stop accepting and close every socket with **1012** before Tomcat's graceful shutdown (nothing to flush). Clients reconnect with jittered backoff and resume with the same hello (token + `lastEventSeq`).
+- **Protocol types:** Kotlin `@Serializable` types are the source of truth. `ProtocolTypesTest` walks them (kotlin-reflect for names, kotlinx descriptors for shapes) and compares with `web/src/protocol/generated.ts` (discriminated unions on `t`), so `./gradlew check` fails on drift; `./gradlew :server:generateProtocol` rewrites the file.
 - **i18n:** the server never sends prose. It sends message keys and params; i18next renders EN/RU per device, and character names have RU transliterations in the catalogs.
 
 ### Engine
@@ -201,8 +210,8 @@ Pure Kotlin + kotlinx.serialization only. Deterministic: a SplitMix64 `Rng` whos
 - `GameMode<M, St, E, V>` (model, agenda step, event, view): `setup(players, config, seed)`, `project`, `legalFor(view)`, `apply`, `onTimer`, `teamOf`, `migrations`, `configSpec` (lobby variant toggles).
   - `FlowMode` implements the generic part: command validation, the `Tx` working copy, and draining steps to the next decision. A game at rest is `GameState(actionSeq, rng, agenda, outcome, model)`.
   - `ErasedMode` exposes it to the server as JSON in/out (`AnyMode`: setup, apply, view + legal, visibility, status, encode/decode with migrations, nudge); `ModeRegistry` lists the modes.
-- **Persistence:** one transaction per applied command writes `rooms(snapshot jsonb, schema, action_seq)`, `room_commands` (append-only) and `room_events`.
-  - `Snapshot(envelope, mode, schema, engineVersion, actionSeq, state)` with chained JSON `Migration`s.
+- **Persistence:** one transaction per applied command writes `rooms(snapshot jsonb, schema, action_seq)`, `room_commands` (append-only) and `room_events` (see Runtime flow above).
+  - The engine state is versioned by the mode's `schemaVersion` with chained JSON `Migration`s; the server's room snapshot wraps it.
   - Replay of setup + commands must reproduce the snapshot byte for byte (CI check).
   - `Json{classDiscriminator="t"; encodeDefaults; explicitNulls=false; ignoreUnknownKeys=false}`; stable `@SerialName`s; canonical sorted lists.
 
