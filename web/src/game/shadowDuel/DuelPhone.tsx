@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Command } from '../../net/roomSocket'
 import type {
@@ -126,6 +126,14 @@ export function DuelPhone({ room, duel, send, refusalId, footer }: Props) {
   })
   const [guide, setGuide] = useState(false)
   const [pickView, setPickView] = useState<'cards' | 'city'>('cards')
+  // The round can end while the page is scrolled down to the board (a laptop shows only part of it), so
+  // bring the verdict at the top into view.
+  const over = view.outcome !== undefined
+  useEffect(() => {
+    if (!over) return
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' })
+  }, [over])
   const mode = intent.key === key ? intent.mode : firstMode(moves, tabs)
   const setMode = (next: Mode) => setIntent({ key, mode: next })
   const name = (id: number) => suspectName(id, i18n.language)

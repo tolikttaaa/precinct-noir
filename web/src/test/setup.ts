@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import i18next from 'i18next'
-import { afterEach, beforeEach } from 'vitest'
+import { afterEach, beforeEach, vi } from 'vitest'
 import { resetModesForTests } from '../hooks/useModes'
 import { initI18n } from '../i18n'
 import { resetTurnstileForTests } from '../net/turnstile'
@@ -9,7 +9,11 @@ import { FakeWebSocket } from './fakeWebSocket'
 
 initI18n('en')
 
+// jsdom doesn't scroll; tests check that the app asked to.
+window.scrollTo = vi.fn() as typeof window.scrollTo
+
 beforeEach(() => {
+  vi.mocked(window.scrollTo).mockClear()
   FakeWebSocket.reset()
   window.history.replaceState(null, '', '/')
 })

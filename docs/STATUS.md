@@ -262,9 +262,10 @@ phone guide and a TV walkthrough. Design notes: [DESIGN.md](DESIGN.md) §7–8.
     - In the file's city, your tile is outlined solid blue and your evidence dashed; the labels carry the same marks as a key.
     - Bigger hands wrap four to a row, and the city shrinks to the height that's left. Checked with hands of 3, 4, 6 and 8 cards.
     - On a laptop (wide, landscape) the open file is a spread: you and your evidence left, the city right.
+  - [x] **The verdict comes into view** when a round ends. The laptop test found it hidden above the fold after a kill low on the board.
   - [ ] **Laptop play beyond the file** stays for M11, as planned: the game page is the phone's single column (640px) there. On a 900px-tall screen, the board's last rows fall below the fold, and the hints say "Tap".
   - [x] **Texts:** kill and accuse say "one of the eight tiles around you"; collapse says when it's possible.
-  - [x] **Browser games:** round 1 now builds up to a collapse and makes it, checking that the TV loses a line. The phones go through the tabs; the opening move checks the other tabs' reason; the inspector lights the accuse targets, then switches to clearing a suspect. The pick is checked in both directions between the cards and the city.
+  - [x] **Browser games:** Ann now plays from a laptop (1440×900, mouse) and Борис from a phone (390×844, touch), so every step runs on both layouts; the laptop's open file is checked to be a spread. The CI job is now just `Browser games` (renamed in #18 before it joins the ruleset). Round 1 builds up to a collapse and makes it, checking that the TV loses a line. The phones go through the tabs; the opening move checks the other tabs' reason; the inspector lights the accuse targets, then switches to clearing a suspect. The pick is checked in both directions between the cards and the city.
   - [ ] The PR.
 - [ ] **Release v0.1**, then a real session with phones and the TV.
 

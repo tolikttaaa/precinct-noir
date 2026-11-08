@@ -413,4 +413,24 @@ describe('around the board', () => {
     expect(bar().getByRole('button', { name: 'End game' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Your file/ })).toBeNull()
   })
+
+  it('brings the verdict into view when the round ends, gently unless motion is reduced', () => {
+    const playing = duelView({ me: killer, pending: undefined })
+    const over = duelView({
+      me: killer,
+      pending: undefined,
+      outcome: { winners: [0], reason: 'kill_quota' },
+    })
+    const { update } = phone(playing)
+    expect(window.scrollTo).not.toHaveBeenCalled()
+    update(over)
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
+    cleanup()
+    const reduce = vi.fn(() => ({ matches: true }) as MediaQueryList)
+    vi.stubGlobal('matchMedia', reduce)
+    phone(over)
+    expect(reduce).toHaveBeenCalledWith('(prefers-reduced-motion: reduce)')
+    expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'auto' })
+    vi.unstubAllGlobals()
+  })
 })

@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
 /**
- * One long test: a living-room session on a TV and two phones. It runs against a real server, by default the
+ * One long test: a living-room session on a TV, a laptop and a phone. It runs against a real server, by default the
  * production image started by `npm run stack:up` (compose.yaml) on http://localhost:8080.
  */
 export default defineConfig({

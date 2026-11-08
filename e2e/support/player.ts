@@ -3,6 +3,8 @@ import { allShifts, direction, type Grid, type Place, type Shift } from './grid'
 import { fill, idOf, nameOf, TEXTS, type Language, type Texts } from './texts'
 
 export type Role = 'killer' | 'inspector'
+/** A phone (390×844, touch) or a laptop (1440×900, mouse): the game's two player layouts. */
+export type Device = 'phone' | 'laptop'
 export type Action = 'kill' | 'accuse' | 'disguise' | 'exonerate' | 'shift' | 'collapse'
 
 /** Pause after each move, so a recording can be followed by eye. */
@@ -11,16 +13,18 @@ export const PACE = Number(process.env.E2E_PACE ?? (process.env.E2E_VIDEO ? 900 
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 /**
- * A player's phone, driven the way a person would: by the buttons and cards on screen, in the phone's own
- * language. It also reads the player's secrets by holding their file open, which a person can do too.
+ * A player at their phone or laptop, driven the way a person would: by the buttons and cards on screen, in
+ * the device's own language. It also reads the player's secrets by holding their file open, which a person
+ * can do too.
  */
-export class Phone {
+export class Player {
   readonly t: Texts
 
   constructor(
     readonly page: Page,
     readonly name: string,
     readonly language: Language,
+    readonly device: Device,
   ) {
     this.t = TEXTS[language]
   }
@@ -130,6 +134,12 @@ export class Phone {
     const inCity = await names('.dossier__city .suspect-card')
     const evidence = await names('.dossier__city [data-evidence]')
     expect(evidence.sort()).toEqual(hand.filter((n) => inCity.includes(n)).sort())
+    // On a laptop the open file is a spread: the identity on the left, the city on its right.
+    if (this.device === 'laptop') {
+      const you = await open.locator('.dossier__identity').boundingBox()
+      const city = await open.locator('.dossier__city').boundingBox()
+      expect(city && you && city.x > you.x + you.width).toBe(true)
+    }
     await this.page.waitForTimeout(PACE)
     await this.page.mouse.up()
     await expect(open).toHaveCount(0)

@@ -167,6 +167,8 @@ file.
     would show your neighbours, and so roughly where you stand, to anyone glancing at the phone. The
     killer's opening kill is the exception, being the only move.
   - Every move ends with a confirm button that names it ("Kill Dorothy", "Shift row 2 right").
+  - **When a round ends,** the screen scrolls up to the verdict (instantly under reduced motion): the
+    last move may have been made far down the board, and a laptop shows only part of it.
   - **Collapse:** the way (by rows or by columns) is chosen in the tab. A line with a single body picks
     itself; you tap a body only where a line has several. Collapsing again is its own small decision,
     with Collapse again and Stop and no tabs.
