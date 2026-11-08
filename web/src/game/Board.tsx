@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Line, ShiftRecord, TileView } from '../protocol/generated'
 import { direction, glide } from './motion'
@@ -19,6 +19,8 @@ interface Props {
   readonly lit?: ReadonlySet<number>
   readonly chosen?: ReadonlySet<number>
   readonly mine?: number
+  /** The viewer's evidence cards, marked where they stand (the open file). */
+  readonly evidence?: ReadonlySet<number>
   /** Called for lit tiles only. */
   readonly onTile?: (id: number) => void
   /** Arrows on every edge, to slide a row or column. */
@@ -36,7 +38,8 @@ const GLIDE_MS = 420
  * collapse glides each card from where it was (a card that wrapped around slides in from the edge).
  */
 export function Board(props: Props) {
-  const { rows, cols, tiles, size, lit, chosen, mine, onTile, shift, lastShift, labels } = props
+  const { rows, cols, tiles, size, lit, chosen, mine, evidence, onTile, shift, lastShift, labels } =
+    props
   const { t } = useTranslation()
   const nodes = useRef(new Map<number, HTMLElement>())
   const rects = useRef(new Map<number, DOMRect>())
@@ -83,6 +86,7 @@ export function Board(props: Props) {
         lit={lit?.has(tile.id)}
         chosen={chosen?.has(tile.id)}
         mine={mine === tile.id}
+        evidence={evidence?.has(tile.id)}
         onPick={onTile && lit?.has(tile.id) ? () => onTile(tile.id) : undefined}
       />
     </div>
@@ -158,10 +162,15 @@ export function Board(props: Props) {
       role="group"
       aria-label={t('duel.board')}
       data-edges={edges ? (shift ? 'arrows' : 'labels') : undefined}
-      style={{
-        gridTemplateColumns: track(cols, edges, Boolean(shift)),
-        gridTemplateRows: track(rows, edges, Boolean(shift)),
-      }}
+      style={
+        {
+          gridTemplateColumns: track(cols, edges, Boolean(shift)),
+          gridTemplateRows: track(rows, edges, Boolean(shift)),
+          // For layouts that fit the board to a height (the open file).
+          '--rows': rows,
+          '--cols': cols,
+        } as CSSProperties
+      }
     >
       {cells}
     </div>

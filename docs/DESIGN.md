@@ -154,18 +154,40 @@ file.
   - what's happening ("Ann to move."), and the case log, newest first.
   - At the end, the verdict stamp, who won and why, and everyone's real identity and hand. The case
     log steps aside then, so the panel stays on screen.
-- **Phone, the player's turn: choose, then target, then confirm.**
-  - The action bar offers the verbs (Kill, Disguise, Collapse…), side by side so the board stays in
-    view, and the phone's mini-board has shift arrows on every edge.
-  - **Targets are lit only after choosing Kill or Accuse.** Lighting them all the time would show your
-    neighbours, and so roughly where you stand, to anyone glancing at the phone.
-  - Every move ends with a confirm button that names it ("Kill Dorothy", "Shift row 2 right"), with
-    Cancel beside it.
-  - **Collapse:** a line with a single body picks itself. You tap a body only where a line has several.
-  - **Drawn cards** (the inspector's identity, the card to clear) replace the board with a 2×2 pick.
-- **The player's file** sits above the board and holds the secrets: identity and evidence in hand.
-  - It stays face down until pressed and held (or Space/Enter held), and closes on release.
-  - It keeps its size open or closed, so the board never jumps.
+- **Phone, the player's turn: a tab, then a target, then confirm.**
+  - **Tabs** list the side's actions: Kill, Disguise, Shift, Collapse for the killer; Accuse, Clear a
+    suspect, Shift, Collapse for the inspector. You can switch at any time, and switching starts that
+    action afresh, so there's no Cancel.
+  - The open tab says what the action does and when it's possible ("a suspect in one of the eight tiles
+    around you"), and the board shows it at once: lit targets, or shift arrows on every edge.
+  - **A tab that can't be used now** has a dotted underline and says why, from facts the player can
+    already see: not on the first move, no one alive next to you, the deck is empty, or the city
+    doesn't qualify for a collapse yet.
+  - **A turn opens on Shift.** Targets light up only on Kill or Accuse: lighting them all the time
+    would show your neighbours, and so roughly where you stand, to anyone glancing at the phone. The
+    killer's opening kill is the exception, being the only move.
+  - Every move ends with a confirm button that names it ("Kill Dorothy", "Shift row 2 right").
+  - **When a round ends,** the screen scrolls up to the verdict (instantly under reduced motion): the
+    last move may have been made far down the board, and a laptop shows only part of it.
+  - **Collapse:** the way (by rows or by columns) is chosen in the tab. A line with a single body picks
+    itself; you tap a body only where a line has several. Collapsing again is its own small decision,
+    with Collapse again and Stop and no tabs.
+  - **Drawn cards** (the inspector's identity, the card to clear) show as a 2×2 pick, with a switch
+    to "In the city", where the same cards are lit. A choice made on either shows on both. A card whose
+    suspect is dead keeps its X; one who has left the city shows among the cards only.
+- **The player's file** is a slim strip above the board (your side, and "Hold to look"). It holds
+  the secrets: identity and evidence in hand.
+  - Pressed and held (or Space/Enter held), it opens over the whole screen: the identity card, the
+    evidence cards, and the city. It closes on release.
+  - In that city your own tile has a solid blue outline and your evidence a dashed dark one, so they
+    differ by shape too. The labels "You are" and "Evidence in your hand" carry the same two marks as
+    a key.
+  - Any number of evidence cards fits: up to four in a row, then more rows. The city takes the
+    height that's left.
+  - On a wide landscape screen (a laptop) the open file is a spread: you and your evidence on the
+    left, the city as tall as the screen on the right.
+  - The open file is part of the strip, so the finger holding it never leaves it.
+  - The game's own board never marks your tile, even while the file is open.
   - Private draws never appear in the phone's visible case log.
 - **Help:** a "What can I do now?" list of your role's actions, and the "How to play" walkthrough.
 
@@ -191,8 +213,14 @@ file.
   - The main action (Start, Play again, End game) sits in a sticky bar in the thumb zone, with Leave
     under it.
   - Touch targets are at least 44px.
-- **Laptop:** the phone and TV layouts adapt (the TV layout goes to one column under 900px). Polishing
-  remote play on one's own device is the final step (M11).
+- **Laptop** (a player's screen at least 1024px wide, in landscape):
+  - The game is one screen with nothing to scroll. The field (the board, or the cards to choose from)
+    fills the left at full height.
+  - On the right, in a column: the prompt, the player's file (always in view), the action tabs, the
+    confirm bar, then the tally, the case log, help and the room buttons. Only that last part scrolls,
+    if ever.
+  - The lobby and the other pages keep the phone's column; the TV layout goes to one column under
+    900px. The rest of remote-play polish stays for M11.
 
 ## 10. Interaction rules
 - **Two taps for anything that affects others:** remove a player, leave, end the game. The first tap

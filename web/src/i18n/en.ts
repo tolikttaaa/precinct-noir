@@ -139,14 +139,15 @@ const en = {
       shift: 'Shift',
     },
     explain: {
-      kill: 'Kill one of the suspects around you.',
-      accuse: 'Name a suspect next to you, or yourself as a bluff. If it’s the killer, you win.',
+      kill: 'Kill a living suspect in one of the eight tiles around you.',
+      accuse:
+        'Name a suspect in one of the eight tiles around you, or yourself as a bluff. If it’s the killer, you win. If not, the game goes on.',
       disguise:
         'Draw a new identity. If that suspect is alive, your old one is cleared in public and you become the new one. If not, the card is wasted.',
       exonerate:
         'Draw a card, then put one of your four face up. That suspect is cleared, and everyone learns whether the killer is next to them.',
       collapse:
-        'Every column or every row has a body: remove one body from each, and the city closes up.',
+        'When every column, or every row, has a body in it: remove one body from each, and the city closes up.',
       shift:
         'Tap an arrow to slide that row or column one step. The suspect pushed off the end comes back on the other side.',
     },
@@ -157,7 +158,20 @@ const en = {
     confirmTarget: { kill: 'Kill {{name}}', accuse: 'Accuse {{name}}' },
     shiftLine: { row: 'Shift row {{n}} {{dir}}', col: 'Shift column {{n}} {{dir}}' },
     dir: { left: 'left', right: 'right', up: 'up', down: 'down' },
-    shiftHint: 'Or tap an arrow on the edge to slide a row or column.',
+    shiftHint: 'Tap an arrow on the edge to slide a row or column.',
+    actions: 'Actions',
+    chooseAction: 'Choose an action above.',
+    unavailable: {
+      opening: 'Not on the first move: the killer always starts with a kill.',
+      kill: 'No one alive is next to you, so there’s no one to kill. Shift a row or column first.',
+      accuse: 'No one can be accused right now.',
+      deck: 'The deck is empty, so there’s no card to draw.',
+      collapse: 'The city closes up only when every row, or every column, has a body in it.',
+      other: 'Not possible right now.',
+    },
+    collapseWayHint: 'Choose which way the city closes up.',
+    pickOnBoard: 'Where they are in the city',
+    pickView: { cards: 'Cards', city: 'In the city' },
     collapseWay: {
       columns: 'Take a body from each column',
       rows: 'Take a body from each row',
@@ -170,7 +184,6 @@ const en = {
       exonerate_discard: 'Clear {{name}}',
     },
     pickHint: 'Tap a card to choose it.',
-    cancel: 'Cancel',
     sent: 'Sent. Waiting for the board…',
     helpNow: 'What can I do now?',
     howToPlay: 'How to play',
@@ -183,7 +196,14 @@ const en = {
       hand: 'Evidence in your hand',
       none: 'You don’t have an identity yet.',
     },
-    card: { dead_f: 'dead', dead_m: 'dead', cleared: 'cleared', stamp: 'Cleared', you: 'you' },
+    card: {
+      dead_f: 'dead',
+      dead_m: 'dead',
+      cleared: 'cleared',
+      stamp: 'Cleared',
+      you: 'you',
+      evidence: 'evidence',
+    },
     rowLabel: 'Row {{n}}',
     colLabel: 'Column {{n}}',
     board: 'The city',

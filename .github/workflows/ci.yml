@@ -137,11 +137,11 @@ jobs:
       - run: npm run typecheck
       - run: npx playwright install --with-deps chromium
 
-      # A TV and two phones (one in Russian) play two rounds: the inspector wins, the VIP starts a rematch,
-      # a phone reloads mid-game, and the killer wins.
+      # A TV, a laptop and a phone (in Russian) play two rounds: the killer collapses the city and the
+      # inspector wins, the VIP starts a rematch, the killer's screen reloads mid-game, and the killer wins.
       - run: npx playwright test
 
-      - name: Put the TV and the phones side by side in one video
+      - name: Put the TV, the laptop and the phone in one video
         if: failure() || inputs.video
         run: |
           command -v ffmpeg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)

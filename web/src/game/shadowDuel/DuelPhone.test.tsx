@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { MeView, Opt, ShadowDuelEvent, ShadowDuelView } from '../../protocol/generated'
 import { duelView, roomView } from '../../test/fixtures'
@@ -39,15 +39,21 @@ function phone(view: ShadowDuelView, legal: Opt[] = [], events: ShadowDuelEvent[
 const bar = () => within(screen.getByRole('contentinfo'))
 const sent = (choice: object, decisionId = 7) => ({ t: 'act', decisionId, choice })
 
+const tab = (name: string) => screen.getByRole('tab', { name })
+const panel = () => within(screen.getByRole('tabpanel'))
+
 describe('the killer’s phone', () => {
-  it('opens on the first kill: pick a lit neighbour, confirm, then wait', () => {
+  it('opens on the first kill: the other actions say why they must wait', () => {
     const view = duelView({
       me: killer,
       pending: { id: 7, actor: 0, kind: 'turn', prompt: 'opening_kill' },
     })
     const { send, refuse } = phone(view, [{ t: 'target', action: 'kill', targets: [6, 7] }])
-    expect(screen.getByRole('status', { name: '' })).toBeDefined()
     expect(screen.getByText('Make the first kill.')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Kill', selected: true })).toBeInTheDocument()
+    expect(
+      panel().getByText(/^Kill a living suspect in one of the eight tiles/),
+    ).toBeInTheDocument()
     expect(bar().getByText('Tap a lit suspect to kill.')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Dorothy' }))
     fireEvent.click(bar().getByRole('button', { name: 'Kill Dorothy' }))
@@ -55,39 +61,62 @@ describe('the killer’s phone', () => {
     expect(bar().getByText('Sent. Waiting for the board…')).toBeInTheDocument()
     refuse(1) // a refusal brings the controls back
     expect(bar().getByText('Tap a lit suspect to kill.')).toBeInTheDocument()
-    fireEvent.click(bar().getByRole('button', { name: 'Cancel' }))
-    fireEvent.click(bar().getByRole('button', { name: 'Kill' }))
+    for (const name of ['Disguise', 'Shift', 'Collapse']) {
+      fireEvent.click(tab(name))
+      expect(tab(name)).toHaveAttribute('data-off')
+      expect(panel().getByText(/^Not on the first move/)).toBeInTheDocument()
+      expect(bar().getByText('Choose an action above.')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Dorothy' })).toBeNull()
+    }
+    fireEvent.click(tab('Kill'))
     expect(screen.getByRole('button', { name: 'Duke' })).toBeInTheDocument()
   })
 
-  it('shifts a row: tap an arrow, then confirm it', () => {
+  it('switches between actions without cancelling, and shifts a row by its arrow', () => {
     const { send } = phone(duelView({ me: killer }), [
       shiftRow1,
       { t: 'target', action: 'kill', targets: [6] },
       { t: 'simple', action: 'disguise' },
     ])
     expect(screen.getByText('Your turn. Take one action.')).toBeInTheDocument()
+    // The turn opens on Shift: no one is lit until Kill is chosen, so onlookers can't tell where you are.
+    expect(screen.getByRole('tab', { name: 'Shift', selected: true })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Dorothy' })).toBeNull()
+    fireEvent.click(tab('Kill'))
+    fireEvent.click(screen.getByRole('button', { name: 'Dorothy' }))
+    fireEvent.click(tab('Shift'))
+    expect(panel().getByText(/^Tap an arrow to slide/)).toBeInTheDocument()
     expect(
-      bar().getByText('Or tap an arrow on the edge to slide a row or column.'),
+      bar().getByText('Tap an arrow on the edge to slide a row or column.'),
     ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Dorothy' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Shift row 2 right' })).toBeDisabled()
     fireEvent.click(screen.getByRole('button', { name: 'Shift row 1 left' }))
     fireEvent.click(screen.getByRole('button', { name: 'Shift row 1 right' }))
     expect(
       screen.getByRole('button', { name: 'Shift row 1 right', pressed: true }),
     ).toBeInTheDocument()
+    // Switching away and back starts the action afresh.
+    fireEvent.click(tab('Kill'))
+    expect(bar().getByText('Tap a lit suspect to kill.')).toBeInTheDocument()
+    fireEvent.click(tab('Shift'))
+    expect(bar().queryByRole('button')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Shift row 1 right' }))
     fireEvent.click(bar().getByRole('button', { name: 'Shift row 1 right' }))
     expect(send).toHaveBeenCalledWith(
       sent({ t: 'shift', action: 'shift', line: { axis: 'row', index: 0 }, by: 1 }),
     )
   })
 
-  it('explains a disguise before taking it', () => {
+  it('disguises, and says why no one can be killed', () => {
     const { send } = phone(duelView({ me: killer }), [{ t: 'simple', action: 'disguise' }])
-    fireEvent.click(bar().getByRole('button', { name: 'Disguise' }))
-    expect(bar().getByText(/^Draw a new identity/)).toBeInTheDocument()
-    fireEvent.click(bar().getByRole('button', { name: 'Cancel' }))
-    fireEvent.click(bar().getByRole('button', { name: 'Disguise' }))
+    expect(screen.getByRole('tab', { name: 'Disguise', selected: true })).toBeInTheDocument()
+    expect(panel().getByText(/^Draw a new identity/)).toBeInTheDocument()
+    fireEvent.click(tab('Kill'))
+    expect(panel().getByText(/^No one alive is next to you/)).toBeInTheDocument()
+    fireEvent.click(tab('Collapse'))
+    expect(panel().getByText(/^The city closes up only when/)).toBeInTheDocument()
+    fireEvent.click(tab('Disguise'))
     fireEvent.click(bar().getByRole('button', { name: 'Disguise' }))
     expect(send).toHaveBeenCalledWith(sent({ t: 'simple', action: 'disguise' }))
   })
@@ -103,8 +132,10 @@ describe('the killer’s phone', () => {
         ],
       },
     ])
-    fireEvent.click(bar().getByRole('button', { name: 'Collapse' }))
-    fireEvent.click(bar().getByRole('button', { name: 'Take a body from each column' }))
+    fireEvent.click(tab('Collapse'))
+    expect(panel().getByText(/^When every column, or every row, has a body/)).toBeInTheDocument()
+    expect(bar().getByText('Choose which way the city closes up.')).toBeInTheDocument()
+    fireEvent.click(panel().getByRole('button', { name: 'Take a body from each column' }))
     expect(bar().getByText('Tap a lit body. 1 line still needs one.')).toBeInTheDocument()
     expect(bar().getByRole('button', { name: 'Collapse' })).toBeDisabled()
     expect(screen.getByRole('img', { name: 'Beatrice' }).closest('[data-chosen]')).not.toBeNull()
@@ -116,26 +147,41 @@ describe('the killer’s phone', () => {
     )
   })
 
-  it('collapses again or stops when the city still qualifies', () => {
-    const view = duelView({
-      me: killer,
-      pending: { id: 9, actor: 0, kind: 'substep', prompt: 'collapse_more' },
-    })
-    const { send } = phone(view, [
+  it('collapses again or stops when the city still qualifies, without the other tabs', () => {
+    const more = { id: 9, actor: 0, kind: 'substep', prompt: 'collapse_more' } as const
+    const stop: Opt = { t: 'simple', action: 'stop_collapsing' }
+    const { send } = phone(duelView({ me: killer, pending: more }), [
       { t: 'collapse', action: 'collapse', options: [{ direction: 'rows', lines: [[3], [8]] }] },
-      { t: 'simple', action: 'stop_collapsing' },
+      stop,
     ])
     expect(screen.getByText(/can close up again/)).toBeInTheDocument()
-    fireEvent.click(bar().getByRole('button', { name: 'Collapse again' }))
+    expect(screen.queryByRole('tablist')).toBeNull()
     expect(bar().getByText('Ready: one body from each line.')).toBeInTheDocument()
-    fireEvent.click(bar().getByRole('button', { name: 'Cancel' }))
+    fireEvent.click(bar().getByRole('button', { name: 'Collapse again' }))
+    expect(send).toHaveBeenCalledWith(
+      sent({ t: 'collapse', action: 'collapse', direction: 'rows', picks: [3, 8] }, 9),
+    )
+    cleanup()
+    const two = phone(duelView({ me: killer, pending: more }), [
+      {
+        t: 'collapse',
+        action: 'collapse',
+        options: [
+          { direction: 'columns', lines: [[3], [8]] },
+          { direction: 'rows', lines: [[3], [8]] },
+        ],
+      },
+      stop,
+    ])
+    expect(bar().getByText('Choose which way the city closes up.')).toBeInTheDocument()
     fireEvent.click(bar().getByRole('button', { name: 'Stop' }))
-    expect(send).toHaveBeenCalledWith(sent({ t: 'simple', action: 'stop_collapsing' }, 9))
+    expect(two.send).toHaveBeenCalledWith(sent({ t: 'simple', action: 'stop_collapsing' }, 9))
   })
 
   it('waits during the other player’s turn, with the room buttons out of the way', () => {
     phone(duelView({ me: killer, pending: { id: 8, actor: 1, kind: 'turn', prompt: 'turn' } }))
     expect(screen.getByText('Bob to move.')).toBeInTheDocument()
+    expect(screen.queryByRole('tablist')).toBeNull()
     expect(bar().queryByRole('button')).toBeNull()
     expect(screen.getByRole('main')).toContainElement(
       screen.getByRole('button', { name: 'End game' }),
@@ -144,22 +190,63 @@ describe('the killer’s phone', () => {
 })
 
 describe('the inspector’s phone', () => {
-  it('picks an identity from the four drawn cards', () => {
+  const choosing = (cards: number[], prompt: 'choose_identity' | 'exonerate_discard') => {
     const view = duelView({
-      me: { seat: 1, role: 'inspector', hand: [3, 4, 5, 6] },
-      pending: { id: 7, actor: 1, kind: 'setup', prompt: 'choose_identity' },
+      me: { seat: 1, role: 'inspector', hand: cards },
+      pending: {
+        id: 7,
+        actor: 1,
+        kind: prompt === 'choose_identity' ? 'setup' : 'substep',
+        prompt,
+      },
+      board: {
+        ...duelView().board,
+        tiles: duelView().board.tiles.map((tile) =>
+          tile.id === 4 ? { ...tile, alive: false } : tile,
+        ),
+      },
     })
-    const { send } = phone(view, [
-      { t: 'pick', action: 'choose_identity', cards: [3, 4, 5, 6], min: 1, max: 1 },
-    ])
-    expect(screen.queryByRole('group', { name: 'The city' })).toBeNull()
+    return phone(view, [{ t: 'pick', action: prompt, cards, min: 1, max: 1 }])
+  }
+  const cards = () => within(screen.getByRole('group', { name: 'Tap a card to choose it.' }))
+  const city = () => within(screen.getByRole('group', { name: 'The city' }))
+
+  it('picks an identity from the four drawn cards, or on the city by a switch', () => {
+    const { send } = choosing([3, 4, 5, 6], 'choose_identity')
+    expect(screen.queryByRole('tablist')).toBeNull()
     expect(bar().getByText('Tap a card to choose it.')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Bruno' }))
-    fireEvent.click(bar().getByRole('button', { name: 'Be Bruno' }))
-    expect(send).toHaveBeenCalledWith(sent({ t: 'pick', action: 'choose_identity', cards: [3] }))
+    expect(screen.getByRole('radio', { name: 'Cards', checked: true })).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'The city' })).toBeNull()
+    // A card naming someone dead keeps its X among the cards too.
+    expect(cards().getByRole('button', { name: 'Cora, dead' })).toHaveAttribute('data-dead')
+    expect(cards().getByRole('button', { name: 'Bruno' })).not.toHaveAttribute('data-dead')
+    fireEvent.click(cards().getByRole('button', { name: 'Bruno' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'In the city' }))
+    expect(screen.queryByRole('group', { name: 'Tap a card to choose it.' })).toBeNull()
+    // The same four are lit on the board, a dead one included; everyone else isn't.
+    for (const name of ['Bruno', /^Cora/, 'Calvin', 'Dorothy'])
+      expect(city().getByRole('button', { name })).toHaveAttribute('data-lit')
+    expect(city().queryByRole('button', { name: 'Ada' })).toBeNull()
+    expect(city().getByRole('button', { name: 'Bruno', pressed: true })).toBeInTheDocument()
+    fireEvent.click(city().getByRole('button', { name: 'Calvin' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'Cards' }))
+    expect(cards().getByRole('button', { name: 'Calvin', pressed: true })).toBeInTheDocument()
+    expect(cards().getByRole('button', { name: 'Bruno', pressed: false })).toBeInTheDocument()
+    fireEvent.click(bar().getByRole('button', { name: 'Be Calvin' }))
+    expect(send).toHaveBeenCalledWith(sent({ t: 'pick', action: 'choose_identity', cards: [5] }))
   })
 
-  it('accuses a neighbour, or clears a suspect', () => {
+  it('clears a card whose suspect has left the city: it shows among the cards only', () => {
+    const { send } = choosing([3, 5, 30], 'exonerate_discard')
+    fireEvent.click(cards().getByRole('button', { name: 'Rosalind, dead' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'In the city' }))
+    expect(city().queryByRole('button', { name: /^Rosalind/ })).toBeNull()
+    expect(city().getByRole('button', { name: 'Bruno', pressed: false })).toBeInTheDocument()
+    fireEvent.click(bar().getByRole('button', { name: 'Clear Rosalind' }))
+    expect(send).toHaveBeenCalledWith(sent({ t: 'pick', action: 'exonerate_discard', cards: [30] }))
+  })
+
+  it('accuses a neighbour, switching to clearing a suspect and back', () => {
     const view = duelView({
       me: inspector,
       pending: { id: 7, actor: 1, kind: 'turn', prompt: 'turn' },
@@ -167,29 +254,81 @@ describe('the inspector’s phone', () => {
     const { send } = phone(view, [
       { t: 'target', action: 'accuse', targets: [0, 1] },
       { t: 'simple', action: 'exonerate' },
+      shiftRow1,
     ])
-    fireEvent.click(bar().getByRole('button', { name: 'Accuse' }))
+    expect(screen.getByRole('tab', { name: 'Shift', selected: true })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Abe' })).toBeNull()
+    fireEvent.click(tab('Accuse'))
+    expect(panel().getByText(/If not, the game goes on\.$/)).toBeInTheDocument()
     expect(bar().getByText('Tap a lit suspect to accuse.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Abe' }))
+    fireEvent.click(tab('Clear a suspect'))
+    expect(panel().getByText(/^Draw a card, then put one of your four/)).toBeInTheDocument()
+    expect(bar().getByRole('button', { name: 'Clear a suspect' })).toBeInTheDocument()
+    fireEvent.click(tab('Accuse'))
     fireEvent.click(screen.getByRole('button', { name: 'Abe' }))
     fireEvent.click(bar().getByRole('button', { name: 'Accuse Abe' }))
     expect(send).toHaveBeenCalledWith(sent({ t: 'target', action: 'accuse', target: 1 }))
   })
+
+  it('clears a suspect, and says when the deck has run out', () => {
+    const turn = { id: 7, actor: 1, kind: 'turn', prompt: 'turn' } as const
+    const { send } = phone(duelView({ me: inspector, pending: turn }), [
+      { t: 'target', action: 'accuse', targets: [1] },
+      { t: 'simple', action: 'exonerate' },
+    ])
+    // Without Shift, the turn still opens on an action that lights no one.
+    expect(screen.getByRole('tab', { name: 'Clear a suspect', selected: true })).toBeInTheDocument()
+    fireEvent.click(bar().getByRole('button', { name: 'Clear a suspect' }))
+    expect(send).toHaveBeenCalledWith(sent({ t: 'simple', action: 'exonerate' }))
+    cleanup()
+    phone(duelView({ me: inspector, pending: turn, deckCount: 0 }), [shiftRow1])
+    expect(screen.getByRole('tab', { name: 'Shift', selected: true })).toBeInTheDocument()
+    fireEvent.click(tab('Clear a suspect'))
+    expect(panel().getByText('The deck is empty, so there’s no card to draw.')).toBeInTheDocument()
+    fireEvent.click(tab('Accuse'))
+    expect(panel().getByText('No one can be accused right now.')).toBeInTheDocument()
+  })
+
+  it('says only that it isn’t possible when no reason is public', () => {
+    const turn = { id: 7, actor: 1, kind: 'turn', prompt: 'turn' } as const
+    phone(duelView({ me: inspector, pending: turn }), [shiftRow1])
+    fireEvent.click(tab('Clear a suspect'))
+    expect(panel().getByText('Not possible right now.')).toBeInTheDocument()
+  })
 })
 
 describe('the player’s file', () => {
-  it('opens only while held, and lights up where you stand', () => {
+  it('opens over the whole screen only while held, with the city marking where you stand', () => {
     phone(duelView({ me: inspector, pending: undefined }))
     const file = screen.getByRole('button', { name: 'Your file: Hold to look' })
     expect(screen.getByText('You’re the inspector')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: 'Ada, you' })).toBeNull()
+    expect(document.querySelector('.dossier__open')).toBeNull()
     fireEvent.pointerDown(file)
     expect(file).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('img', { name: 'Ada, you' })).toBeInTheDocument()
+    // Shown, not read out: the open file is hidden from screen readers, which hear one sentence instead.
+    const open = within(document.querySelector('.dossier__open') as HTMLElement)
+    expect(open.getAllByRole('img', { name: 'Ada, you', hidden: true })).toHaveLength(2)
+    expect(open.getByRole('group', { name: 'The city', hidden: true })).toBeInTheDocument()
+    // The evidence is in the hand and marked in the city: Bruno, Cora and Calvin, the hand's 3, 4 and 5.
+    const city = within(open.getByRole('group', { name: 'The city', hidden: true }))
+    for (const name of ['Bruno', 'Cora', 'Calvin']) {
+      expect(open.getByRole('img', { name, hidden: true })).not.toHaveAttribute('data-evidence')
+      expect(city.getByRole('img', { name: `${name}, evidence`, hidden: true })).toHaveAttribute(
+        'data-evidence',
+      )
+    }
+    expect(city.getByRole('img', { name: 'Gloria', hidden: true })).not.toHaveAttribute(
+      'data-evidence',
+    )
+    expect(open.getByText('Let go to hide it. Keep it from the others.')).toBeInTheDocument()
     expect(
       screen.getByText('You are Ada. Evidence in your hand: Bruno, Cora, Calvin.'),
     ).toBeInTheDocument()
+    // The game's own board never marks the player's tile.
+    expect(screen.getByRole('group', { name: 'The city' }).querySelector('[data-mine]')).toBeNull()
     fireEvent.pointerUp(file)
-    expect(screen.queryByRole('img', { name: 'Ada, you' })).toBeNull()
+    expect(document.querySelector('.dossier__open')).toBeNull()
     fireEvent.pointerDown(file)
     fireEvent.pointerLeave(file)
     fireEvent.pointerDown(file)
@@ -236,7 +375,7 @@ describe('around the board', () => {
     expect(screen.getByText('Dorothy was killed.')).toBeInTheDocument()
     expect(screen.queryByText('You are Gloria.')).toBeNull()
     fireEvent.click(screen.getByText('What can I do now?'))
-    expect(screen.getByText('Kill one of the suspects around you.')).toBeInTheDocument()
+    expect(screen.getByText(/^Kill a living suspect in one of the eight tiles/)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'How to play' }))
     expect(screen.getByRole('heading', { name: 'How to play Shadow Duel' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Back to the game' }))
@@ -273,5 +412,25 @@ describe('around the board', () => {
     expect(screen.getByText('Hand: Bruno, Cora')).toBeInTheDocument()
     expect(bar().getByRole('button', { name: 'End game' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Your file/ })).toBeNull()
+  })
+
+  it('brings the verdict into view when the round ends, gently unless motion is reduced', () => {
+    const playing = duelView({ me: killer, pending: undefined })
+    const over = duelView({
+      me: killer,
+      pending: undefined,
+      outcome: { winners: [0], reason: 'kill_quota' },
+    })
+    const { update } = phone(playing)
+    expect(window.scrollTo).not.toHaveBeenCalled()
+    update(over)
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
+    cleanup()
+    const reduce = vi.fn(() => ({ matches: true }) as MediaQueryList)
+    vi.stubGlobal('matchMedia', reduce)
+    phone(over)
+    expect(reduce).toHaveBeenCalledWith('(prefers-reduced-motion: reduce)')
+    expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'auto' })
+    vi.unstubAllGlobals()
   })
 })

@@ -1,7 +1,7 @@
 {
   "name": "precinct-noir-e2e",
   "private": true,
-  "description": "Browser tests: a TV and two phones play Shadow Duel against the production image.",
+  "description": "Browser tests: a TV, a laptop and a phone play Shadow Duel against the production image.",
   "scripts": {
     "test": "playwright test",
     "video": "E2E_VIDEO=1 playwright test && node stitch.mjs",

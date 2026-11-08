@@ -1,7 +1,7 @@
 import { expect, type Browser, type BrowserContext, type Page } from '@playwright/test'
 import { mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { PACE, Phone } from './phone'
+import { PACE, Player, type Device } from './player'
 import { Recorder, writeTimeline } from './recorder'
 import { showTaps } from './taps'
 import { TEXTS, type Language } from './texts'
@@ -10,12 +10,18 @@ import { TEXTS, type Language } from './texts'
 export const VIDEO_DIR = join(__dirname, '..', 'videos')
 
 const TV = { width: 1920, height: 1080 }
-const PHONE = { width: 390, height: 844 }
-const SCREENS = ['tv', 'phone-1', 'phone-2']
+const SCREENS = ['tv', 'player-1', 'player-2']
+
+/** How each kind of screen is set up: its size, pixel density and whether it has touch. */
+const DEVICES = {
+  tv: { viewport: TV, scale: 1, touch: false },
+  phone: { viewport: { width: 390, height: 844 }, scale: 2, touch: true },
+  laptop: { viewport: { width: 1440, height: 900 }, scale: 1, touch: false },
+} as const
 
 /**
- * A living room: the TV and two phones, each its own browser with its own storage. All three are recorded
- * on one clock, with every tap shown.
+ * A living room: the TV and two players, each on a phone or a laptop, each its own browser with its own
+ * storage. All three are recorded on one clock, with every tap and click shown.
  */
 export class Session {
   readonly errors: string[] = []
@@ -25,39 +31,45 @@ export class Session {
     private readonly contexts: BrowserContext[],
     private readonly recorders: Recorder[],
     readonly tv: Page,
-    readonly phones: Phone[],
+    readonly players: Player[],
   ) {}
 
-  static async open(browser: Browser, players: [string, Language][]): Promise<Session> {
+  static async open(browser: Browser, players: [string, Language, Device][]): Promise<Session> {
     rmSync(VIDEO_DIR, { recursive: true, force: true })
     mkdirSync(VIDEO_DIR, { recursive: true })
-    const screens: [Language, typeof TV, number][] = [
-      ['en', TV, 1],
-      ...players.map(([, language]) => [language, PHONE, 2] as [Language, typeof TV, number]),
+    const screens = [
+      { language: 'en', ...DEVICES.tv },
+      ...players.map(([, language, device]) => ({ language, ...DEVICES[device] })),
     ]
     const contexts = await Promise.all(
-      screens.map(([language, viewport, scale]) =>
+      screens.map(({ language, viewport, scale, touch }) =>
         browser.newContext({
           viewport,
           deviceScaleFactor: scale,
           locale: language === 'ru' ? 'ru-RU' : 'en-US',
-          hasTouch: viewport === PHONE,
+          hasTouch: touch,
         }),
       ),
     )
     await Promise.all(contexts.map((c) => c.addInitScript(showTaps)))
     const pages = await Promise.all(contexts.map((c) => c.newPage()))
+    // Until a screen opens the game, it shows the app's dark, not a white blank page.
+    await Promise.all(
+      pages.map((p) => p.setContent('<body style="margin:0;background:#0b0f15"></body>')),
+    )
     const recorders = await Promise.all(
       pages.map((page, i) =>
         Recorder.start(
           page,
           join(VIDEO_DIR, SCREENS[i]),
-          i === 0 ? { width: 1280, height: 720 } : PHONE,
+          i === 0 ? { width: 1600, height: 900 } : screens[i].viewport,
         ),
       ),
     )
-    const phones = players.map(([name, language], i) => new Phone(pages[i + 1], name, language))
-    const session = new Session(contexts, recorders, pages[0], phones)
+    const seated = players.map(
+      ([name, language, device], i) => new Player(pages[i + 1], name, language, device),
+    )
+    const session = new Session(contexts, recorders, pages[0], seated)
     pages.forEach((page, i) => {
       const who = i === 0 ? 'TV' : players[i - 1][0]
       page.on('pageerror', (e) => session.errors.push(`${who}: ${e.message}`))
@@ -88,24 +100,25 @@ export class Session {
    * every move, with the number of moves so far.
    */
   async playRound(
-    move: (phone: Phone) => Promise<void>,
+    move: (player: Player) => Promise<void>,
     after: (moves: number) => Promise<void> = async () => {},
   ): Promise<void> {
     for (let moves = 0; moves < 200; moves++) {
-      const phone = await this.nextToMove()
-      if (!phone) return
-      await move(phone)
+      const player = await this.nextToMove()
+      if (!player) return
+      if (player.device === 'laptop') await player.expectOneScreen()
+      await move(player)
       await this.tv.waitForTimeout(PACE)
       await after(moves + 1)
     }
     throw new Error('The round went on for 200 moves without ending')
   }
 
-  private async nextToMove(): Promise<Phone | undefined> {
+  private async nextToMove(): Promise<Player | undefined> {
     const deadline = Date.now() + 20_000
     while (Date.now() < deadline) {
       if (await this.outcome.isVisible()) return undefined
-      for (const phone of this.phones) if (await phone.canAct()) return phone
+      for (const player of this.players) if (await player.canAct()) return player
       await this.tv.waitForTimeout(100)
     }
     throw new Error('No one had a move to make for 20 seconds')

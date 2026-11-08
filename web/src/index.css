@@ -1043,6 +1043,12 @@ button.suspect-card {
     0 0 18px 4px rgb(156 192 230 / 0.55);
 }
 
+/* The viewer's evidence, in the open file's city: dashed, unlike their own solid blue. */
+.suspect-card[data-evidence] {
+  outline: 2px dashed var(--ribbon);
+  outline-offset: 1px;
+}
+
 button.suspect-card:focus-visible {
   outline: 3px solid var(--fog);
   outline-offset: 3px;
@@ -1348,18 +1354,19 @@ button.suspect-card:focus-visible {
   font-size: 0.85rem;
 }
 
-/* The player's file: a slim folder above the board, face down until held. */
+/* The player's file: a slim folder strip above the board, face down. Held, it opens over the whole
+   screen: identity, evidence, and the city with the player's own tile marked. */
 .dossier__folder {
   position: relative;
   display: block;
-  height: 7.4rem;
-  margin-top: 1.2rem;
-  padding: 0.7rem 0.9rem;
+  height: 3.25rem;
+  margin-top: 1rem;
+  padding: 0 1rem;
   border-radius: 2px 4px 4px 4px;
   background: var(--fibre), linear-gradient(172deg, #ead9ab, var(--manila) 45%, #d8c48f);
   box-shadow:
     inset 0 0 0 1px rgb(120 95 40 / 0.2),
-    0 14px 24px -12px rgb(0 0 0 / 0.85);
+    0 12px 20px -12px rgb(0 0 0 / 0.85);
   color: var(--ribbon);
   cursor: pointer;
   user-select: none;
@@ -1375,22 +1382,21 @@ button.suspect-card:focus-visible {
 
 .dossier__tab {
   position: absolute;
-  top: -1.2rem;
+  top: -1rem;
   left: 1rem;
-  height: 1.2rem;
-  padding: 0 1rem;
+  height: 1rem;
+  padding: 0 0.9rem;
   background: var(--fibre), #dcc68f;
-  clip-path: polygon(0.5rem 0, calc(100% - 0.5rem) 0, 100% 100%, 0 100%);
-  font: 400 var(--step--1) / 1.2rem var(--font-typed);
+  clip-path: polygon(0.45rem 0, calc(100% - 0.45rem) 0, 100% 100%, 0 100%);
+  font: 400 0.8rem / 1rem var(--font-typed);
 }
 
 .dossier__closed {
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   height: 100%;
-  text-align: center;
 }
 
 .dossier__role {
@@ -1402,36 +1408,168 @@ button.suspect-card:focus-visible {
   color: var(--ribbon-faint);
 }
 
-.dossier[data-open] .dossier__folder {
-  background: #f1eee7;
-}
-
-.dossier__inside {
+.dossier__open {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
   display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  height: 100%;
+  flex-direction: column;
+  gap: 1rem;
+  padding: calc(1rem + env(safe-area-inset-top)) 1rem calc(1rem + env(safe-area-inset-bottom));
+  overflow: hidden;
+  background: var(--fibre), linear-gradient(172deg, #f3f0e9, #e6e1d5);
+  color: var(--ribbon);
 }
 
-.dossier__none {
+.dossier__title {
+  align-self: flex-start;
+  padding: 0.15rem 0.9rem;
+  background: var(--fibre), #dcc68f;
+  clip-path: polygon(0.45rem 0, calc(100% - 0.45rem) 0, 100% 100%, 0 100%);
   font: 400 var(--step--1) / 1.3 var(--font-typed);
 }
 
-.dossier__identity .suspect-card {
-  width: 4.6rem;
-  font-size: 0.62rem;
+.dossier__people {
+  display: flex;
+  gap: 0.9rem;
 }
 
-.dossier__hand {
-  display: flex;
+.dossier__group {
+  display: grid;
+  align-content: start;
   gap: 0.4rem;
+}
+
+.dossier__group + .dossier__group {
+  flex: 1;
   padding-left: 0.9rem;
   border-left: 1px dashed rgb(42 36 28 / 0.35);
 }
 
+.dossier__label {
+  font: 400 0.8rem / 1.2 var(--font-typed);
+  color: var(--ribbon-faint);
+}
+
+/* Each label shows how the city marks it: solid blue for you, dashed for evidence. */
+.dossier__label--you::before,
+.dossier__label--evidence::before {
+  content: '';
+  display: inline-block;
+  box-sizing: border-box;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.45em;
+  vertical-align: -0.12em;
+  border-radius: 1px;
+}
+
+.dossier__label--you::before {
+  border: 2px solid var(--evidence-blue-light);
+  box-shadow: 0 0 4px 1px rgb(156 192 230 / 0.7);
+}
+
+.dossier__label--evidence::before {
+  border: 2px dashed var(--ribbon);
+}
+
+.dossier__none {
+  max-width: 12rem;
+  font: 400 var(--step--1) / 1.3 var(--font-typed);
+}
+
+.dossier__identity .suspect-card {
+  width: 6.5rem;
+  font-size: 0.8rem;
+}
+
+/* Up to four cards in a row, so three in hand (four while clearing one) take one row; a bigger hand
+   wraps onto more rows, which keeps it about as tall as the identity card. */
+.dossier__hand {
+  display: grid;
+  grid-template-columns: repeat(var(--per-row), minmax(0, 4.6rem));
+  gap: 0.4rem;
+}
+
 .dossier__hand .suspect-card {
-  width: 3.5rem;
-  font-size: 0.5rem;
+  font-size: 0.55rem;
+}
+
+/* The city takes the height that's left and fits in it, whatever its rows and columns. A board of
+   cards is about 0.82 as wide as it is tall, per row and column. */
+.dossier__city {
+  flex: 1 1 0;
+  min-height: 0;
+  container-type: size;
+}
+
+.dossier__city .board {
+  width: min(100%, 100cqh * var(--cols) / var(--rows) * 0.82);
+}
+
+.dossier__hint {
+  margin-top: auto;
+  font: 400 var(--step--1) / 1.3 var(--font-typed);
+  color: var(--ribbon-faint);
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* On a laptop (wide and landscape), the open file reads like a spread: you and your evidence on the
+   left, large; the city on the right, as tall as the screen. */
+@media (min-width: 48rem) and (orientation: landscape) {
+  .dossier__open {
+    display: grid;
+    grid-template-columns: minmax(16rem, 26rem) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 1.5rem 3rem;
+    padding: 2rem 3rem;
+  }
+
+  .dossier__title {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .dossier__people {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .dossier__group + .dossier__group {
+    padding: 1.25rem 0 0;
+    border-top: 1px dashed rgb(42 36 28 / 0.35);
+    border-left: 0;
+  }
+
+  .dossier__label {
+    font-size: var(--step--1);
+  }
+
+  .dossier__identity .suspect-card {
+    width: 10rem;
+    font-size: 1rem;
+  }
+
+  .dossier__hand {
+    grid-template-columns: repeat(var(--per-row), minmax(0, 5.75rem));
+    gap: 0.6rem;
+  }
+
+  .dossier__hand .suspect-card {
+    font-size: 0.75rem;
+  }
+
+  .dossier__city {
+    grid-row: 2 / 4;
+    grid-column: 2;
+  }
+
+  .dossier__hint {
+    grid-row: 3;
+    grid-column: 1;
+    text-align: left;
+  }
 }
 
 .visually-hidden {
@@ -1472,6 +1610,163 @@ button.suspect-card:focus-visible {
 .duel-phone__room {
   display: grid;
   gap: 0.5rem;
+}
+
+/* The game's three parts, top (prompt, file, actions), field (the board, or the cards to choose from)
+   and rest (tally, log, help, room buttons), lay out as one column on a phone, in that order. */
+.duel-phone__top,
+.duel-phone__field,
+.duel-phone__rest {
+  display: contents;
+}
+
+/* On a laptop (wide and landscape) the game is one screen with nothing to scroll: the field fills the
+   left at full height, and the top, the confirm bar and the rest stand in a column on the right, the
+   player's file always in view. */
+@media (min-width: 64rem) and (orientation: landscape) {
+  .screen--phone:has(> .duel-phone) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 26rem);
+    grid-template-rows: auto auto auto auto minmax(0, 1fr);
+    grid-template-areas:
+      'head head'
+      'notice notice'
+      'field top'
+      'field bar'
+      'field rest';
+    column-gap: clamp(1.5rem, 3vw, 3.5rem);
+    max-width: 100rem;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .screen--phone:has(> .duel-phone) > .masthead {
+    grid-area: head;
+  }
+
+  .screen--phone:has(> .duel-phone) > .connection {
+    grid-area: notice;
+  }
+
+  .screen--phone > .duel-phone {
+    display: contents;
+  }
+
+  .duel-phone__top {
+    grid-area: top;
+    display: grid;
+    align-content: start;
+    gap: 1.25rem;
+    padding-top: 0.5rem;
+  }
+
+  .duel-phone__field {
+    grid-area: field;
+    display: grid;
+    align-items: center;
+    min-height: 0;
+    padding: 0.5rem 0 1.5rem;
+    container-type: size;
+  }
+
+  /* The board as big as the field allows; a board of cards is about 0.82 as wide as it is tall per
+     row and column. */
+  .duel-phone__field .board {
+    width: min(100%, 100cqh * var(--cols) / var(--rows) * 0.82);
+  }
+
+  .duel-phone__field .pick {
+    width: min(100%, 100cqh * 0.8, 40rem);
+    font-size: 1rem;
+  }
+
+  .screen--phone:has(> .duel-phone) > .action-bar {
+    grid-area: bar;
+    position: static;
+    padding: 0.75rem 0 0;
+    background: none;
+  }
+
+  .duel-phone__rest {
+    grid-area: rest;
+    display: grid;
+    align-content: start;
+    gap: 1.5rem;
+    min-height: 0;
+    padding: 1.25rem 0 1.5rem;
+    overflow-y: auto;
+  }
+}
+
+/* The turn's actions: a tab for each, then what the chosen one does, or why it can't be done now. Tabs
+   that can't be used now keep a dotted underline, so the state isn't carried by colour alone. */
+.actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.actions__tabs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  border-bottom: 1px solid var(--smoke);
+}
+
+.actions__tab {
+  min-height: 48px;
+  margin-bottom: -1px;
+  padding: 0.35rem 0.25rem;
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: var(--fog);
+  font: 650 var(--step--1) / 1.1 var(--font-ui);
+  cursor: pointer;
+}
+
+.actions__tab[data-off] {
+  color: var(--smoke-light);
+  text-decoration: underline dotted;
+  text-underline-offset: 0.3em;
+}
+
+.actions__tab[aria-selected='true'] {
+  border-bottom-color: var(--brass);
+  color: var(--brass-light);
+}
+
+.actions__tab[data-off][aria-selected='true'] {
+  border-bottom-style: dotted;
+  color: var(--fog);
+}
+
+.actions__panel {
+  font-size: var(--step--1);
+  line-height: 1.4;
+}
+
+.actions__panel[data-off] {
+  color: var(--smoke-light);
+}
+
+.actions__ways {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.actions__ways .button {
+  flex: 1 1 10rem;
+}
+
+.pick-view {
+  justify-content: center;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 /* The turn's choices: buttons side by side, so the board stays in view. */
