@@ -4,7 +4,7 @@
 > built, and what is next, so development can resume from any point (a new session, a new agent,
 > or after a break). Update it in every milestone PR.
 >
-> **Last updated:** 2026-11-09. M5 (the Shadow Duel board, playable) and P2/P2b (the approved portrait pictures) are merged and live (PRs #15–#17). M5b, the browser games in CI, is on branch `m5b/e2e` (PR #18 open). M5c, clearer turns on the phone, is on branch `m5c/turn-tabs`, stacked on M5b.
+> **Last updated:** 2026-11-09. Shadow Duel is playable and live: M5 (board), P/P2/P2b (portraits), M5b (browser games in CI) and M5c (clearer turns, full-screen file, laptop layout) are merged (PRs #14–#19). Next up: the owner's requests V (versioning) and H (home screen), then Spy Ring (M6).
 >
 > **Legend:** ✅ done and merged · 🟡 done on a branch / PR open · ⬜ not started · ⚠️ known issue or follow-up
 
@@ -71,10 +71,12 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M4 | Look and feel, home, join flow, lobby on TV and phone, EN/RU | ✅ (live) | #13 |
 | P | Suspect portraits, evidence-wall background, realistic folders | ✅ (live) | #14 |
 | M5 | Shadow Duel board and game UI → **release v0.1, first playable** | ✅ (live) | #15 |
-| M5b | Browser end-to-end tests (TV + 2 phones) in CI | 🟡 PR open | #18 |
-| M5c | Clearer turns on the phone: action tabs, reasons, drawn cards shown in the city; a collapse in the browser games | 🟡 in progress | `m5c/turn-tabs` |
+| M5b | Browser end-to-end tests in CI (TV, laptop, phone) | ✅ (live) | #18 |
+| M5c | Clearer turns: action tabs, reasons, drawn cards in the city, a full-screen file, a laptop layout; a collapse in the browser games | ✅ (live) | #19 |
 | P2 | Picture portraits (files, with a drawn fallback) and the brief and prompts for making them | ✅ (live) | #16 |
 | P2b | The 60 approved portrait pictures, and the drawing fixed to match | ✅ (live) | #17 |
+| V | Versioning: the deployed version on screen, and release tags on GitHub (owner's request) | ⬜ | – |
+| H | Home: host and join folders the same size, and a game-type choice (owner's request) | ⬜ | – |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
@@ -82,7 +84,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M10 | Casino Heist | ⬜ | – |
 | M11 | Hardening & polish, incl. remote-play polish | ⬜ | – |
 
-**Next action:** the owner reviews the M5c PR. The owner merges M5b and adds its check, `Browser games`, to the ruleset (RUNBOOK §1.3). Then the rules pages and sound (`p3/rules-pages`), a real session on the TV, and Spy Ring (M6).
+**Next action:** the owner adds `Browser games` to the ruleset's required checks (RUNBOOK §1.3) and answers the open questions under V and H (§5). Then V and H, the rules pages and sound (`p3/rules-pages`), a real session on the TV, and Spy Ring (M6).
 
 **Order of the next steps** (owner's choice, 2026-11-06; changed 2026-11-07): portraits first after all, because the owner asked for an evidence-wall background with the suspects on it, then the playable board. M5 then makes Shadow Duel playable, with the portraits on its case-file cards. Every later mode ships with its own UI in its milestone. TV + phones get the polish first; remote play on one's own device is polished last (M11).
 
@@ -252,7 +254,7 @@ phone guide and a TV walkthrough. Design notes: [DESIGN.md](DESIGN.md) §7–8.
     - `stitch.mjs` places the frames on a common 25 fps timeline, so the TV and both phones stay in step to within a frame, reloads included.
     - Playwright's own video files couldn't be lined up: they drop the still stretches at their start and end.
     - Every tap shows as a ring (`support/taps.ts`), including the press-and-hold that opens a player's file.
-- [ ] **M5c: clearer turns on the phone** (branch `m5c/turn-tabs`; the owner asked for it after watching the M5b video).
+- [x] **M5c: clearer turns on the phone** (PR #19, merged 2026-11-08 and live; the owner asked for it after watching the M5b video).
   - [x] **Action tabs** (`DuelPhone.tsx`): Kill / Disguise / Shift / Collapse, or Accuse / Clear a suspect / Shift / Collapse. Switch freely, with no Cancel. The open tab explains its action and shows it on the board.
   - [x] **Unavailable actions** keep their tab, with a dotted underline and the reason: the first move, no one next to you, an empty deck, or a city that can't collapse yet.
   - [x] **A turn opens on Shift,** so lit targets never show onlookers where you stand (DESIGN §7).
@@ -268,7 +270,6 @@ phone guide and a TV walkthrough. Design notes: [DESIGN.md](DESIGN.md) §7–8.
   - [ ] Still for M11: the hints say "Tap" on a laptop, and the lobby keeps the phone's column.
   - [x] **Texts:** kill and accuse say "one of the eight tiles around you"; collapse says when it's possible.
   - [x] **Browser games:** Ann now plays from a laptop (1440×900, mouse) and Борис from a phone (390×844, touch), so every step runs on both layouts; the laptop's open file is checked to be a spread. The CI job is now just `Browser games` (renamed in #18 before it joins the ruleset). Round 1 builds up to a collapse and makes it, checking that the TV loses a line. The phones go through the tabs; the opening move checks the other tabs' reason; the inspector lights the accuse targets, then switches to clearing a suspect. The pick is checked in both directions between the cards and the city.
-  - [ ] The PR.
 - [ ] **Release v0.1**, then a real session with phones and the TV.
 
 ### P: portraits, evidence wall, realistic folders ✅ (PR #14, live)
@@ -289,7 +290,7 @@ the suspects on it, and folders that look real. Design notes: [DESIGN.md](DESIGN
 - [ ] Check the wall on a real smart-TV browser after deploying. If it draws slowly there, pre-render it into an image at build time.
 - [x] **Game name:** stays "Precinct Noir" in Latin letters in Russian too (owner asked; never «Нуар», the Russian title of another game).
 
-### P2: picture portraits ✅ (PR #16, live); the approved pictures 🟡 (P2b, branch `p2b/approved-portraits`)
+### P2: picture portraits ✅ (PR #16, live); the approved pictures ✅ (P2b, PR #17, live)
 - [x] The portraits become a black-and-white sketch: ink line with grey wash on cream paper, both eyes drawn,
   soft shading instead of solid-ink shadow. Same suspects, parts and ids, so the wall and the board change
   together.
@@ -328,6 +329,32 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 - [ ] Optional synthesized SFX.
 - [ ] Remote play on one's own laptop or phone: polish the layouts for playing without a shared TV.
 - [ ] Docs finalised.
+
+### Owner's feature requests ⬜ (added 2026-11-09)
+
+#### V: versioning
+The owner wants to see which version is deployed, and versions tagged on GitHub.
+- [ ] **Scheme:** semantic versions `vMAJOR.MINOR.PATCH`. A proposal for the owner to confirm:
+  - `v0.1.0` for what's live once M5b/M5c are merged (Shadow Duel, the first playable);
+  - a minor bump per mode milestone (`v0.2.0` with Spy Ring, and so on);
+  - a patch for fixes;
+  - `v1.0.0` after M11.
+- [ ] **Tags and releases:** each version is a git tag `vX.Y.Z` with a GitHub Release, whose notes list the PRs merged since the last one.
+- [ ] **The build knows its version:** from the tag, or `0.0.0-dev+<short sha>` between tags. Gradle and the web build read it, and the Docker image is labelled and tagged with it (deploys use `$GITHUB_SHA` today).
+- [ ] **Visible:**
+  - a quiet "v0.1.0 · abc1234" on the home page and in a corner of the TV lobby;
+  - the same in `GET /api/config` (or `/actuator/info`), so a script can check what's live.
+- [ ] **Open questions for the owner:**
+  - Who cuts a version: by hand when the owner decides to release, or automatically on every merge to `main`?
+  - Does production keep deploying on every merge, or only on a tag?
+
+#### H: home screen
+- [ ] **Host and Join folders the same size:** equal width and height side by side on wide screens, and equal height stacked on a phone.
+- [ ] **Choose the game type when hosting:** the Host folder lists all six modes under their original names, with player counts.
+  - Shadow Duel is selectable. Spy Ring, The Hit List, Cat Burglar, Feds vs. Mob and Casino Heist are shown but marked "Coming later" and can't be picked.
+  - The room starts in the chosen mode: `POST /api/rooms` takes a `mode`, validated against the `ModeRegistry` (a protocol change: PROTOCOL.md, codegen, tests).
+  - EN/RU texts. As each later mode ships (M6–M10), it becomes selectable.
+- [ ] **Open question for the owner:** keep the VIP's mode picker in the lobby too (`set_mode`), or fix the mode at the host's choice?
 
 ---
 
