@@ -4,7 +4,7 @@
 > built, and what is next, so development can resume from any point (a new session, a new agent,
 > or after a break). Update it in every milestone PR.
 >
-> **Last updated:** 2026-11-08. M5 (the Shadow Duel board, playable) and P2/P2b (the approved portrait pictures) are merged and live (PRs #15–#17). M5b, the browser games in CI, is on branch `m5b/e2e` (PR open).
+> **Last updated:** 2026-11-09. M5 (the Shadow Duel board, playable) and P2/P2b (the approved portrait pictures) are merged and live (PRs #15–#17). M5b, the browser games in CI, is on branch `m5b/e2e` (PR #18 open). M5c, clearer turns on the phone, is on branch `m5c/turn-tabs`, stacked on M5b.
 >
 > **Legend:** ✅ done and merged · 🟡 done on a branch / PR open · ⬜ not started · ⚠️ known issue or follow-up
 
@@ -71,9 +71,10 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M4 | Look and feel, home, join flow, lobby on TV and phone, EN/RU | ✅ (live) | #13 |
 | P | Suspect portraits, evidence-wall background, realistic folders | ✅ (live) | #14 |
 | M5 | Shadow Duel board and game UI → **release v0.1, first playable** | ✅ (live) | #15 |
-| M5b | Browser end-to-end tests (TV + 2 phones) in CI | 🟡 PR open | `m5b/e2e` |
+| M5b | Browser end-to-end tests (TV + 2 phones) in CI | 🟡 PR open | #18 |
+| M5c | Clearer turns on the phone: action tabs, reasons, drawn cards shown in the city; a collapse in the browser games | 🟡 in progress | `m5c/turn-tabs` |
 | P2 | Picture portraits (files, with a drawn fallback) and the brief and prompts for making them | ✅ (live) | #16 |
-| P2b | The 60 approved portrait pictures, and the drawing fixed to match | 🟡 PR open | `p2b/approved-portraits` |
+| P2b | The 60 approved portrait pictures, and the drawing fixed to match | ✅ (live) | #17 |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
@@ -81,7 +82,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M10 | Casino Heist | ⬜ | – |
 | M11 | Hardening & polish, incl. remote-play polish | ⬜ | – |
 
-**Next action:** the owner merges M5b and adds its check, `Browser games`, to the ruleset (RUNBOOK §1.3). Then the rules pages and sound (`p3/rules-pages`), a real session on the TV, and Spy Ring (M6).
+**Next action:** the owner reviews the M5c PR. The owner merges M5b and adds its check, `Browser games`, to the ruleset (RUNBOOK §1.3). Then the rules pages and sound (`p3/rules-pages`), a real session on the TV, and Spy Ring (M6).
 
 **Order of the next steps** (owner's choice, 2026-11-06; changed 2026-11-07): portraits first after all, because the owner asked for an evidence-wall background with the suspects on it, then the playable board. M5 then makes Shadow Duel playable, with the portraits on its case-file cards. Every later mode ships with its own UI in its milestone. TV + phones get the polish first; remote play on one's own device is polished last (M11).
 
@@ -251,6 +252,20 @@ phone guide and a TV walkthrough. Design notes: [DESIGN.md](DESIGN.md) §7–8.
     - `stitch.mjs` places the frames on a common 25 fps timeline, so the TV and both phones stay in step to within a frame, reloads included.
     - Playwright's own video files couldn't be lined up: they drop the still stretches at their start and end.
     - Every tap shows as a ring (`support/taps.ts`), including the press-and-hold that opens a player's file.
+- [ ] **M5c: clearer turns on the phone** (branch `m5c/turn-tabs`; the owner asked for it after watching the M5b video).
+  - [x] **Action tabs** (`DuelPhone.tsx`): Kill / Disguise / Shift / Collapse, or Accuse / Clear a suspect / Shift / Collapse. Switch freely, with no Cancel. The open tab explains its action and shows it on the board.
+  - [x] **Unavailable actions** keep their tab, with a dotted underline and the reason: the first move, no one next to you, an empty deck, or a city that can't collapse yet.
+  - [x] **A turn opens on Shift,** so lit targets never show onlookers where you stand (DESIGN §7).
+  - [x] **Drawn cards in the city:** while the inspector picks an identity or the card to clear, a switch shows "Cards" or "In the city", where the same cards are lit. A choice on either shows on both, and a dead suspect's card keeps its X.
+    - The owner chose the switch from three layouts (cards above the city, the switch, or the city only), shown as screenshots on 2026-11-09.
+  - [x] **The player's file** (`Dossier.tsx`) is a slim strip now. Held, it opens over the whole screen with the identity, the evidence and the city; the game's board no longer marks your tile.
+    - In the file's city, your tile is outlined solid blue and your evidence dashed; the labels carry the same marks as a key.
+    - Bigger hands wrap four to a row, and the city shrinks to the height that's left. Checked with hands of 3, 4, 6 and 8 cards.
+    - On a laptop (wide, landscape) the open file is a spread: you and your evidence left, the city right.
+  - [ ] **Laptop play beyond the file** stays for M11, as planned: the game page is the phone's single column (640px) there. On a 900px-tall screen, the board's last rows fall below the fold, and the hints say "Tap".
+  - [x] **Texts:** kill and accuse say "one of the eight tiles around you"; collapse says when it's possible.
+  - [x] **Browser games:** round 1 now builds up to a collapse and makes it, checking that the TV loses a line. The phones go through the tabs; the opening move checks the other tabs' reason; the inspector lights the accuse targets, then switches to clearing a suspect. The pick is checked in both directions between the cards and the city.
+  - [ ] The PR.
 - [ ] **Release v0.1**, then a real session with phones and the TV.
 
 ### P: portraits, evidence wall, realistic folders ✅ (PR #14, live)

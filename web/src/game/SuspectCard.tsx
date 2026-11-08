@@ -11,11 +11,13 @@ interface Props {
   readonly chosen?: boolean
   /** The viewer's own identity, shown only while they hold their file open. */
   readonly mine?: boolean
+  /** One of the viewer's evidence cards, shown only while they hold their file open. */
+  readonly evidence?: boolean
   readonly onPick?: () => void
 }
 
 /** One suspect's case-file card: portrait, name and file number, with a red X or a cleared stamp. */
-export function SuspectCard({ id, dead, cleared, lit, chosen, mine, onPick }: Props) {
+export function SuspectCard({ id, dead, cleared, lit, chosen, mine, evidence, onPick }: Props) {
   const { t, i18n } = useTranslation()
   const name = suspectName(id, i18n.language)
   const stamp = t('duel.card.stamp')
@@ -24,6 +26,7 @@ export function SuspectCard({ id, dead, cleared, lit, chosen, mine, onPick }: Pr
     dead && t('duel.card.dead', { context: genderOf(id) }),
     cleared && t('duel.card.cleared'),
     mine && t('duel.card.you'),
+    evidence && t('duel.card.evidence'),
   ]
     .filter(Boolean)
     .join(', ')
@@ -51,6 +54,7 @@ export function SuspectCard({ id, dead, cleared, lit, chosen, mine, onPick }: Pr
     'data-lit': lit || undefined,
     'data-chosen': chosen || undefined,
     'data-mine': mine || undefined,
+    'data-evidence': evidence || undefined,
   }
   return onPick ? (
     <button

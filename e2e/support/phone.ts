@@ -3,6 +3,7 @@ import { allShifts, direction, type Grid, type Place, type Shift } from './grid'
 import { fill, idOf, nameOf, TEXTS, type Language, type Texts } from './texts'
 
 export type Role = 'killer' | 'inspector'
+export type Action = 'kill' | 'accuse' | 'disguise' | 'exonerate' | 'shift' | 'collapse'
 
 /** Pause after each move, so a recording can be followed by eye. */
 export const PACE = Number(process.env.E2E_PACE ?? (process.env.E2E_VIDEO ? 900 : 100))
@@ -37,6 +38,40 @@ export class Phone {
     return this.controls.getByRole('button', { name: text, exact: true })
   }
 
+  /** An action's tab, shown on a turn with several actions. */
+  private tab(action: Action): Locator {
+    return this.page.getByRole('tab', { name: this.t.duel.action[action], exact: true })
+  }
+
+  /** Switch to an action's tab, straight from whichever is open; nothing to do when there are no tabs. */
+  private async choose(action: Action): Promise<void> {
+    const tab = this.tab(action)
+    if ((await tab.count()) === 0) return
+    if ((await tab.getAttribute('aria-selected')) !== 'true') {
+      await tab.click()
+      await this.page.waitForTimeout(PACE / 2)
+    }
+  }
+
+  /** True when the action's tab can be used now. */
+  async available(action: Action): Promise<boolean> {
+    const tab = this.tab(action)
+    return (await tab.count()) > 0 && (await tab.getAttribute('data-off')) === null
+  }
+
+  /** What an action's tab says: what it does, or why it can't be done now. */
+  async explanation(action: Action): Promise<string> {
+    await this.choose(action)
+    return this.page.getByRole('tabpanel').innerText()
+  }
+
+  private async litOnBoard(): Promise<number[]> {
+    const names = await this.board
+      .locator('button.suspect-card[data-lit]')
+      .evaluateAll((cards) => cards.map((c) => (c.getAttribute('aria-label') ?? '').split(', ')[0]))
+    return names.map(idOf)
+  }
+
   private card(scope: Locator, id: number): Locator {
     const name = nameOf(id, this.language)
     return scope.getByRole('button', { name: new RegExp(`^${escape(name)}(,|$)`) })
@@ -66,7 +101,10 @@ export class Phone {
     return this.page.locator('.duel-phone__prompt').innerText()
   }
 
-  /** Who this player is: press and hold the file, read it, let go. */
+  /**
+   * Who this player is: press and hold the file, read it, let go. Held, the file covers the whole screen,
+   * and the city inside it marks the player's own tile.
+   */
   async identity(): Promise<number> {
     const folder = this.page.locator('.dossier__folder')
     await folder.scrollIntoViewIfNeeded()
@@ -74,13 +112,28 @@ export class Phone {
     if (!box) throw new Error(`${this.name}'s file isn't on screen`)
     await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
     await this.page.mouse.down()
-    const label = await this.page
-      .locator('.dossier__identity .suspect-card')
-      .getAttribute('aria-label')
+    const open = this.page.locator('.dossier__open')
+    expect(await open.boundingBox()).toEqual({ x: 0, y: 0, ...this.page.viewportSize() })
+    const label = await open.locator('.dossier__identity .suspect-card').getAttribute('aria-label')
+    if (!label) throw new Error(`${this.name} has no identity`)
+    const name = label.split(', ')[0]
+    const marked = await open.locator('.dossier__city [data-mine]').getAttribute('aria-label')
+    expect(marked?.split(', ')[0]).toBe(name)
+    // The evidence in hand is marked too, wherever it still stands in the city.
+    const names = (selector: string) =>
+      open
+        .locator(selector)
+        .evaluateAll((nodes) =>
+          nodes.map((n) => (n.getAttribute('aria-label') ?? '').split(', ')[0]),
+        )
+    const hand = await names('.dossier__hand .suspect-card')
+    const inCity = await names('.dossier__city .suspect-card')
+    const evidence = await names('.dossier__city [data-evidence]')
+    expect(evidence.sort()).toEqual(hand.filter((n) => inCity.includes(n)).sort())
     await this.page.waitForTimeout(PACE)
     await this.page.mouse.up()
-    if (!label) throw new Error(`${this.name} has no identity`)
-    return idOf(label.split(', ')[0])
+    await expect(open).toHaveCount(0)
+    return idOf(name)
   }
 
   /** The city as this phone shows it. */
@@ -118,6 +171,7 @@ export class Phone {
 
   /** The shifts the board offers right now: an undo of the last one is greyed out. */
   async shifts(grid: Grid): Promise<Shift[]> {
+    await this.choose('shift')
     const open: Shift[] = []
     for (const shift of allShifts(grid)) {
       const arrow = this.board.getByRole('button', { name: this.arrowLabel(shift), exact: true })
@@ -127,61 +181,103 @@ export class Phone {
   }
 
   async shift(shift: Shift): Promise<void> {
+    await this.choose('shift')
     const label = this.arrowLabel(shift)
     await this.board.getByRole('button', { name: label, exact: true }).click()
     await this.page.waitForTimeout(PACE)
     await this.button(label).click()
   }
 
-  /** Suspects lit as targets once [action] is chosen, then the choice is cancelled. */
+  /** Suspects lit as targets on [action]'s tab, or none when the tab can't be used. */
   async targets(action: 'kill' | 'accuse'): Promise<number[]> {
-    const start = this.button(this.t.duel.action[action])
-    if ((await start.count()) === 0) return []
-    await start.click()
-    const lit = await this.board
-      .locator('button.suspect-card[data-lit]')
-      .evaluateAll((cards) => cards.map((c) => (c.getAttribute('aria-label') ?? '').split(', ')[0]))
-    await this.button(this.t.duel.cancel).click()
-    return lit.map(idOf)
+    if (!(await this.available(action))) return []
+    await this.choose(action)
+    return this.litOnBoard()
   }
 
-  /** Kill or accuse [id]. The killer's first move starts with the targets already lit. */
+  /** Kill or accuse [id]. */
   async strike(action: 'kill' | 'accuse', id: number): Promise<void> {
-    const start = this.button(this.t.duel.action[action])
-    if ((await start.count()) > 0) await start.click()
+    await this.choose(action)
     await this.card(this.board, id).click()
     await this.page.waitForTimeout(PACE)
     const confirm = this.t.duel.confirmTarget[action]
     await this.button(fill(confirm, { name: nameOf(id, this.language) })).click()
   }
 
-  /** The killer's opening kill: any lit suspect. */
+  /** The killer's opening kill: any lit suspect. The other tabs say they have to wait. */
   async firstKill(): Promise<void> {
-    const label = await this.board
-      .locator('button.suspect-card[data-lit]')
-      .first()
-      .getAttribute('aria-label')
-    await this.strike('kill', idOf((label ?? '').split(', ')[0]))
+    for (const action of ['disguise', 'shift', 'collapse'] as const) {
+      expect(await this.available(action)).toBe(false)
+      expect(await this.explanation(action)).toBe(this.t.duel.unavailable.opening)
+    }
+    await this.choose('kill')
+    await this.strike('kill', (await this.litOnBoard())[0])
   }
 
-  /** Choose one of the cards offered face up: an identity, or the card to clear. */
+  /** Switch a pick between the cards and the city. */
+  private async view(which: 'cards' | 'city'): Promise<void> {
+    await this.page.getByRole('radio', { name: this.t.duel.pickView[which], exact: true }).check()
+    await this.page.waitForTimeout(PACE / 2)
+  }
+
+  /**
+   * Choose one of the cards offered face up: an identity, or the card to clear. Switched to the city, the
+   * same cards are lit. The choice is made once on a card and once on the city, and each shows on the other.
+   */
   async pick(kind: 'choose_identity' | 'exonerate_discard'): Promise<number> {
-    const card = this.page.locator('.pick button.suspect-card:not([data-dead])').first()
-    const id = idOf(((await card.getAttribute('aria-label')) ?? '').split(', ')[0])
-    await card.click()
+    const cards = this.page.locator('.pick')
+    const ids = (
+      await cards
+        .locator('button.suspect-card')
+        .evaluateAll((nodes) =>
+          nodes.map((n) => (n.getAttribute('aria-label') ?? '').split(', ')[0]),
+        )
+    ).map(idOf)
+    const first = ids[0]
+    await this.card(cards, first).click()
+    await this.view('city')
+    const grid = await this.grid()
+    const onCity = ids.filter((id) => grid.at.has(id))
+    expect((await this.litOnBoard()).sort()).toEqual([...onCity].sort())
+    if (grid.at.has(first))
+      await expect(this.card(this.board, first)).toHaveAttribute('aria-pressed', 'true')
+    const id = onCity.filter((other) => other !== first).pop() ?? first
+    if (id !== first) await this.card(this.board, id).click()
+    await this.view('cards')
+    await expect(this.card(cards, id)).toHaveAttribute('aria-pressed', 'true')
     await this.page.waitForTimeout(PACE)
     await this.button(fill(this.t.duel.pick[kind], { name: nameOf(id, this.language) })).click()
     return id
   }
 
   async picking(): Promise<boolean> {
-    return (await this.page.locator('.pick').count()) > 0
+    return (await this.page.locator('.pick-view').count()) > 0
   }
 
   /** Clear a suspect: draw a card, then put one face up. The face-up pick follows as its own decision. */
   async clearSuspect(): Promise<void> {
-    await this.button(this.t.duel.action.exonerate).click()
+    await this.choose('exonerate')
     await this.page.waitForTimeout(PACE)
     await this.button(this.t.duel.action.exonerate).click()
+  }
+
+  /** Close the city up: the first way offered, then a lit body in every line that has several. */
+  async collapse(): Promise<void> {
+    await this.choose('collapse')
+    const ways = this.page.locator('.actions__ways button')
+    if ((await ways.count()) > 0) {
+      await ways.first().click()
+      await this.page.waitForTimeout(PACE / 2)
+    }
+    // A later tap in a line replaces the earlier one, so tapping each lit body once fills every line.
+    for (const id of await this.litOnBoard()) {
+      await this.card(this.board, id).click()
+      await this.page.waitForTimeout(PACE / 2)
+    }
+    await this.button(this.t.duel.action.collapse).click()
+  }
+
+  async stopCollapsing(): Promise<void> {
+    await this.button(this.t.duel.action.stop_collapsing).click()
   }
 }

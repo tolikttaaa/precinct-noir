@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { closingShift, distance, quietShift } from '../support/grid'
+import { closes, closingShift, collapsePlan, distance, quietShift } from '../support/grid'
 import type { Phone } from '../support/phone'
 import { Session } from '../support/session'
 import { fill } from '../support/texts'
@@ -50,24 +50,39 @@ test('a living-room session: a TV and two phones play two rounds of Shadow Duel'
       await expect(boris.page.getByText(waiting)).toBeVisible()
     })
 
-    await test.step('round 1: the inspector tracks the killer down and accuses them', async () => {
+    await test.step('round 1: the killer closes the city up, then the inspector tracks them down', async () => {
       await ann.page.getByRole('button', { name: ann.t.lobby.start }).click()
       const { killer, inspector } = await sides(session)
       await expectTvKeepsSecrets(session)
       const k = await killer.identity()
       let i: number | undefined
       let cleared = false
+      let collapsed = false
       await session.playRound(async (phone) => {
         const prompt = await phone.prompt()
         if (phone === killer) {
-          // The killer keeps killing anyone but the inspector, and never moves either of them.
           if (prompt === phone.t.duel.yourPrompt.opening_kill) return phone.firstKill()
+          if (prompt === phone.t.duel.yourPrompt.collapse_more) return phone.stopCollapsing()
           i ??= await inspector.identity()
-          const inspectorId = i
-          const targets = (await phone.targets('kill')).filter((id) => id !== inspectorId)
-          if (targets.length > 0) return phone.strike('kill', targets[0])
           const grid = await phone.grid()
-          return phone.shift(quietShift(grid, [k, inspectorId], await phone.shifts(grid)))
+          if (!collapsed) {
+            // The killer works towards closing the city up, sparing the inspector, and collapses it as soon
+            // as every row or every column has a body. Until then, the tab says why it can't.
+            expect(await phone.available('collapse')).toBe(closes(grid))
+            if (closes(grid)) {
+              collapsed = true
+              await phone.collapse()
+              return expect(session.tv.locator('.board__cell')).toHaveCount(
+                grid.rows * grid.cols - 5,
+              )
+            }
+            expect(await phone.explanation('collapse')).toBe(phone.t.duel.unavailable.collapse)
+            const step = collapsePlan(grid, k, [i], await phone.shifts(grid))
+            if (step && 'kill' in step) return phone.strike('kill', step.kill)
+            if (step) return phone.shift(step.shift)
+          }
+          // Otherwise it slides lines that move neither of them.
+          return phone.shift(quietShift(grid, [k, i], await phone.shifts(grid)))
         }
         if (await phone.picking()) {
           if (prompt === phone.t.duel.yourPrompt.exonerate_discard)
@@ -75,16 +90,20 @@ test('a living-room session: a TV and two phones play two rounds of Shadow Duel'
           i = await phone.pick('choose_identity')
           return
         }
-        // The inspector clears a suspect once, then slides the killer next to them and accuses.
         if (!cleared) {
+          // The accuse tab lights who could be accused; switching to clearing a suspect needs no cancel.
           cleared = true
+          expect((await phone.targets('accuse')).length).toBeGreaterThan(0)
           return phone.clearSuspect()
         }
+        // The inspector waits out the collapse, then slides the killer next to them and accuses.
         i ??= await phone.identity()
         const grid = await phone.grid()
+        if (!collapsed) return phone.shift(quietShift(grid, [k, i], await phone.shifts(grid)))
         if (distance(grid, k, i) <= 1) return phone.strike('accuse', k)
         return phone.shift(closingShift(grid, k, i, await phone.shifts(grid)))
       })
+      expect(collapsed).toBe(true)
       await expectVerdict(session, inspector, 'killer_caught')
       await expectTvKeepsSecrets(session)
     })

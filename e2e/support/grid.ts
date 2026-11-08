@@ -94,3 +94,74 @@ export function quietShift(grid: Grid, keep: readonly number[], options: readonl
   if (!quiet) throw new Error('Every possible shift moves a suspect that should stay put')
   return quiet
 }
+
+/** The living suspects next to [id]: the ones it could kill or accuse. */
+export function neighbours(grid: Grid, id: number): number[] {
+  return [...grid.at]
+    .filter(([other, p]) => other !== id && p.alive && distance(grid, id, other) === 1)
+    .map(([other]) => other)
+}
+
+function bodyLines(grid: Grid): { rows: Set<number>; cols: Set<number> } {
+  const rows = new Set<number>()
+  const cols = new Set<number>()
+  for (const p of grid.at.values())
+    if (!p.alive) {
+      rows.add(p.r)
+      cols.add(p.c)
+    }
+  return { rows, cols }
+}
+
+/** True when every row, or every column, has a body in it: then the city can close up. */
+export function closes(grid: Grid): boolean {
+  const { rows, cols } = bodyLines(grid)
+  return rows.size === grid.rows || cols.size === grid.cols
+}
+
+/** How near the city is to closing up: the further-along way first, then both together. */
+function nearness(grid: Grid): number {
+  const { rows, cols } = bodyLines(grid)
+  const r = rows.size / grid.rows
+  const c = cols.size / grid.cols
+  return Math.max(r, c) * 10 + r + c
+}
+
+function killed(grid: Grid, id: number): Grid {
+  const at = new Map(grid.at)
+  at.set(id, { ...place(grid, id), alive: false })
+  return { ...grid, at }
+}
+
+export type Step = { readonly kill: number } | { readonly shift: Shift }
+
+/**
+ * The killer's next step towards closing the city up: a kill that puts a body in a row or column that had
+ * none, or else a shift, among [options], after which such a kill is possible. It never kills [spare].
+ * Undefined when neither would help.
+ */
+export function collapsePlan(
+  grid: Grid,
+  killer: number,
+  spare: readonly number[],
+  options: readonly Shift[],
+): Step | undefined {
+  const now = nearness(grid)
+  const bestKill = (g: Grid) => {
+    let best: { id: number; score: number } | undefined
+    for (const id of neighbours(g, killer)) {
+      if (spare.includes(id)) continue
+      const score = nearness(killed(g, id))
+      if (score > (best?.score ?? now)) best = { id, score }
+    }
+    return best
+  }
+  const kill = bestKill(grid)
+  if (kill) return { kill: kill.id }
+  let best: { shift: Shift; score: number } | undefined
+  for (const shift of options) {
+    const next = bestKill(shifted(grid, shift))
+    if (next && next.score > (best?.score ?? -1)) best = { shift, score: next.score }
+  }
+  return best && { shift: best.shift }
+}
