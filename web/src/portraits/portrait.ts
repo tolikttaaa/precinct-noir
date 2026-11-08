@@ -151,7 +151,6 @@ export const EXTRAS = [
   'beads',
   'scar',
   'beauty_mark',
-  'pencil_ear',
   'flower_hair',
   'flower_lapel',
   'tape_measure',
@@ -240,7 +239,7 @@ const KITS: Record<string, Kit> = {
     mouth: 'smile',
     build: 'slim',
   },
-  typist: { hair: 'bun', outfit: 'blouse_bow', extras: ['glasses_cat', 'pencil_ear'] },
+  typist: { hair: 'bun', outfit: 'blouse_bow', extras: ['glasses_cat'] },
   boxer: {
     hair: 'crop',
     outfit: 'towel',
@@ -269,7 +268,7 @@ const KITS: Record<string, Kit> = {
     hat: 'fedora_tilt',
     hair: 'waves',
     outfit: 'suit',
-    extras: ['press_card', 'pencil_ear'],
+    extras: ['press_card'],
     mouth: 'smirk',
   },
   bootlegger: {
@@ -353,7 +352,7 @@ const KITS: Record<string, Kit> = {
     hat: 'paper_cap',
     hair: 'ponytail',
     outfit: 'blouse',
-    extras: ['name_tag', 'pencil_ear'],
+    extras: ['name_tag'],
     mouth: 'smile',
   },
   newsboy: {
@@ -460,7 +459,7 @@ const KITS: Record<string, Kit> = {
   librarian: {
     hair: 'bun',
     outfit: 'cardigan',
-    extras: ['glasses_cat', 'pencil_ear'],
+    extras: ['glasses_cat'],
     brow: 'raised',
     mouth: 'flat',
   },
@@ -531,7 +530,6 @@ const KITS: Record<string, Kit> = {
     hat: 'eyeshade',
     hair: 'bob',
     outfit: 'vest',
-    extras: ['pencil_ear'],
     brow: 'level',
   },
   stage_magician: {
@@ -789,7 +787,7 @@ function backdrop(g: Geo, id: string): string {
   const lightX = g.L(30)
   return (
     `<defs><radialGradient id="${id}-light" cx="${r1(lightX / 200)}" cy="0.35" r="0.8">` +
-    `<stop offset="0" stop-color="#ebe3d3"/><stop offset="0.6" stop-color="#d3c7ad"/><stop offset="1" stop-color="#9f896b"/></radialGradient>` +
+    `<stop offset="0" stop-color="#e4e3e1"/><stop offset="0.6" stop-color="#c6c5c2"/><stop offset="1" stop-color="#878683"/></radialGradient>` +
     `<clipPath id="${id}-head"><path d="${headPath(g)}"/></clipPath>` +
     `<clipPath id="${id}-far"><rect x="${g.s > 0 ? 100 : -50}" y="-50" width="150" height="350"/></clipPath>` +
     `<filter id="${id}-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="${g.seed}"/><feDisplacementMap in="SourceGraphic" scale="1.2"/></filter>` +
@@ -812,8 +810,8 @@ function backdrop(g: Geo, id: string): string {
         const y = -40 + i * 52
         return fill(
           d`M-20 ${y} L220 ${y - 70} L220 ${y - 48} L-20 ${y + 22}Z`,
-          '#fbf7ee',
-          ' opacity="0.18"',
+          '#ffffff',
+          ' opacity="0.16"',
         )
       })
       .join('')
@@ -865,10 +863,41 @@ function hairBack(g: Geo, hair: Hair): string {
     case 'chignon':
       return dot(S(w + 6), jawY - 4, 12, c, ` stroke="${INK}" stroke-width="2.2"`)
     case 'ponytail':
-      return shape(
-        d`M${S(w - 6)} ${top + 14} C${S(w + 26)} ${top + 10}, ${S(w + 22)} ${cy + 40}, ${S(w + 8)} ${jawY + 30} C${S(w + 10)} ${cy + 20}, ${S(w + 6)} ${top + 30}, ${S(w - 6)} ${top + 24}Z`,
-        c,
+      // Tied high at the back: the tail shows past the far side of the head and falls behind the shoulder.
+      return (
+        shape(
+          d`M${S(w - 4)} ${top + 10} C${S(w + 14)} ${top + 8}, ${S(w + 21)} ${cy + 4}, ${S(w + 15)} ${jawY + 10} C${S(w + 11)} ${jawY + 24}, ${S(w + 9)} ${g.shoulderY + 4}, ${S(w + 13)} ${g.shoulderY + 16} C${S(w + 2)} ${g.shoulderY}, ${S(w + 4)} ${jawY + 4}, ${S(w + 4)} ${cy + 6} C${S(w + 4)} ${cy - 10}, ${S(w)} ${top + 22}, ${S(w - 4)} ${top + 22}Z`,
+          c,
+        ) +
+        strands(g, [
+          d`M${S(w + 4)} ${top + 16} C${S(w + 15)} ${cy - 6}, ${S(w + 14)} ${jawY + 6}, ${S(w + 11)} ${g.shoulderY + 4}`,
+          d`M${S(w + 9)} ${top + 18} C${S(w + 18)} ${cy + 4}, ${S(w + 14)} ${jawY + 14}, ${S(w + 12)} ${g.shoulderY + 10}`,
+        ])
       )
+    case 'wild': {
+      // A shock of hair: long, uneven locks standing out at the sides, shorter ones over the top.
+      const rx = w + 5
+      const ry = g.h - 2
+      const a0 = Math.PI * 0.88
+      const a1 = Math.PI * 2.12
+      const reach = (mid: number, i: number) =>
+        (3 + 11 * Math.abs(Math.cos(mid))) * [1, 0.7, 1.25, 0.85, 1.1][i % 5]
+      return (
+        shape(
+          `M${r1(100 + Math.cos(a0) * rx)} ${r1(cy - 6 + Math.sin(a0) * ry)} ` +
+            locks(100, cy - 6, rx, ry, a0, a1, 11, 10, reach) +
+            'Z',
+          c,
+        ) +
+        strands(
+          g,
+          [-1, 1].flatMap((k) => [
+            d`M${100 + k * (w + 3)} ${cy - 4} q${k * 6} -4 ${k * 10} -10`,
+            d`M${100 + k * (w + 1)} ${cy - 20} q${k * 5} -5 ${k * 9} -8`,
+          ]),
+        )
+      )
+    }
     case 'rolls':
       return shape(
         d`M${100 - w - 8} ${jawY + 10} C${100 - w - 12} ${cy}, ${100 - w} ${top}, 100 ${top - 4} C${100 + w} ${top}, ${100 + w + 12} ${cy}, ${100 + w + 8} ${jawY + 10} Q100 ${jawY + 18} ${100 - w - 8} ${jawY + 10}Z`,
@@ -900,7 +929,7 @@ function sweep(g: Geo, c: string, depth: number): string {
   )
 }
 
-function hairFront(g: Geo, hair: Hair, hatted: boolean): string {
+function hairFront(g: Geo, hair: Hair, hatted: boolean, id: string): string {
   const { w, h, top, cy, L, S } = g
   const c = hairColor(g)
   const line = cy - h * 0.55
@@ -940,19 +969,20 @@ function hairFront(g: Geo, hair: Hair, hatted: boolean): string {
         ])
       )
     case 'crop':
-      if (hatted)
-        return (
-          shape(
-            d`M${100 - w - 1} ${cy - 2} L${100 - w} ${cy - 16} L${100 - w + 4} ${cy - 14} L${100 - w + 3} ${cy - 1}Z`,
-            c,
-            1.6,
-          ) +
-          shape(
-            d`M${100 + w + 1} ${cy - 2} L${100 + w} ${cy - 16} L${100 + w - 4} ${cy - 14} L${100 + w - 3} ${cy - 1}Z`,
-            c,
-            1.6,
+      if (hatted) {
+        // Short hair at the temples, from the brim to the top of the ear, inside the head's outline.
+        const temple = (k: 1 | -1) => {
+          const x = (dx: number) => 100 + k * dx
+          const edge = d`M${x(w - 4)} ${cy - 3} C${x(w - 6)} ${cy - 12}, ${x(w - 7)} ${cy - 20}, ${x(w - 8)} ${top + h * 0.3}`
+          return (
+            fill(
+              d`M${x(w + 3)} ${top + h * 0.3} L${x(w + 3)} ${cy - 1} Q${x(w - 1)} ${cy + 1} ${x(w - 4)} ${cy - 3} C${x(w - 6)} ${cy - 12}, ${x(w - 7)} ${cy - 20}, ${x(w - 8)} ${top + h * 0.3}Z`,
+              c,
+            ) + ink(edge, 1)
           )
-        )
+        }
+        return `<g clip-path="url(#${id}-head)">${temple(-1) + temple(1)}</g>`
+      }
       return (
         shape(
           d`M${100 - w - 1} ${cy - 2} C${100 - w - 3} ${top - 5}, ${100 + w + 3} ${top - 5}, ${100 + w + 1} ${cy - 2} L${100 + w - 3} ${cy - 4} C${100 + w - 6} ${line + 4}, ${S(10)} ${line}, 100 ${line + 1} C${L(10)} ${line}, ${100 - w + 6} ${line + 4}, ${100 - w + 3} ${cy - 4}Z`,
@@ -965,17 +995,33 @@ function hairFront(g: Geo, hair: Hair, hatted: boolean): string {
         )
       )
     case 'messy': {
-      const spikes = [0, 1, 2, 3, 4, 5, 6]
-        .map((i) => {
-          const x = 100 - w - 2 + (i * (2 * w + 4)) / 6
-          const tip = top - 6 - (i % 2 === 0 ? 6 : 1)
-          return `L${r1(x)} ${r1(tip)} L${r1(x + (w + 2) / 6)} ${r1(top + 2)}`
-        })
-        .join(' ')
-      return shape(
-        `M${r1(100 - w - 1)} ${r1(cy - 4)} ${spikes} L${r1(100 + w + 1)} ${r1(cy - 4)} L${r1(100 + w - 3)} ${r1(cy - 6)} ` +
-          d`C${100 + w - 6} ${line + 4}, ${S(4)} ${line + 6}, ${L(4)} ${line + 2} L${L(10)} ${line + 8} L${L(14)} ${line + 1} C${100 - w + 6} ${line + 4}, ${100 - w + 4} ${cy - 10}, ${100 - w + 3} ${cy - 6}Z`,
-        c,
+      // Tousled: locks all over the crown, and a fringe of uneven locks falling across the forehead.
+      const ry = h - 1
+      const a0 = Math.PI + 0.08
+      const a1 = 2 * Math.PI - 0.08
+      const base = [w - 5, w * 0.45, 0, -w * 0.45, -(w - 5)]
+      let fringe = d`L${100 + w - 3} ${cy - 8} L${100 + w - 5} ${line + 6}`
+      for (let k = 0; k < base.length - 1; k++) {
+        const x0 = 100 + base[k]
+        const x1 = 100 + base[k + 1]
+        const tipX = (x0 + x1) / 2 - g.s * 2
+        const tipY = line + 8 + (k % 2) * 4
+        const end = line + (k === base.length - 2 ? 6 : 1)
+        fringe += d` Q${x0 - (x0 - x1) * 0.15} ${tipY - 3} ${tipX} ${tipY} Q${(tipX + x1) / 2} ${line + 4} ${x1} ${end}`
+      }
+      return (
+        shape(
+          `M${r1(100 + Math.cos(a0) * (w + 1))} ${r1(cy - 6 + Math.sin(a0) * ry)} ` +
+            locks(100, cy - 6, w + 1, ry, a0, a1, 7, 6) +
+            fringe +
+            d` L${100 - w + 3} ${cy - 8}Z`,
+          c,
+        ) +
+        strands(g, [
+          d`M${L(w * 0.6)} ${top + 4} Q${L(w * 0.3)} ${line - 6} ${L(w * 0.2)} ${line + 6}`,
+          d`M${S(w * 0.1)} ${top} Q${S(w * 0.2)} ${line - 8} ${S(w * 0.3)} ${line + 8}`,
+          d`M${S(w * 0.6)} ${top + 6} Q${S(w * 0.75)} ${line - 4} ${S(w * 0.8)} ${line + 4}`,
+        ])
       )
     }
     case 'balding':
@@ -993,27 +1039,19 @@ function hairFront(g: Geo, hair: Hair, hatted: boolean): string {
           : ink(d`M${L(w - 8)} ${top + 12} Q100 ${top + 2} ${S(w - 10)} ${top + 10}`, 1.2) +
             ink(d`M${L(w - 12)} ${top + 17} Q100 ${top + 8} ${S(w - 14)} ${top + 15}`, 1.2))
       )
-    case 'wild': {
-      const puffs = [0, 1, 2, 3, 4, 5, 6, 7]
-        .map((i) => {
-          const a = Math.PI * (1.0 + (i / 7) * 1.0)
-          return dot(
-            100 + Math.cos(a) * (w + 4),
-            cy - 10 + Math.sin(a) * (h * 0.85),
-            10 + (i % 3) * 2,
-            c,
-            ` stroke="${INK}" stroke-width="2"`,
-          )
-        })
-        .join('')
+    case 'wild':
+      // Thin on top and swept back from a high hairline; the wild part stands out behind (hairBack).
       return (
-        puffs +
         shape(
-          d`M${100 - w} ${cy - 8} C${100 - w} ${top + 6}, ${100 + w} ${top + 6}, ${100 + w} ${cy - 8} L${100 + w - 4} ${cy - 12} C${S(w * 0.5)} ${line + 6}, ${L(w * 0.5)} ${line + 6}, ${100 - w + 4} ${cy - 12}Z`,
+          d`M${100 - w - 1} ${cy - 10} C${100 - w - 2} ${top - 4}, ${100 + w + 2} ${top - 4}, ${100 + w + 1} ${cy - 10} L${100 + w - 3} ${cy - 12} C${100 + w - 5} ${top + 16}, ${S(w * 0.4)} ${top + 10}, 100 ${top + 13} C${L(w * 0.4)} ${top + 10}, ${100 - w + 5} ${top + 16}, ${100 - w + 3} ${cy - 12}Z`,
           c,
-        )
+        ) +
+        strands(g, [
+          d`M${L(w * 0.7)} ${top + 12} Q${L(w * 0.3)} ${top - 2} ${S(w * 0.3)} ${top - 1}`,
+          d`M${L(w * 0.2)} ${top + 12} Q${S(w * 0.2)} ${top + 2} ${S(w * 0.75)} ${top + 8}`,
+          d`M${S(w * 0.5)} ${top + 10} q${g.s * 6} -6 ${g.s * 14} -4`,
+        ])
       )
-    }
     case 'bob':
       return sweep(g, c, 6)
     case 'waves':
@@ -1275,7 +1313,127 @@ function features(g: Geo, kit: Kit, id: string): string {
   return out.join('')
 }
 
-function facialHair(g: Geo, facial: Facial | undefined, rand: () => number): string {
+/**
+ * A ragged run of locks along an ellipse round (cx, cy), from angle [a0] to [a1]: each lock bulges out by about
+ * [len] and ends in a point. Returns path segments that continue from the ellipse's point at [a0].
+ */
+function locks(
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  a0: number,
+  a1: number,
+  n: number,
+  len: number,
+  reachOf: (mid: number, i: number) => number = (_, i) => len * [1, 0.75, 1.25][i % 3],
+): string {
+  const at = (a: number, out: number) =>
+    `${r1(cx + Math.cos(a) * (rx + out))} ${r1(cy + Math.sin(a) * (ry + out))}`
+  let path = ''
+  for (let i = 0; i < n; i++) {
+    const a = a0 + ((a1 - a0) * i) / n
+    const b = a0 + ((a1 - a0) * (i + 1)) / n
+    const reach = reachOf((a + b) / 2, i)
+    path += `Q${at(a + (b - a) * 0.2, reach * 0.9)} ${at(b - (b - a) * 0.2, reach)} Q${at(b - (b - a) * 0.05, reach * 0.2)} ${at(b, 0)} `
+  }
+  return path
+}
+
+type Pt = readonly [number, number]
+
+function bezier(p: readonly Pt[], t: number): Pt {
+  const u = 1 - t
+  const k = [u * u * u, 3 * u * u * t, 3 * u * t * t, t * t * t]
+  return [
+    k[0] * p[0][0] + k[1] * p[1][0] + k[2] * p[2][0] + k[3] * p[3][0],
+    k[0] * p[0][1] + k[1] * p[1][1] + k[2] * p[2][1] + k[3] * p[3][1],
+  ]
+}
+
+/**
+ * A full beard: from the sideburns down the jaw to a ragged edge of locks under the chin, open round the mouth,
+ * with a moustache. Strands follow the hair's fall toward the chin, and the far side sits in shadow.
+ */
+function beard(g: Geo, c: string, id: string, rand: () => number): string {
+  const { L, S, s, w, jw, cy, jawY, chinY, mouthY } = g
+  const outer = (k: number): Pt[] => [
+    [100 + k * (w - 1), cy + 6],
+    [100 + k * (jw + 2), jawY + 4],
+    [100 + k * 16, chinY + 12],
+    [100, chinY + 13],
+  ]
+  const inner = (k: number): Pt[] => [
+    [100 + k * (w - 6), cy + 10],
+    [100 + k * (jw - 7), jawY - 4],
+    [100 + k * 9, mouthY + 2],
+    [100, mouthY + 6],
+  ]
+  const pt = ([x, y]: Pt) => `${r1(x)} ${r1(y)}`
+  // The outer edge breaks into locks, each pushed out from the mouth and hanging a little.
+  const edge = (k: number, back: boolean) => {
+    const n = 8
+    const pts = Array.from({ length: n + 1 }, (_, i) => bezier(outer(k), i / n))
+    if (back) pts.reverse()
+    let out = ''
+    for (let i = 0; i < n; i++) {
+      const [x0, y0] = pts[i]
+      const [x1, y1] = pts[i + 1]
+      const mx = (x0 + x1) / 2
+      const my = (y0 + y1) / 2
+      const len = Math.hypot(mx - 100, my - mouthY) || 1
+      const ox = (mx - 100) / len
+      const oy = (my - mouthY) / len
+      const tip: Pt = [mx + ox * 3.2, my + oy * 3.2 + 1.5]
+      out += `Q${pt([x0 + ox * 2.4, y0 + oy * 2.4])} ${pt(tip)} Q${pt([(tip[0] + x1) / 2, (tip[1] + y1) / 2])} ${pt([x1, y1])} `
+    }
+    return out
+  }
+  const [ri1, ri2, ri3] = inner(1).slice(1)
+  const [li0, li1, li2] = inner(-1).slice(0, 3).reverse()
+  const outline =
+    `M${pt(outer(-1)[0])} ${edge(-1, false)}${edge(1, true)}` +
+    `L${pt(inner(1)[0])} C${pt(ri1)} ${pt(ri2)} ${pt(ri3)} C${pt(li0)} ${pt(li1)} ${pt(li2)}Z`
+  const dark = c === INK
+  const flow: string[] = []
+  for (let i = 0; i < 70; i++) {
+    const k = rand() < 0.5 ? -1 : 1
+    const along = 0.05 + rand() * 0.92
+    const depth = 0.1 + rand() * 0.85
+    const [ox, oy] = bezier(outer(k), along)
+    const [ix, iy] = bezier(inner(k), along)
+    const x = ix + (ox - ix) * depth
+    const y = iy + (oy - iy) * depth
+    const len = Math.hypot(100 - x, chinY + 14 - y) || 1
+    const vx = ((100 - x) / len) * 0.5
+    const vy = 0.5 + ((chinY + 14 - y) / len) * 0.5
+    const l = 4 + rand() * 4
+    const bend = (rand() - 0.5) * 3
+    flow.push(d`M${x} ${y} q${vx * l * 0.5 + bend} ${vy * l * 0.5} ${vx * l} ${vy * l}`)
+  }
+  const farHalf = d`M100 ${cy} L${S(60)} ${cy} L${S(60)} ${chinY + 30} L100 ${chinY + 30}Z`
+  const stache = d`M${L(13)} ${mouthY} Q${L(7)} ${mouthY - 8} 100 ${mouthY - 6.5} Q${S(7)} ${mouthY - 8} ${S(13)} ${mouthY} Q${S(7)} ${mouthY - 3} 100 ${mouthY - 2.5} Q${L(7)} ${mouthY - 3} ${L(13)} ${mouthY}Z`
+  const hairs = (paths: string[], width: number) =>
+    paths.map((p) => ink(p, width, dark ? PAPER : INK, ` opacity="${dark ? 0.38 : 0.5}"`)).join('')
+  return (
+    `<clipPath id="${id}-beard"><path d="${outline}"/></clipPath>` +
+    shape(outline, c, 1.6) +
+    `<g clip-path="url(#${id}-beard)">` +
+    `<g filter="url(#${id}-soft2)">${fill(farHalf, SHADE, ' opacity="0.4"')}</g>` +
+    hairs(flow, 0.8) +
+    `</g>` +
+    shape(stache, c, 1.3) +
+    hairs(
+      [3, 6, 9].flatMap((x) => [
+        d`M${L(x)} ${mouthY - 6} l${-s * 1.5} 4`,
+        d`M${S(x)} ${mouthY - 6} l${s * 1.5} 4`,
+      ]),
+      0.7,
+    )
+  )
+}
+
+function facialHair(g: Geo, facial: Facial | undefined, rand: () => number, id: string): string {
   if (!facial) return ''
   const { L, S, mouthY, chinY, jawY, w, jw, cy, s } = g
   const c = g.tone === 'dark' ? INK : g.tone === 'grey' ? GREY : PAPER
@@ -1310,36 +1468,26 @@ function facialHair(g: Geo, facial: Facial | undefined, rand: () => number): str
           d`M${L(9)} ${mouthY - 4} Q100 ${mouthY - 8} ${S(9)} ${mouthY - 4} L${S(9)} ${mouthY - 2} Q100 ${mouthY - 5} ${L(9)} ${mouthY - 2}Z`,
           c,
           1.4,
+        ) +
+        ink(
+          d`M${L(3)} ${chinY - 11} q${-s * 0.5} 8 ${-s * 1} 14 M100 ${chinY - 12} l0 18 M${S(3)} ${chinY - 11} q${s * 0.5} 8 ${s * 1} 14`,
+          0.7,
+          c === INK ? PAPER : INK,
+          ' opacity="0.45"',
         )
       )
     case 'beard':
-      return (
-        shape(
-          d`M${100 - w + 1} ${cy + 8} C${100 - jw} ${jawY + 4}, ${100 - 16} ${chinY + 12}, 100 ${chinY + 12} C${100 + 16} ${chinY + 12}, ${100 + jw} ${jawY + 4}, ${100 + w - 1} ${cy + 8} L${100 + w - 5} ${cy + 10} C${100 + jw - 6} ${jawY - 4}, ${S(8)} ${mouthY + 2}, 100 ${mouthY + 6} C${L(8)} ${mouthY + 2}, ${100 - jw + 6} ${jawY - 4}, ${100 - w + 5} ${cy + 10}Z`,
-          c,
-          2,
-        ) +
-        shape(
-          d`M${L(11)} ${mouthY - 2} Q100 ${mouthY - 9} ${S(11)} ${mouthY - 2} Q100 ${mouthY - 4} ${L(11)} ${mouthY - 2}Z`,
-          c,
-          1.4,
-        ) +
-        (c === INK
-          ? strands(g, [
-              d`M${L(w - 6)} ${jawY - 2} l${s * 2} 6`,
-              d`M${L(w - 12)} ${jawY + 4} l${s * 2} 6`,
-              d`M${L(10)} ${chinY + 2} l${s * 1} 6`,
-            ])
-          : '')
-      )
+      return beard(g, c, id, rand)
     case 'stubble': {
+      // Over the jaw, chin and upper lip on both sides, kept off the lips and inside the face.
       const dots: string[] = []
-      for (let i = 0; i < 46; i++) {
-        const x = L(4 + rand() * (jw - 4))
-        const y = mouthY - 6 + rand() * (g.chinY - mouthY + 4)
-        dots.push(dot(x, y, 0.55, INK, ' opacity="0.7"'))
+      for (let i = 0; i < 90; i++) {
+        const x = 100 + (rand() * 2 - 1) * jw
+        const y = mouthY - 7 + rand() * (g.chinY - mouthY + 6)
+        if (Math.abs(x - 100) < 10 && Math.abs(y - mouthY) < 3) continue
+        dots.push(dot(x, y, 0.5, INK, ' opacity="0.55"'))
       }
-      return dots.join('')
+      return `<g clip-path="url(#${id}-head)">${dots.join('')}</g>`
     }
     case 'chops': {
       // Sideburns grown into mutton chops: in front of the ear, widening down the cheek to the jaw.
@@ -2315,69 +2463,75 @@ function hat(g: Geo, h: Hat, id: string): { back: string; front: string; shade: 
   }
 }
 
+type Spectacles = 'glasses_round' | 'glasses_horn' | 'glasses_half' | 'glasses_cat'
+
+/**
+ * Spectacles drawn the same on both eyes: one ink frame round each eye with a faint glass tint, a bridge over
+ * the nose and an arm back to each ear. Reading glasses (`glasses_half`) are small wire ovals low on the nose.
+ */
+function glasses(g: Geo, kind: Spectacles): string {
+  const { L, S, ex, eyeY, w } = g
+  type Side = (dx: number) => number
+  const spec = {
+    glasses_round: {
+      lens: (P: Side) =>
+        d`M${P(ex - 9)} ${eyeY} A9 9 0 1 0 ${P(ex + 9)} ${eyeY} A9 9 0 1 0 ${P(ex - 9)} ${eyeY}Z`,
+      width: 1.9,
+      bridge: [9, eyeY - 1, eyeY - 5],
+      arm: [9, eyeY - 1],
+    },
+    glasses_horn: {
+      lens: (P: Side) =>
+        d`M${P(ex - 9)} ${eyeY - 6} L${P(ex + 10)} ${eyeY - 6} Q${P(ex + 10.5)} ${eyeY + 5} ${P(ex + 6)} ${eyeY + 6.5} L${P(ex - 5)} ${eyeY + 6.5} Q${P(ex - 9.5)} ${eyeY + 5} ${P(ex - 9)} ${eyeY - 6}Z`,
+      width: 2.2,
+      bridge: [9, eyeY - 4, eyeY - 7],
+      arm: [10, eyeY - 5],
+    },
+    glasses_half: {
+      lens: (P: Side) =>
+        d`M${P(ex - 9)} ${eyeY + 1.5} A9 6.5 0 1 0 ${P(ex + 9)} ${eyeY + 1.5} A9 6.5 0 1 0 ${P(ex - 9)} ${eyeY + 1.5}Z`,
+      width: 1.5,
+      bridge: [9, eyeY + 0.5, eyeY - 2],
+      arm: [9, eyeY + 0.5],
+    },
+    glasses_cat: {
+      lens: (P: Side) =>
+        d`M${P(ex - 8.5)} ${eyeY - 4} Q${P(ex + 2)} ${eyeY - 7.5} ${P(ex + 12)} ${eyeY - 10} Q${P(ex + 11)} ${eyeY + 5} ${P(ex + 1)} ${eyeY + 7} Q${P(ex - 8.5)} ${eyeY + 7} ${P(ex - 8.5)} ${eyeY - 4}Z`,
+      width: 2.1,
+      bridge: [8.5, eyeY - 3, eyeY - 6],
+      arm: [12, eyeY - 9],
+    },
+  }[kind]
+  const [bx, by, bTop] = spec.bridge
+  const [ax, ay] = spec.arm
+  const side = (P: Side) =>
+    `<path d="${spec.lens(P)}" fill="${PAPER}" fill-opacity="0.16" stroke="${INK}" stroke-width="${spec.width}" stroke-linejoin="round"/>` +
+    (kind === 'glasses_horn'
+      ? ink(d`M${P(ex - 9)} ${eyeY - 6} L${P(ex + 10)} ${eyeY - 6}`, 3.2)
+      : '') +
+    ink(d`M${P(ex + ax)} ${ay} L${P(w)} ${eyeY - 3}`, 1.5)
+  return (
+    side(L) + side(S) + ink(d`M${L(ex - bx)} ${by} Q100 ${bTop} ${S(ex - bx)} ${by}`, spec.width)
+  )
+}
+
 function extras(
   g: Geo,
   list: Extra[],
   rand: () => number,
-): { back: string; face: string; top: string } {
+  /** False when hair falls over the far ear, so no earring shows there. */
+  farEar = true,
+): { face: string; top: string } {
   const { L, S, ex, eyeY, noseY, mouthY, chinY, w, cy, s, shoulderY: y, nw, top } = g
-  const back: string[] = []
   const face: string[] = []
   const over: string[] = []
-  const lens = (x: number, shapeD: string, lit: boolean) =>
-    ink(shapeD, lit ? 2.2 : 1.4) +
-    (lit ? ink(d`M${x - 3} ${eyeY - 4} l3 -2`, 1.2, INK, ' opacity="0.6"') : '')
   for (const e of list) {
     switch (e) {
       case 'glasses_round':
-        face.push(
-          lens(L(ex), d`M${L(ex) - 8} ${eyeY} a8 8 0 1 0 16 0 a8 8 0 1 0 -16 0`, true),
-          lens(S(ex), d`M${S(ex) - 8} ${eyeY} a8 8 0 1 0 16 0 a8 8 0 1 0 -16 0`, false),
-          ink(d`M${L(ex - 8)} ${eyeY - 1} Q100 ${eyeY - 4} ${S(ex - 8)} ${eyeY - 1}`, 1.8),
-          ink(d`M${L(ex + 8)} ${eyeY - 1} L${L(w + 1)} ${eyeY - 3}`, 1.8),
-        )
-        break
       case 'glasses_horn':
-        face.push(
-          ink(
-            d`M${L(ex + 10)} ${eyeY - 6} L${L(ex - 9)} ${eyeY - 6} L${L(ex - 8)} ${eyeY + 5} Q${L(ex)} ${eyeY + 8} ${L(ex + 9)} ${eyeY + 5}Z`,
-            3,
-          ),
-          ink(
-            d`M${S(ex + 10)} ${eyeY - 6} L${S(ex - 9)} ${eyeY - 6} L${S(ex - 8)} ${eyeY + 5} Q${S(ex)} ${eyeY + 8} ${S(ex + 9)} ${eyeY + 5}Z`,
-            1.6,
-          ),
-          ink(d`M${L(ex - 9)} ${eyeY - 4} Q100 ${eyeY - 7} ${S(ex - 9)} ${eyeY - 4}`, 2.4),
-          ink(d`M${L(ex + 10)} ${eyeY - 5} L${L(w + 1)} ${eyeY - 4}`, 2.4),
-        )
-        break
       case 'glasses_half':
-        face.push(
-          ink(d`M${L(ex + 8)} ${eyeY + 3} Q${L(ex)} ${eyeY + 12} ${L(ex - 8)} ${eyeY + 3}Z`, 1.8),
-          ink(d`M${S(ex + 8)} ${eyeY + 3} Q${S(ex)} ${eyeY + 12} ${S(ex - 8)} ${eyeY + 3}Z`, 1.2),
-          ink(d`M${L(ex - 8)} ${eyeY + 3} Q100 ${eyeY + 1} ${S(ex - 8)} ${eyeY + 3}`, 1.4),
-          ink(d`M${L(ex + 8)} ${eyeY + 3} L${L(w + 1)} ${eyeY - 1}`, 1.4),
-          ink(
-            d`M${L(w + 1)} ${eyeY} Q${L(w + 6)} ${y - 10} ${L(nw + 6)} ${y + 6}`,
-            0.8,
-            INK,
-            ' stroke-dasharray="1.5 1.5"',
-          ),
-        )
-        break
       case 'glasses_cat':
-        face.push(
-          ink(
-            d`M${L(ex - 10)} ${eyeY - 7} L${L(ex + 13)} ${eyeY - 12} Q${L(ex + 12)} ${eyeY + 6} ${L(ex)} ${eyeY + 8} Q${L(ex - 10)} ${eyeY + 7} ${L(ex - 10)} ${eyeY - 7}Z`,
-            1.9,
-          ),
-          ink(
-            d`M${S(ex - 10)} ${eyeY - 7} L${S(ex + 13)} ${eyeY - 12} Q${S(ex + 12)} ${eyeY + 6} ${S(ex)} ${eyeY + 8} Q${S(ex - 10)} ${eyeY + 7} ${S(ex - 10)} ${eyeY - 7}Z`,
-            1.4,
-            PAPER,
-          ),
-          ink(d`M${L(ex - 8)} ${eyeY - 2} Q100 ${eyeY - 5} ${S(ex - 8)} ${eyeY - 2}`, 2),
-        )
+        face.push(glasses(g, e))
         break
       case 'monocle':
         face.push(
@@ -2391,16 +2545,25 @@ function extras(
           ink(d`M${L(ex) - 4} ${eyeY - 5} l4 -2`, 1.4, INK, ' opacity="0.5"'),
         )
         break
-      case 'loupe':
-        face.push(
-          fill(
-            d`M${L(ex) - 8} ${eyeY - 6} L${L(ex) + 8} ${eyeY - 6} L${L(ex) + 6} ${eyeY + 6} L${L(ex) - 6} ${eyeY + 6}Z`,
-            INK,
+      case 'loupe': {
+        // A jeweller's loupe on a cord round the neck.
+        const lx = S(4)
+        const ly = y + 24
+        over.push(
+          ink(
+            d`M${L(nw - 3)} ${y - 4} Q${L(nw * 0.5)} ${y + 12} ${lx} ${ly - 5} M${S(nw - 3)} ${y - 4} Q${S(nw * 0.6)} ${y + 10} ${lx} ${ly - 5}`,
+            1.1,
+            GREY,
           ),
-          `<ellipse cx="${r1(L(ex))}" cy="${r1(eyeY)}" rx="6" ry="5" fill="#777" stroke="${PAPER}" stroke-width="1.2"/>`,
-          dot(L(ex) - s * 2, eyeY - 1.5, 1.4, PAPER),
+          shape(
+            d`M${lx - 4.5} ${ly - 5} L${lx + 4.5} ${ly - 5} L${lx + 6} ${ly + 4} L${lx - 6} ${ly + 4}Z`,
+            GREY,
+            1.2,
+          ),
+          `<ellipse cx="${r1(lx)}" cy="${r1(ly + 4)}" rx="6" ry="2.2" fill="${PAPER}" stroke="${INK}" stroke-width="1.2"/>`,
         )
         break
+      }
       case 'cigarette':
       case 'cigar':
       case 'holder': {
@@ -2465,15 +2628,21 @@ function extras(
         face.push(
           ink(d`M${L(w + 1)} ${cy + 16} l0 7`, 1.2),
           dot(L(w + 1), cy + 26, 3.2, PAPER, ` stroke="${INK}" stroke-width="1.4"`),
-          ink(d`M${S(w + 1)} ${cy + 16} l0 7`, 1),
-          dot(S(w + 1), cy + 26, 2.8, PAPER, ` stroke="${INK}" stroke-width="1.2"`),
         )
+        if (farEar)
+          face.push(
+            ink(d`M${S(w + 1)} ${cy + 16} l0 7`, 1),
+            dot(S(w + 1), cy + 26, 2.8, PAPER, ` stroke="${INK}" stroke-width="1.2"`),
+          )
         break
       case 'earrings_hoop':
         face.push(
           `<circle cx="${r1(L(w + 1))}" cy="${r1(cy + 24)}" r="6" fill="none" stroke="${INK}" stroke-width="1.8"/>`,
-          `<circle cx="${r1(S(w + 1))}" cy="${r1(cy + 24)}" r="5.5" fill="none" stroke="${INK}" stroke-width="1.4"/>`,
         )
+        if (farEar)
+          face.push(
+            `<circle cx="${r1(S(w + 1))}" cy="${r1(cy + 24)}" r="5.5" fill="none" stroke="${INK}" stroke-width="1.4"/>`,
+          )
         break
       case 'pearls':
       case 'long_pearls':
@@ -2513,12 +2682,6 @@ function extras(
         break
       case 'beauty_mark':
         face.push(dot(L(11), mouthY - 6, 1.6, INK))
-        break
-      case 'pencil_ear':
-        back.push(
-          // Tucked behind the ear: drawn behind the head, so only the end sticking out past the ear shows.
-          `<g transform="translate(${r1(L(w + 4))} ${r1(cy - 8)}) rotate(${s * 62})">${shape('M-2.3 -16 L2.3 -16 L2.3 10 L0 15 L-2.3 10Z', '#d9d5cc', 1.2)}</g>`,
-        )
         break
       case 'flower_hair':
       case 'flower_lapel': {
@@ -2754,7 +2917,7 @@ function extras(
         break
     }
   }
-  return { back: back.join(''), face: face.join(''), top: over.join('') }
+  return { face: face.join(''), top: over.join('') }
 }
 
 const sw = (g: Geo) => g.sw
@@ -2804,7 +2967,7 @@ export function renderPortrait(
   const covered = kit.hat === 'headscarf' || kit.hat === 'turban'
   const hair = (layer: string) =>
     covered ? '' : hatted ? `<g clip-path="url(#${id}-underhat)">${layer}</g>` : layer
-  const ex = extras(g, kit.extras ?? [], rand)
+  const ex = extras(g, kit.extras ?? [], rand, kit.hair !== 'peekaboo')
   const head = headPath(g)
   const shade =
     h.shade > 0
@@ -2817,7 +2980,6 @@ export function renderPortrait(
     `<g transform="translate(100 ${FRAME_Y}) scale(${FRAME_SCALE}) translate(-100 -${FRAME_Y})">` +
     h.back +
     hair(hairBack(g, kit.hair)) +
-    ex.back +
     neck(g, id) +
     outfit(g, kit.outfit, id) +
     ears(g) +
@@ -2825,8 +2987,8 @@ export function renderPortrait(
     `<g clip-path="url(#${id}-far)">${ink(head, 3)}</g>` +
     `<g clip-path="url(#${id}-head)">${faceShading(g, id)}</g>` +
     features(g, kit, id) +
-    facialHair(g, kit.facial, rand) +
-    hair(hairFront(g, kit.hair, hatted)) +
+    facialHair(g, kit.facial, rand, id) +
+    hair(hairFront(g, kit.hair, hatted, id)) +
     ex.face +
     shade +
     h.front +

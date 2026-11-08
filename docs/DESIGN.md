@@ -88,11 +88,18 @@ file.
 200×250): ink line and a deep grey wash, between the old bold-ink look and a soft pencil study.
 - **Line and wash:** dark hair, hats and coats keep a thin ink edge and fill with a deep wash (`WASH`), so
   they read nearly black but still show their shape.
-- **Wall:** an old photograph's warm grey, with venetian-blind light across it.
+- **Wall:** plain grey with no tint, lit from the suspect's lit side, with venetian-blind light across it.
 - **Hair under hats:** under a hat that covers the crown, hair is clipped to below the brim
   (`-underhat`); under a headscarf or a turban there is no hair at all.
-- **Props that sit where they should:** a pencil tucked behind the ear is drawn behind the head (the
-  `back` layer of `extras`); both lenses and both earrings are ink; mutton chops sit in front of the ears.
+- **Props that sit where they should:**
+  - Glasses are one drawing mirrored on both eyes: the same ink frame, a faint glass tint, a bridge and an arm
+    to each ear (`glasses()`).
+  - Earrings are ink on both ears, except under hair that covers the far ear.
+  - Mutton chops sit in front of the ears.
+- **Facial hair with texture:** a full beard has a ragged edge of locks, strands falling toward the chin, the
+  far side in shadow and a moustache (`beard()`). Stubble covers both sides of the jaw and stays inside the face.
+- **Hair with locks:** messy and wild hair are built from irregular locks (`locks()`) rather than spikes or
+  balls. Short hair under a cap shows only at the temples, inside the head's outline.
 - **A close portrait:** the figure is drawn 1.22× larger about the face (`FRAME_SCALE`), so the head fills
   about half the frame and sits in its top square, with the shoulders cropped below. Board cards can show
   just that top square. Tall hats (top hat, chef's toque) are kept short enough to stay in the frame.
