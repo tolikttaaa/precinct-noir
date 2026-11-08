@@ -74,8 +74,8 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
   another game's characters, card templates, title lettering or layouts.
 
 ## 6. Suspect portraits
-**Pictures first.** A suspect's face is a picture file when there is one: a hand-drawn noir comic portrait
-in ink with a sepia wash, square, in `portraits/images/` named by id (`7.webp`). `portraits/photos.ts`
+**Pictures first.** A suspect's face is a picture file when there is one: a hand-drawn noir graphic-novel
+portrait in black ink (solid blacks, hatching) on sepia parchment, square, in `portraits/images/` named by id (`7.webp`). `portraits/photos.ts`
 finds them at build time; cards use the file's URL, and the wall (an SVG shown as an image, which can't
 load files) embeds its suspects' pictures as data URIs and appears once they've loaded.
 [PORTRAITS.md](PORTRAITS.md) is the brief, with a prompt for each suspect.
