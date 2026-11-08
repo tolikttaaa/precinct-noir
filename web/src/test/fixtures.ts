@@ -1,6 +1,14 @@
 import { act } from '@testing-library/react'
 import { vi } from 'vitest'
-import type { MemberView, ModeInfo, RoomView, ServerMessage, You } from '../protocol/generated'
+import type {
+  MemberView,
+  ModeInfo,
+  RoomView,
+  ServerMessage,
+  ShadowDuelView,
+  TileView,
+  You,
+} from '../protocol/generated'
 import { FakeWebSocket } from './fakeWebSocket'
 
 export const member = (id: number, name: string, connected = true): MemberView => ({
@@ -70,4 +78,48 @@ export function serve(you: You, ...messages: ServerMessage[]): FakeWebSocket {
 /** Pushes server messages to [socket] inside `act`. */
 export function push(socket: FakeWebSocket, ...messages: ServerMessage[]): void {
   act(() => messages.forEach((m) => socket.receive(m)))
+}
+
+/** A 5×5 Shadow Duel view over suspects 0–24 (Ada, Abe, Beatrice… row by row), killer in seat 0. */
+export function duelView(patch: Partial<ShadowDuelView> = {}): ShadowDuelView {
+  return {
+    board: {
+      rows: 5,
+      cols: 5,
+      tiles: Array.from({ length: 25 }, (_, id) => tile(id)),
+      removed: [],
+    },
+    deckCount: 20,
+    discard: [],
+    outOfPlay: [],
+    seats: [
+      { seat: 0, role: 'killer', handCount: 0 },
+      { seat: 1, role: 'inspector', handCount: 3 },
+    ],
+    kills: 0,
+    killsToWin: 14,
+    turn: 3,
+    interrogateDeadOnBoard: true,
+    pending: { id: 7, actor: 0, kind: 'turn', prompt: 'turn' },
+    ...patch,
+  }
+}
+
+export function tile(id: number, patch: Partial<TileView> = {}): TileView {
+  return { id, alive: true, exonerated: false, arrested: false, tokens: [], ...patch }
+}
+
+/** [view] with the tiles for [ids] changed by [patch]. */
+export function withTiles(
+  view: ShadowDuelView,
+  ids: readonly number[],
+  patch: Partial<TileView>,
+): ShadowDuelView {
+  return {
+    ...view,
+    board: {
+      ...view.board,
+      tiles: view.board.tiles.map((t) => (ids.includes(t.id) ? { ...t, ...patch } : t)),
+    },
+  }
 }

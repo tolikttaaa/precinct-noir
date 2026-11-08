@@ -899,6 +899,714 @@ select:disabled,
   font-size: var(--step-3);
 }
 
+/* ---------- The game: suspect cards and the city ----------
+   Each suspect is an index card pinned to the board: paper, a bold-ink portrait, a typed name.
+   A red X marks a body, a blue stamp a cleared suspect. What you can pick right now is lit in brass;
+   everything else steps back. */
+
+.suspect-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto;
+  width: 100%;
+  margin: 0;
+  padding: 5% 5% 3%;
+  border: 0;
+  border-radius: 2px;
+  background: linear-gradient(170deg, #f3ecda, #e4d8b8);
+  color: var(--ribbon);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.5) inset,
+    0 6px 14px -6px rgb(0 0 0 / 0.8);
+  font: inherit;
+  text-align: center;
+  transition:
+    transform 160ms ease-out,
+    opacity 200ms ease-out,
+    box-shadow 160ms ease-out;
+}
+
+button.suspect-card {
+  cursor: pointer;
+}
+
+.suspect-card__portrait {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  background: #1b1d22;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.suspect-card__name {
+  margin-top: 0.3em;
+  overflow: hidden;
+  font: 700 1.1em / 1.1 var(--font-display);
+  letter-spacing: 0.05em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.suspect-card__number {
+  position: absolute;
+  top: 6%;
+  left: 7%;
+  padding: 0 0.25em;
+  background: rgb(243 236 218 / 0.85);
+  color: var(--ribbon-faint);
+  font: 400 0.6em / 1.3 var(--font-typed);
+}
+
+.suspect-card[data-dead] .suspect-card__portrait {
+  filter: grayscale(1) brightness(0.55) contrast(1.1);
+}
+
+.suspect-card[data-dead] .suspect-card__name {
+  color: var(--ribbon-faint);
+  text-decoration: line-through;
+  text-decoration-color: var(--stamp-red);
+}
+
+/* The red X: two strokes of a grease pencil. */
+.suspect-card__x {
+  position: absolute;
+  inset: 4% 4% 18%;
+  pointer-events: none;
+}
+
+.suspect-card__x::before,
+.suspect-card__x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -2%;
+  width: 104%;
+  height: max(3px, 7%);
+  border-radius: 999px;
+  background: var(--stamp-red);
+  opacity: 0.88;
+  transform: rotate(52deg);
+}
+
+.suspect-card__x::after {
+  transform: rotate(-52deg);
+}
+
+.suspect-card__cleared {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  max-width: 96%;
+  padding: 0.12em 0.35em 0.05em;
+  white-space: nowrap;
+  border: 0.14em solid currentColor;
+  border-radius: 3px;
+  color: var(--evidence-blue);
+  background: rgb(243 236 218 / 0.35);
+  font: 800 0.85em / 1 var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%) rotate(-14deg);
+  -webkit-mask-image: var(--ink-texture);
+  mask-image: var(--ink-texture);
+}
+
+.suspect-card[data-lit] {
+  box-shadow:
+    0 0 0 3px var(--brass-light),
+    0 10px 22px -6px rgb(0 0 0 / 0.9);
+  transform: translateY(-2px);
+}
+
+.suspect-card[data-chosen] {
+  box-shadow:
+    0 0 0 4px var(--stamp-red-light),
+    0 0 0 7px rgb(176 38 44 / 0.45),
+    0 10px 22px -6px rgb(0 0 0 / 0.9);
+}
+
+.suspect-card[data-mine] {
+  box-shadow:
+    0 0 0 3px var(--evidence-blue-light),
+    0 0 18px 4px rgb(156 192 230 / 0.55);
+}
+
+button.suspect-card:focus-visible {
+  outline: 3px solid var(--fog);
+  outline-offset: 3px;
+}
+
+.board {
+  display: grid;
+  gap: var(--board-gap, 0.4rem);
+  align-items: center;
+  justify-items: stretch;
+  margin: 0 auto;
+}
+
+/* While some cards can be picked, the rest step back. */
+.board:has([data-lit]) .suspect-card:not([data-lit], [data-chosen]) {
+  opacity: 0.42;
+}
+
+.board__cell {
+  min-width: 0;
+}
+
+.board--tv {
+  --board-gap: clamp(0.4rem, 0.8vw, 1rem);
+  /* Five rows of cards (about 0.7 as wide as tall) fit between the masthead and the overscan margin. */
+  width: min(100%, calc((100dvh - 15rem) * 0.68));
+  font-size: clamp(0.7rem, 1.05vw, 1.25rem);
+}
+
+.board--phone {
+  --board-gap: 0.28rem;
+  width: 100%;
+  font-size: clamp(0.5rem, 2.4vw, 0.85rem);
+}
+
+.board__label {
+  display: grid;
+  place-items: center;
+  min-width: 1.6em;
+  min-height: 1.6em;
+  color: var(--smoke-light);
+  font: 400 1.1em / 1 var(--font-typed);
+}
+
+.board__label[data-last] {
+  color: var(--ink);
+  background: var(--brass-light);
+  border-radius: 2px;
+}
+
+.board__arrow {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  justify-self: stretch;
+  min-width: 26px;
+  min-height: 26px;
+  padding: 0;
+  border: 1px solid rgb(220 187 128 / 0.35);
+  border-radius: var(--radius);
+  background: rgb(13 16 22 / 0.7);
+  color: var(--brass-light);
+  cursor: pointer;
+}
+
+.board__arrow svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.board__arrow--up svg {
+  transform: rotate(180deg);
+}
+
+.board__arrow--left svg {
+  transform: rotate(90deg);
+}
+
+.board__arrow--right svg {
+  transform: rotate(-90deg);
+}
+
+.board__arrow:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.board__arrow[aria-pressed='true'] {
+  background: var(--brass);
+  border-color: var(--brass-light);
+  color: var(--ink);
+}
+
+/* ---------- The game on the TV ---------- */
+
+.duel-tv {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(18rem, 1.25fr);
+  gap: 3vw;
+  align-items: start;
+  padding-top: 1vh;
+}
+
+.duel-tv__city {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+}
+
+.duel-tv__turn {
+  color: var(--smoke-light);
+  font: 400 var(--step-0) / 1 var(--font-typed);
+}
+
+.duel-tv__side {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.duel-tv__prompt {
+  font: 700 var(--step-2) / 1.1 var(--font-display);
+  color: var(--brass-light);
+}
+
+.duel-seats {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.duel-seats__seat {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.3rem 0.5rem;
+  border-left: 4px solid transparent;
+}
+
+.duel-seats__seat[data-moving] {
+  border-left-color: var(--brass-light);
+  background: rgb(220 187 128 / 0.08);
+}
+
+.duel-seats__name {
+  font: 700 var(--step-2) / 1 var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+.screen--phone .duel-seats__name {
+  font-size: var(--step-1);
+}
+
+.kill-meter {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.kill-meter__label {
+  color: var(--smoke-light);
+}
+
+.kill-meter__count {
+  color: var(--fog);
+  font-weight: 700;
+}
+
+/* A tally of strokes, five to a group. */
+.kill-meter__tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.kill-meter__stroke {
+  width: 0.35rem;
+  height: 1.6rem;
+  border-radius: 1px;
+  background: rgb(221 225 230 / 0.14);
+  transform: rotate(4deg);
+}
+
+.kill-meter__stroke:nth-child(5n) {
+  margin-right: 0.55rem;
+}
+
+.kill-meter__stroke[data-done] {
+  background: var(--stamp-red-light);
+}
+
+.case-log__lines {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 400 var(--step--1) / 1.4 var(--font-typed);
+  color: var(--smoke-light);
+}
+
+.case-log__lines li:first-child {
+  color: var(--fog);
+  font-size: var(--step-0);
+}
+
+.screen--tv .case-log__lines {
+  font-size: var(--step-0);
+}
+
+.screen--tv .case-log__lines li:first-child {
+  font-size: var(--step-1);
+}
+
+.outcome {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.outcome__title {
+  display: grid;
+  justify-items: start;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.outcome__title .stamp {
+  font-size: var(--step-2);
+}
+
+.outcome__winner {
+  font: 800 var(--step-3) / 1 var(--font-display);
+}
+
+.outcome__reason {
+  font-size: var(--step-1);
+}
+
+.reveal {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 1rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reveal__seat {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+}
+
+.reveal__seat .suspect-card {
+  max-width: 10rem;
+  font-size: 0.85rem;
+}
+
+.screen--tv .reveal__seat .suspect-card {
+  max-width: 8.5rem;
+}
+
+.reveal__who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+/* ---------- The game on a phone ---------- */
+
+.screen--phone .duel-phone {
+  gap: 1.5rem;
+}
+
+.duel-phone__status {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.duel-phone__prompt {
+  font: 700 var(--step-1) / 1.2 var(--font-display);
+  color: var(--brass-light);
+}
+
+.pick {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  width: min(100%, 22rem);
+  margin: 0 auto;
+  font-size: 0.85rem;
+}
+
+/* The player's file: a slim folder above the board, face down until held. */
+.dossier__folder {
+  position: relative;
+  display: block;
+  height: 7.4rem;
+  margin-top: 1.2rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 2px 4px 4px 4px;
+  background: var(--fibre), linear-gradient(172deg, #ead9ab, var(--manila) 45%, #d8c48f);
+  box-shadow:
+    inset 0 0 0 1px rgb(120 95 40 / 0.2),
+    0 14px 24px -12px rgb(0 0 0 / 0.85);
+  color: var(--ribbon);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
+.dossier__folder:focus-visible {
+  outline: 3px solid var(--fog);
+  outline-offset: 3px;
+}
+
+.dossier__tab {
+  position: absolute;
+  top: -1.2rem;
+  left: 1rem;
+  height: 1.2rem;
+  padding: 0 1rem;
+  background: var(--fibre), #dcc68f;
+  clip-path: polygon(0.5rem 0, calc(100% - 0.5rem) 0, 100% 100%, 0 100%);
+  font: 400 var(--step--1) / 1.2rem var(--font-typed);
+}
+
+.dossier__closed {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.35rem;
+  height: 100%;
+  text-align: center;
+}
+
+.dossier__role {
+  font: 700 var(--step-1) / 1 var(--font-display);
+}
+
+.dossier__hold {
+  font: 400 var(--step--1) / 1.2 var(--font-typed);
+  color: var(--ribbon-faint);
+}
+
+.dossier[data-open] .dossier__folder {
+  background: #f1eee7;
+}
+
+.dossier__inside {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  height: 100%;
+}
+
+.dossier__none {
+  font: 400 var(--step--1) / 1.3 var(--font-typed);
+}
+
+.dossier__identity .suspect-card {
+  width: 4.6rem;
+  font-size: 0.62rem;
+}
+
+.dossier__hand {
+  display: flex;
+  gap: 0.4rem;
+  padding-left: 0.9rem;
+  border-left: 1px dashed rgb(42 36 28 / 0.35);
+}
+
+.dossier__hand .suspect-card {
+  width: 3.5rem;
+  font-size: 0.5rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.help-now summary {
+  min-height: 44px;
+  padding-top: 0.6rem;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.help-now summary::marker {
+  color: var(--brass-light);
+}
+
+.help-now dl {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.5rem 0 0;
+}
+
+.help-now dt {
+  font-weight: 700;
+}
+
+.help-now dd {
+  margin: 0;
+  color: var(--smoke-light);
+}
+
+.duel-phone__room {
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* The turn's choices: buttons side by side, so the board stays in view. */
+.duel-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.action-bar .duel-controls .button {
+  flex: 1 1 9rem;
+  width: auto;
+}
+
+.duel-controls > p {
+  flex-basis: 100%;
+}
+
+.lobby-guide {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+}
+
+/* ---------- How to play ---------- */
+
+.guide {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.guide__page {
+  display: grid;
+  gap: 1rem;
+}
+
+.guide__title {
+  font: 800 var(--step-2) / 1.05 var(--font-display);
+}
+
+.guide__body {
+  max-width: 42ch;
+  font-size: var(--step-1);
+  line-height: 1.45;
+}
+
+.guide__nav,
+.guide__more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.guide__nav .button {
+  flex: 1;
+}
+
+.guide__code {
+  font: 400 var(--step-1) / 1 var(--font-typed);
+}
+
+.guide--tv .guide__page {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'title title'
+    'diagram body'
+    'diagram count';
+  align-items: start;
+  column-gap: 2.5rem;
+}
+
+.guide--tv .guide__title {
+  grid-area: title;
+  font-size: var(--step-3);
+}
+
+.guide--tv .diagram {
+  grid-area: diagram;
+  width: clamp(9rem, 13vw, 15rem);
+}
+
+.guide--tv .guide__body {
+  grid-area: body;
+  font-size: clamp(1.4rem, 1.7vw, 2.4rem);
+  max-width: 36ch;
+}
+
+.guide--tv .guide__count {
+  grid-area: count;
+}
+
+.diagram {
+  display: grid;
+  gap: 4px;
+  width: min(100%, 13rem);
+}
+
+.diagram__cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: rgb(221 225 230 / 0.16);
+  font: 800 0.8rem / 1 var(--font-ui);
+}
+
+.folder .diagram__cell {
+  background: rgb(42 36 28 / 0.14);
+}
+
+.diagram__cell[data-cell='near'] {
+  background: var(--brass-light);
+}
+
+.diagram__cell[data-cell='you'],
+.diagram__cell[data-cell='inspector'] {
+  background: var(--evidence-blue);
+  color: #fff;
+}
+
+.diagram__cell[data-cell='killer'] {
+  background: var(--stamp-red);
+  color: #fff;
+}
+
+.diagram__cell[data-cell='body'] {
+  background: #3b2a2a;
+  box-shadow: inset 0 0 0 2px var(--stamp-red);
+}
+
+.diagram__cell[data-cell='cleared'] {
+  background: var(--evidence-blue-light);
+}
+
+.diagram__cell[data-cell='moving'] {
+  background: var(--brass);
+  color: var(--ink);
+}
+
+@media (max-width: 900px) {
+  .duel-tv {
+    grid-template-columns: 1fr;
+  }
+
+  .board--tv {
+    width: 100%;
+  }
+}
+
 @media (max-width: 900px) {
   .tv {
     grid-template-columns: 1fr;

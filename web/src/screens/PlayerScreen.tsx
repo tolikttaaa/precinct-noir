@@ -5,6 +5,10 @@ import { ConfirmButton } from '../components/ConfirmButton'
 import { Lineup } from '../components/Lineup'
 import { playingIds } from '../components/seats'
 import { RoomRules } from '../components/RoomRules'
+import { GuideSheet } from '../game/Guide'
+import { hasGuide } from '../game/guides'
+import { DuelPhone } from '../game/shadowDuel/DuelPhone'
+import { duelOf } from '../game/shadowDuel/moves'
 import { useModes } from '../hooks/useModes'
 import { useRoom } from '../hooks/useRoom'
 import { errorText, modeName } from '../i18n/text'
@@ -130,6 +134,7 @@ function PlayerRoom({
   const { t } = useTranslation()
   const { state, send } = useRoom(code, 'player', credentials)
   const modes = useModes()
+  const [guideOpen, setGuideOpen] = useState(false)
 
   useEffect(() => {
     if (state.ending) forgetCredentials(code, 'player')
@@ -159,40 +164,112 @@ function PlayerRoom({
   const playing = playingIds(room.members, room.seats, max)
   const missing = Math.max(0, (mode?.minPlayers ?? 0) - Math.min(room.members.length, max))
   const vipName = room.members.find((m) => m.id === room.vip)?.name ?? ''
-  const leave = (
-    <ConfirmButton
-      label={t('lobby.leave')}
-      confirmLabel={t('lobby.leaveConfirm')}
-      onConfirm={() => send({ t: 'leave' })}
+  const duel = duelOf(state, room)
+  const roomButtons = (
+    <>
+      {room.status === 'in_game' && isVip && (
+        <ConfirmButton
+          label={t('game.endGame')}
+          confirmLabel={t('game.endConfirm')}
+          onConfirm={() => send({ t: 'end_game' })}
+        />
+      )}
+      {room.status === 'finished' &&
+        (isVip ? (
+          <button type="button" className="button" onClick={() => send({ t: 'play_again' })}>
+            {t('game.playAgain')}
+          </button>
+        ) : (
+          <p className="action-bar__status">{t('game.waitingForRematch', { name: vipName })}</p>
+        ))}
+      {room.status !== 'in_game' && (
+        <ConfirmButton
+          label={t('lobby.leave')}
+          confirmLabel={t('lobby.leaveConfirm')}
+          onConfirm={() => send({ t: 'leave' })}
+        />
+      )}
+    </>
+  )
+  const lobby = guideOpen ? (
+    <GuideSheet
+      mode={room.mode}
+      onClose={() => setGuideOpen(false)}
+      board={
+        isVip
+          ? {
+              showing: room.guide !== undefined,
+              show: (page) => send(page === null ? { t: 'show_guide' } : { t: 'show_guide', page }),
+            }
+          : undefined
+      }
     />
+  ) : (
+    <>
+      <StoppedEarly room={room} />
+      {isVip && <p className="lede">{t('lobby.youAreVip')}</p>}
+      <Lineup
+        members={room.members}
+        playing={playing}
+        vip={room.vip}
+        you={me}
+        mode={{ name: modeName(t, room.mode), players: max }}
+        onRemove={isVip ? (playerId) => send({ t: 'kick', playerId }) : undefined}
+      />
+      {hasGuide(room.mode) && (
+        <div className="lobby-guide">
+          <button type="button" className="button button--quiet" onClick={() => setGuideOpen(true)}>
+            {t('duel.howToPlay')}
+          </button>
+          {!isVip && room.guide !== undefined && (
+            <p className="hint">{t('guide.onBoard', { name: vipName })}</p>
+          )}
+        </div>
+      )}
+      {modes && <RoomRules room={room} modes={modes} editable={isVip} send={send} />}
+      {!room.hostConnected && <p className="hint">{t('lobby.boardOffline')}</p>}
+    </>
   )
 
   return (
     <div className="screen screen--phone">
       <Masthead code={code} />
       <ConnectionNotice connection={state.connection} />
-      <main className="room">
-        {room.status === 'lobby' && (
-          <>
-            <StoppedEarly room={room} />
-            {isVip && <p className="lede">{t('lobby.youAreVip')}</p>}
-            <Lineup
-              members={room.members}
-              playing={playing}
-              vip={room.vip}
-              you={me}
-              mode={{ name: modeName(t, room.mode), players: max }}
-              onRemove={isVip ? (playerId) => send({ t: 'kick', playerId }) : undefined}
-            />
-            {modes && <RoomRules room={room} modes={modes} editable={isVip} send={send} />}
-            {!room.hostConnected && <p className="hint">{t('lobby.boardOffline')}</p>}
-          </>
-        )}
-        {room.status === 'in_game' && (
-          <GameUnderway room={room} seated={me !== undefined && playing.has(me)} />
-        )}
-        {room.status === 'finished' && <RoundOver room={room} />}
-      </main>
+      {duel ? (
+        <DuelPhone
+          room={room}
+          duel={duel}
+          send={send}
+          refusalId={state.refusal?.id ?? 0}
+          footer={roomButtons}
+        />
+      ) : (
+        <>
+          <main className="room">
+            {room.status === 'lobby' && lobby}
+            {room.status === 'in_game' && (
+              <GameUnderway room={room} seated={me !== undefined && playing.has(me)} />
+            )}
+            {room.status === 'finished' && <RoundOver room={room} />}
+          </main>
+          <footer className="action-bar">
+            {room.status === 'lobby' &&
+              (isVip ? (
+                <button
+                  type="button"
+                  className="button"
+                  disabled={missing > 0}
+                  onClick={() => send({ t: 'start' })}
+                >
+                  {missing > 0 ? t('lobby.needMore', { count: missing }) : t('lobby.start')}
+                </button>
+              ) : (
+                <p className="action-bar__status">{t('lobby.waitingForVip', { name: vipName })}</p>
+              ))}
+            {roomButtons}
+          </footer>
+        </>
+      )}
       <Flash
         id={state.refusal?.id ?? 0}
         message={state.refusal && t(`refusals.${state.refusal.reason}`)}
@@ -203,37 +280,6 @@ function PlayerRoom({
           {t('errors.unexpected')}
         </p>
       )}
-      <footer className="action-bar">
-        {room.status === 'lobby' &&
-          (isVip ? (
-            <button
-              type="button"
-              className="button"
-              disabled={missing > 0}
-              onClick={() => send({ t: 'start' })}
-            >
-              {missing > 0 ? t('lobby.needMore', { count: missing }) : t('lobby.start')}
-            </button>
-          ) : (
-            <p className="action-bar__status">{t('lobby.waitingForVip', { name: vipName })}</p>
-          ))}
-        {room.status === 'in_game' && isVip && (
-          <ConfirmButton
-            label={t('game.endGame')}
-            confirmLabel={t('game.endConfirm')}
-            onConfirm={() => send({ t: 'end_game' })}
-          />
-        )}
-        {room.status === 'finished' &&
-          (isVip ? (
-            <button type="button" className="button" onClick={() => send({ t: 'play_again' })}>
-              {t('game.playAgain')}
-            </button>
-          ) : (
-            <p className="action-bar__status">{t('game.waitingForRematch', { name: vipName })}</p>
-          ))}
-        {room.status !== 'in_game' && leave}
-      </footer>
     </div>
   )
 }

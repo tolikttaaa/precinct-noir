@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { loadCredentials, saveCredentials } from '../net/credentials'
 import { FakeWebSocket } from '../test/fakeWebSocket'
-import { json, push, roomView, serve, shadowDuel, stubFetch } from '../test/fixtures'
+import { duelView, json, push, roomView, serve, shadowDuel, stubFetch } from '../test/fixtures'
 import { TvScreen } from './TvScreen'
 
 const host = { role: 'host' } as const
@@ -52,6 +52,48 @@ describe('TvScreen', () => {
       room: roomView({ round: 2, lastResult: { round: 2, kind: 'idle_timeout' } }),
     })
     expect(screen.getByText('The game ended after two hours without a move.')).toBeInTheDocument()
+  })
+
+  it('shows the walkthrough page the VIP chose, then the duel and its verdict', () => {
+    saveCredentials('BKTR', 'host', { token: 'h', clientSeq: 0 })
+    render(<TvScreen code="BKTR" />)
+    const ws = serve(host, { t: 'room', room: roomView({ guide: 3 }) })
+    expect(screen.getByRole('heading', { name: 'Next to you' })).toBeInTheDocument()
+    expect(screen.getByText('Room BKTR')).toBeInTheDocument()
+    expect(screen.queryByText('BKTR', { selector: '.case-number' })).toBeNull()
+
+    push(
+      ws,
+      { t: 'room', room: roomView({ status: 'in_game', round: 1, seats: [1, 2] }) },
+      { t: 'game', round: 1, mode: 'killer_inspector', view: duelView(), legal: [] },
+      {
+        t: 'events',
+        round: 1,
+        events: [{ seq: 1, event: { t: 'game_started', killer: 0, inspector: 1 } }],
+      },
+    )
+    expect(screen.getByRole('group', { name: 'The city' })).toBeInTheDocument()
+    expect(screen.getByText('Ann is the killer. Bob is the inspector.')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Ann to move.')
+
+    push(
+      ws,
+      { t: 'room', room: roomView({ status: 'finished', round: 1, seats: [1, 2] }) },
+      {
+        t: 'game',
+        round: 1,
+        mode: 'killer_inspector',
+        view: duelView({ pending: undefined, outcome: { winners: [1], reason: 'killer_caught' } }),
+        legal: [],
+      },
+    )
+    expect(screen.getByText('Bob wins')).toBeInTheDocument()
+    expect(screen.getByText('Waiting for Ann to start the next round')).toBeInTheDocument()
+    push(ws, {
+      t: 'room',
+      room: roomView({ status: 'finished', round: 1, seats: [1, 2], vip: undefined, members: [] }),
+    })
+    expect(screen.queryByText('Waiting for Ann to start the next round')).toBeNull()
   })
 
   it('offers a new room when this one closes', () => {

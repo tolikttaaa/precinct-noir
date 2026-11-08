@@ -2,7 +2,16 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { loadCredentials, saveCredentials } from '../net/credentials'
 import { FakeWebSocket } from '../test/fakeWebSocket'
-import { json, member, push, roomView, serve, shadowDuel, stubFetch } from '../test/fixtures'
+import {
+  duelView,
+  json,
+  member,
+  push,
+  roomView,
+  serve,
+  shadowDuel,
+  stubFetch,
+} from '../test/fixtures'
 import { PlayerScreen } from './PlayerScreen'
 
 const me = { role: 'player', playerId: 1 } as const
@@ -198,6 +207,80 @@ describe('in the room', () => {
     ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Join again' }))
     expect(await screen.findByRole('textbox', { name: 'Your name' })).toBeInTheDocument()
+  })
+
+  it('teaches the game in the lobby, and lets the VIP show it on the board', async () => {
+    const ws = await enter()
+    fireEvent.click(screen.getByRole('button', { name: 'How to play' }))
+    expect(screen.getByRole('heading', { name: 'Two hunters in one crowd' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Show on the board' }))
+    push(ws, { t: 'room', room: roomView({ guide: 0 }) })
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(ws.commands()).toEqual([
+      { t: 'show_guide', clientSeq: 1, page: 0 },
+      { t: 'show_guide', clientSeq: 2, page: 1 },
+      { t: 'show_guide', clientSeq: 3 },
+    ])
+    expect(screen.getByRole('button', { name: 'Start game' })).toBeInTheDocument()
+  })
+
+  it('tells the others when the VIP is showing the walkthrough', async () => {
+    await enter(roomView({ vip: 2, members: [member(2, 'Bob'), member(1, 'Ann')], guide: 2 }))
+    expect(screen.getByText('Bob is showing how to play on the board.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'How to play' }))
+    expect(screen.queryByRole('button', { name: 'Show on the board' })).toBeNull()
+  })
+
+  it('plays the duel on the phone, with the end-game button below the board', async () => {
+    const ws = await enter()
+    push(
+      ws,
+      { t: 'room', room: roomView({ status: 'in_game', round: 1, seats: [1, 2] }) },
+      {
+        t: 'game',
+        round: 1,
+        mode: 'killer_inspector',
+        seat: 0,
+        view: duelView({ me: { seat: 0, role: 'killer', identity: 12, hand: [] } }),
+        legal: [{ t: 'target', action: 'kill', targets: [6] }],
+      },
+    )
+    expect(screen.getByRole('group', { name: 'The city' })).toBeInTheDocument()
+    expect(screen.getByRole('main')).toContainElement(
+      screen.getByRole('button', { name: 'End game' }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Dorothy' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Kill Dorothy' }))
+    expect(ws.commands()).toEqual([
+      {
+        t: 'act',
+        clientSeq: 1,
+        decisionId: 7,
+        choice: { t: 'target', action: 'kill', target: 6 },
+      },
+    ])
+    push(ws, {
+      t: 'room',
+      room: roomView({
+        status: 'finished',
+        round: 1,
+        seats: [1, 2],
+        lastResult: { round: 1, kind: 'finished' },
+      }),
+    })
+    push(ws, {
+      t: 'game',
+      round: 1,
+      mode: 'killer_inspector',
+      seat: 0,
+      view: duelView({ pending: undefined, outcome: { winners: [0], reason: 'kill_quota' } }),
+      legal: [],
+    })
+    expect(screen.getByText('Ann wins')).toBeInTheDocument()
+    expect(screen.getByRole('contentinfo')).toContainElement(
+      screen.getByRole('button', { name: 'Play again' }),
+    )
   })
 
   it('copes without its player number', async () => {
