@@ -78,8 +78,27 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
 bust (SVG, 200×250): ink line and grey wash on cream paper, like a pencil-and-ink study. No colour.
 - **Line and wash:** a filter keeps a thin ink edge on every dark shape (hair, hats, coats) and fills its
   inside with grey wash (`WASH`), so dark clothes read as shaded cloth, not solid black.
-- **Lighting:** from one side. Soft grey (`SHADE`) gathers on the far cheek and jaw, under the chin, beside
-  the nose and under a hat brim. Both eyes and brows are always drawn.
+- **A close portrait:** the figure is drawn 1.22× larger about the face (`FRAME_SCALE`), so the head fills
+  about half the frame and sits in its top square, with the shoulders cropped below. Board cards can show
+  just that top square. Tall hats (top hat, chef's toque) are kept short enough to stay in the frame.
+- **Drawn like a person:**
+  - **Proportions:** eyes at mid-head and about one eye-width apart, the nose base halfway from the eyes to
+    the chin, the mouth a third of the way on.
+  - **Head:** temple, cheekbone, jaw angle and chin, rather than an oval.
+  - **Eyes:** almond lids, a grey iris tucked under the upper lid with a catchlight, a lid crease and a faint
+    lower lid. Women get a lash flick, and older faces bags under the eyes.
+  - **Brows:** thick at the inner end, tapering to a fine tail.
+  - **Nose:** a shadow-side bridge line, the wings, the underside of the tip and two nostrils.
+  - **Mouth:** an upper lip with a cupid's bow. Men's lips are lightly washed; women's are filled in grey.
+  - **Ears:** set from the brow to the nose base, with the rim's inner curve.
+  - **Age:** grown men get faint lines from nose to mouth; older faces get crow's feet and a lined brow.
+- **Lighting:** from one side, laid in by planes. Soft grey (`SHADE`) covers:
+  - the far side of the face, turning away;
+  - the eye sockets;
+  - beside and under the nose, and under the lower lip;
+  - under the chin, and under a hat brim.
+
+  The head's outline is thin on the lit side and heavier on the shadow side.
 - **Ink feel:** a light displacement filter wobbles the lines, and faint grain sits on top.
 - **Real pictures later:** [PORTRAITS.md](PORTRAITS.md) is the brief for replacing these drawings with
   drawn or generated image files in the same style.
