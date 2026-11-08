@@ -57,6 +57,14 @@ sealed interface ClientMessage {
     @SerialName("set_timer")
     data class SetTimer(override val clientSeq: Long, val seconds: Int? = null) : RoomCommand
 
+    /**
+     * Shows page [page] of the mode's "How to play" walkthrough on the board, or hides it (`null`).
+     * Lobby only; the client owns the pages, the server only checks the range.
+     */
+    @Serializable
+    @SerialName("show_guide")
+    data class ShowGuide(override val clientSeq: Long, val page: Int? = null) : RoomCommand
+
     @Serializable
     @SerialName("kick")
     data class Kick(override val clientSeq: Long, val playerId: Int) : RoomCommand
@@ -108,6 +116,8 @@ data class RoomView(
     val turnTimer: Int?,
     val seats: List<Int>,
     val lastResult: RoundResult?,
+    /** The walkthrough page the board shows, or `null` when it's hidden. */
+    val guide: Int? = null,
 )
 
 @Serializable

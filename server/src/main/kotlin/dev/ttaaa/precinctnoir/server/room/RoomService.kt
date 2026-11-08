@@ -264,6 +264,7 @@ class RoomService(
         is ClientMessage.SetMode -> asVip(room, who, LOBBY_ONLY) { setMode(room, command.mode) }
         is ClientMessage.SetConfig -> asVip(room, who, LOBBY_ONLY) { setConfig(room, command.config) }
         is ClientMessage.SetTimer -> asVip(room, who, LOBBY_ONLY) { setTimer(room, command.seconds) }
+        is ClientMessage.ShowGuide -> asVip(room, who, LOBBY_ONLY) { showGuide(room, command.page) }
         is ClientMessage.Kick -> asVip(room, who, BETWEEN_GAMES) { kick(room, who as Principal.Player, command.playerId) }
         is ClientMessage.Leave -> leave(room, who)
         is ClientMessage.Start -> asVip(room, who, LOBBY_ONLY) { start(room) }
@@ -279,7 +280,7 @@ class RoomService(
 
     private fun setMode(room: Room, id: String): Refusal? {
         val mode = modes.firstOrNull { it.id == id } ?: return Refusal.UNKNOWN_MODE
-        commit(room, room.snap.copy(mode = mode.id, config = defaults(mode), lastActivity = clock.millis()))
+        commit(room, room.snap.copy(mode = mode.id, config = defaults(mode), guide = null, lastActivity = clock.millis()))
         return null
     }
 
@@ -292,6 +293,12 @@ class RoomService(
     private fun setTimer(room: Room, seconds: Int?): Refusal? {
         if (seconds != null && seconds !in TIMER_SECONDS) return Refusal.INVALID_TIMER
         commit(room, room.snap.copy(turnTimer = seconds, lastActivity = clock.millis()))
+        return null
+    }
+
+    private fun showGuide(room: Room, page: Int?): Refusal? {
+        if (page != null && page !in GUIDE_PAGES) return Refusal.ILLEGAL_INPUT
+        commit(room, room.snap.copy(guide = page, lastActivity = clock.millis()))
         return null
     }
 
@@ -334,6 +341,7 @@ class RoomService(
             game = GameRecord(mode.id, mode.schemaVersion, seed, seats, now),
             nextEventSeq = snap.nextEventSeq + events.size,
             rematch = null,
+            guide = null,
             lastActivity = now,
         )
         commit(room, next, setup.game, EventWrite(reset = true, append = events))
@@ -452,6 +460,7 @@ class RoomService(
             turnTimer = snap.turnTimer,
             seats = snap.game?.seats ?: emptyList(),
             lastResult = snap.lastResult,
+            guide = snap.guide,
         )
     }
 
@@ -517,6 +526,9 @@ class RoomService(
 
     companion object {
         val TIMER_SECONDS = setOf(60, 90, 120)
+
+        /** Walkthrough pages the board accepts; generous, since the client decides how many a mode has. */
+        val GUIDE_PAGES = 0..<20
         private const val CODE_ATTEMPTS = 100
         private const val MILLIS = 1000L
         private val LOBBY_ONLY = setOf(RoomStatus.LOBBY)

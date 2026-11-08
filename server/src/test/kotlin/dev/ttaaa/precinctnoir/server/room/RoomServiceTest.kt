@@ -20,6 +20,7 @@ import dev.ttaaa.precinctnoir.server.protocol.ClientMessage.PlayAgain
 import dev.ttaaa.precinctnoir.server.protocol.ClientMessage.SetConfig
 import dev.ttaaa.precinctnoir.server.protocol.ClientMessage.SetMode
 import dev.ttaaa.precinctnoir.server.protocol.ClientMessage.SetTimer
+import dev.ttaaa.precinctnoir.server.protocol.ClientMessage.ShowGuide
 import dev.ttaaa.precinctnoir.server.protocol.ClientMessage.Start
 import dev.ttaaa.precinctnoir.server.protocol.CloseReason
 import dev.ttaaa.precinctnoir.server.protocol.EventView
@@ -266,6 +267,29 @@ class RoomServiceTest {
         assertThat(t.send(t.vip) { SetTimer(it, null) }).isEqualTo(t.ack())
         assertThat(t.room().turnTimer).isNull()
         assertThat(t.room().version).isEqualTo(version + 4)
+    }
+
+    @Test
+    fun `the VIP shows the walkthrough on the board, page by page, until a game starts`() {
+        val t = Table()
+        assertThat(t.room().guide).isNull()
+        assertThat(t.send(t.player(2)) { ShowGuide(it, 0) }).isEqualTo(t.refused(Refusal.NOT_VIP))
+        assertThat(t.send(t.vip) { ShowGuide(it, -1) }).isEqualTo(t.refused(Refusal.ILLEGAL_INPUT))
+        assertThat(t.send(t.vip) { ShowGuide(it, 20) }).isEqualTo(t.refused(Refusal.ILLEGAL_INPUT))
+        assertThat(t.send(t.vip) { ShowGuide(it, 3) }).isEqualTo(t.ack())
+        assertThat(t.room().guide).isEqualTo(3)
+        assertThat(t.room(t.player(2)).guide).isEqualTo(3)
+        assertThat(t.send(t.vip) { ShowGuide(it, null) }).isEqualTo(t.ack())
+        assertThat(t.room().guide).isNull()
+
+        t.send(t.vip) { ShowGuide(it, 1) }
+        t.send(t.vip) { SetMode(it, "counter") } // another game's guide has other pages
+        assertThat(t.room().guide).isNull()
+        t.send(t.vip) { SetMode(it, "killer_inspector") }
+        t.send(t.vip) { ShowGuide(it, 2) }
+        t.start()
+        assertThat(t.room().guide).isNull()
+        assertThat(t.send(t.vip) { ShowGuide(it, 0) }).isEqualTo(t.refused(Refusal.WRONG_STATUS))
     }
 
     @Test

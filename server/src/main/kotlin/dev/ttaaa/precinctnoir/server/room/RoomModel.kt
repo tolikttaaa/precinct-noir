@@ -81,6 +81,8 @@ data class RoomSnapshot(
     val nextEventSeq: Long = 1,
     val lastResult: RoundResult? = null,
     val rematch: Rematch? = null,
+    /** The walkthrough page on the board, if the VIP is showing one (lobby only). */
+    val guide: Int? = null,
     val version: Long = 1,
 ) {
     /** The VIP: the earliest player still in the room. */

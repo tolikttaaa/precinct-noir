@@ -21,6 +21,7 @@ export type ClientMessageRoomCommand =
   | ClientMessageSetConfig
   | ClientMessageSetMode
   | ClientMessageSetTimer
+  | ClientMessageShowGuide
   | ClientMessageStart
 
 export interface ClientMessageAct {
@@ -156,6 +157,12 @@ export interface ClientMessageSetTimer {
   t: 'set_timer'
   clientSeq: number
   seconds?: number
+}
+
+export interface ClientMessageShowGuide {
+  t: 'show_guide'
+  clientSeq: number
+  page?: number
 }
 
 export interface ClientMessageStart {
@@ -332,6 +339,7 @@ export interface RoomView {
   turnTimer?: number
   seats: number[]
   lastResult?: RoundResult
+  guide?: number
 }
 
 export type RoomStatus = 'lobby' | 'in_game' | 'finished'
