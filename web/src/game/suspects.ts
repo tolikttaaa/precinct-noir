@@ -1,14 +1,17 @@
 import { RU_NAMES } from '../i18n/suspectNames'
+import { PHOTOS } from '../portraits/photos'
 import { portraitUri } from '../portraits/portrait'
 import { ROSTER } from '../portraits/roster'
 
 const byId = new Map(ROSTER.map((s) => [s.id, s]))
 const portraits = new Map<number, string>()
 
-/** A suspect's portrait as an image source, drawn once and reused by every card. */
+/** A suspect's portrait as an image source: their picture if there is one, else drawn once and reused. */
 export function portraitOf(id: number): string | undefined {
   const s = byId.get(id)
   if (!s) return undefined
+  const photo = PHOTOS.get(id)
+  if (photo !== undefined) return photo
   let uri = portraits.get(id)
   if (uri === undefined) {
     uri = portraitUri(s)

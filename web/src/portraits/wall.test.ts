@@ -29,6 +29,19 @@ describe('the evidence wall', () => {
     expect(svg).not.toContain('CLEARED')
   })
 
+  it('puts in picture portraits where there are some, and draws everyone else', () => {
+    const [first, second] = twelve
+    const picture = 'data:image/webp;base64,UElD'
+    const svg = evidenceWallSvg(twelve, undefined, new Map([[first.id, picture]]))
+    expect(svgProblem(svg)).toBeNull()
+    expect(svg).toContain(`<image href="${picture}"`)
+    expect(svg).not.toContain(`id="w${first.id}-`)
+    expect(svg).toContain(`id="w${second.id}-`)
+    expect(
+      decodeURIComponent(evidenceWallUri(twelve, undefined, new Map([[first.id, picture]]))),
+    ).toContain(picture)
+  })
+
   it('comes as a data URI for <img>', () => {
     expect(evidenceWallUri(twelve).startsWith('data:image/svg+xml,')).toBe(true)
   })

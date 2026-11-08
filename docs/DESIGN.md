@@ -74,11 +74,38 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
   another game's characters, card templates, title lettering or layouts.
 
 ## 6. Suspect portraits
-`portraits/portrait.ts` draws each of the 60 roster suspects as an original black-and-white "bold ink"
-bust (SVG, 200×250).
-- **Lighting:** hard from one side, so the far third of the face falls into solid ink. A small triangle of
-  light lands on the shadow cheek, and the shadow eye keeps only its glint.
-- **Ink feel:** a displacement filter wobbles the lines like brush ink, and grain sits on top.
+**Pictures first.** A suspect's face is a picture file when there is one: a hand-drawn noir graphic-novel
+portrait in black ink (solid blacks, hatching) on sepia parchment, square, in `portraits/images/` named by id (`7.webp`). `portraits/photos.ts`
+finds them at build time; cards use the file's URL, and the wall (an SVG shown as an image, which can't
+load files) embeds its suspects' pictures as data URIs and appears once they've loaded.
+[PORTRAITS.md](PORTRAITS.md) is the brief, with a prompt for each suspect.
+
+**The drawn fallback.** Until a suspect has a picture, `portraits/portrait.ts` draws them as an original
+black-and-white "sketch" bust (SVG, 200×250): ink line and grey wash on cream paper. No colour.
+- **Line and wash:** a filter keeps a thin ink edge on every dark shape (hair, hats, coats) and fills its
+  inside with grey wash (`WASH`), so dark clothes read as shaded cloth, not solid black.
+- **A close portrait:** the figure is drawn 1.22× larger about the face (`FRAME_SCALE`), so the head fills
+  about half the frame and sits in its top square, with the shoulders cropped below. Board cards can show
+  just that top square. Tall hats (top hat, chef's toque) are kept short enough to stay in the frame.
+- **Drawn like a person:**
+  - **Proportions:** eyes at mid-head and about one eye-width apart, the nose base halfway from the eyes to
+    the chin, the mouth a third of the way on.
+  - **Head:** temple, cheekbone, jaw angle and chin, rather than an oval.
+  - **Eyes:** almond lids, a grey iris tucked under the upper lid with a catchlight, a lid crease and a faint
+    lower lid. Women get a lash flick, and older faces bags under the eyes.
+  - **Brows:** thick at the inner end, tapering to a fine tail.
+  - **Nose:** a shadow-side bridge line, the wings, the underside of the tip and two nostrils.
+  - **Mouth:** an upper lip with a cupid's bow. Men's lips are lightly washed; women's are filled in grey.
+  - **Ears:** set from the brow to the nose base, with the rim's inner curve.
+  - **Age:** grown men get faint lines from nose to mouth; older faces get crow's feet and a lined brow.
+- **Lighting:** from one side, laid in by planes. Soft grey (`SHADE`) covers:
+  - the far side of the face, turning away;
+  - the eye sockets;
+  - beside and under the nose, and under the lower lip;
+  - under the chin, and under a hat brim.
+
+  The head's outline is thin on the lit side and heavier on the shadow side.
+- **Ink feel:** a light displacement filter wobbles the lines, and faint grain sits on top.
 - **One look per job (`KITS`):** the suspect's archetype picks the hat, hair, clothes, facial hair and
   props. Their id varies the face: proportions, which side is lit, jaw and chin.
 - **Deterministic:** a suspect looks the same everywhere (wall, board cards), with no randomness outside the
