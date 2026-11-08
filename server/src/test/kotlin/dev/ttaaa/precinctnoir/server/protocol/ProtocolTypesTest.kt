@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.io.File
 
@@ -26,6 +27,13 @@ class ProtocolTypesTest {
         }
         assertThat(file).describedAs("run ./gradlew :server:generateProtocol").exists()
         assertThat(file.readText()).describedAs("web/src/protocol/generated.ts is stale: run ./gradlew :server:generateProtocol").isEqualTo(generated)
+    }
+
+    @Test
+    fun `two protocol types with the same name fail generation instead of merging`() {
+        assertThatThrownBy { TypeScriptGenerator().generate(listOf(Role::class, dev.ttaaa.precinctnoir.server.protocol.clash.Role::class)) }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("both called Role")
     }
 
     @Test

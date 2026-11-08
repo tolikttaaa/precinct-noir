@@ -472,9 +472,11 @@ export interface Officer {
 
 export interface SeatView {
   seat: Seat
-  role: Role
+  role: ShadowDuelRole
   handCount: number
 }
+
+export type ShadowDuelRole = 'killer' | 'inspector'
 
 export interface ShiftRecord {
   line: Line
@@ -493,7 +495,7 @@ export type PendingKind = 'setup' | 'turn' | 'substep' | 'trigger' | 'reaction' 
 
 export interface MeView {
   seat: Seat
-  role: Role
+  role: ShadowDuelRole
   identity?: SuspectId
   hand: SuspectId[]
 }
@@ -504,7 +506,7 @@ export interface Reveal {
 
 export interface SeatReveal {
   seat: Seat
-  role: Role
+  role: ShadowDuelRole
   identity?: SuspectId
   hand: SuspectId[]
 }

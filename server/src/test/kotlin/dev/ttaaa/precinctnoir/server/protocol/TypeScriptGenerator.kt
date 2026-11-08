@@ -16,9 +16,12 @@ import kotlin.reflect.full.starProjectedType
  * become aliases, and nullable fields become optional (nulls are omitted on the wire).
  *
  * Names come from the Kotlin class, with enclosing classes prefixed (`ServerMessage.Room` → `ServerMessageRoom`).
+ * Two different classes may not share a name: TypeScript would silently merge them into one type, so generation
+ * fails instead (give mode-specific types the mode's prefix, like `ShadowDuelRole`).
  */
 class TypeScriptGenerator {
     private val declarations = LinkedHashMap<String, String>()
+    private val owners = HashMap<String, KClass<*>>()
 
     fun generate(roots: List<KClass<*>>): String {
         roots.forEach(::declare)
@@ -27,6 +30,8 @@ class TypeScriptGenerator {
 
     private fun declare(cls: KClass<*>): String {
         val name = nameOf(cls)
+        val owner = owners.getOrPut(name) { cls }
+        require(owner == cls) { "Two protocol types are both called $name: ${owner.qualifiedName} and ${cls.qualifiedName}. Rename one." }
         if (name in declarations) return name
         declarations[name] = "" // reserve the slot: parents are emitted before the types they mention
         declarations[name] = when {
