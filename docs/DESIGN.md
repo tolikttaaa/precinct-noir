@@ -75,15 +75,31 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
 
 ## 6. Suspect portraits
 **Pictures first.** A suspect's face is a picture file when there is one: a hand-drawn noir graphic-novel
-portrait in black ink (solid blacks, hatching) on sepia parchment, square, in `portraits/images/` named by id (`7.webp`). `portraits/photos.ts`
+portrait in black ink on paper, square, in `portraits/images/` named by id (`7.webp`). `portraits/photos.ts`
 finds them at build time; cards use the file's URL, and the wall (an SVG shown as an image, which can't
 load files) embeds its suspects' pictures as data URIs and appears once they've loaded.
 [PORTRAITS.md](PORTRAITS.md) is the brief, with a prompt for each suspect.
 
-**The drawn fallback.** Until a suspect has a picture, `portraits/portrait.ts` draws them as an original
-black-and-white "sketch" bust (SVG, 200×250): ink line and grey wash on cream paper. No colour.
-- **Line and wash:** a filter keeps a thin ink edge on every dark shape (hair, hats, coats) and fills its
-  inside with grey wash (`WASH`), so dark clothes read as shaded cloth, not solid black.
+**The pictures in the repo today** are exported from the drawing below (Chrome, the top 512×512 square,
+WebP), so the game already shows static pictures in this style. Hand-made pictures replace them file by
+file.
+
+**The drawing.** `portraits/portrait.ts` draws each suspect as an original black-and-white bust (SVG,
+200×250): ink line and a deep grey wash, between the old bold-ink look and a soft pencil study.
+- **Line and wash:** dark hair, hats and coats keep a thin ink edge and fill with a deep wash (`WASH`), so
+  they read nearly black but still show their shape.
+- **Wall:** plain grey with no tint and no pattern, lit from the suspect's lit side.
+- **Hair under hats:** under a hat that covers the crown, hair is clipped to below the brim
+  (`-underhat`); under a headscarf or a turban there is no hair at all.
+- **Props that sit where they should:**
+  - Glasses are one drawing mirrored on both eyes: the same ink frame, a faint glass tint, a bridge and an arm
+    to each ear (`glasses()`).
+  - Earrings are ink on both ears, except under hair that covers the far ear.
+  - Mutton chops sit in front of the ears.
+- **Facial hair with texture:** a full beard has a ragged edge of locks, strands falling toward the chin, the
+  far side in shadow and a moustache (`beard()`). Stubble covers both sides of the jaw and stays inside the face.
+- **Hair with locks:** messy and wild hair are built from irregular locks (`locks()`) rather than spikes or
+  balls. Short hair under a cap shows only at the temples, inside the head's outline.
 - **A close portrait:** the figure is drawn 1.22× larger about the face (`FRAME_SCALE`), so the head fills
   about half the frame and sits in its top square, with the shoulders cropped below. Board cards can show
   just that top square. Tall hats (top hat, chef's toque) are kept short enough to stay in the frame.
