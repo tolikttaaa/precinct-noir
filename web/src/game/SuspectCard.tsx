@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { fileNumber, genderOf, portraitOf, suspectName } from './suspects'
 
@@ -28,7 +29,9 @@ export function SuspectCard({ id, dead, cleared, lit, chosen, mine, onPick }: Pr
   const body = (
     <>
       <img className="suspect-card__portrait" src={portraitOf(id)} alt="" draggable={false} />
-      <span className="suspect-card__name">{name}</span>
+      <span className="suspect-card__name" style={{ '--chars': name.length } as CSSProperties}>
+        {name}
+      </span>
       <span className="suspect-card__number">№{fileNumber(id)}</span>
       {dead && <span className="suspect-card__x" />}
       {cleared && <span className="suspect-card__cleared">{t('duel.card.stamp')}</span>}

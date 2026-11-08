@@ -19,6 +19,13 @@ describe('Board', () => {
     expect(screen.queryAllByRole('button')).toHaveLength(0)
   })
 
+  it('gives each name its length, so a long name shrinks to fit instead of being cut off', () => {
+    render(<Board size="tv" rows={5} cols={5} tiles={tiles} />)
+    const name = screen.getByRole('img', { name: 'Beatrice' }).querySelector('.suspect-card__name')
+    expect(name).toHaveTextContent('Beatrice')
+    expect((name as HTMLElement).style.getPropertyValue('--chars')).toBe('8')
+  })
+
   it('lets only lit suspects be picked, and marks the chosen one and your own', () => {
     const onTile = vi.fn()
     render(

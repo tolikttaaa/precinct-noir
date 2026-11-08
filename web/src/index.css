@@ -900,7 +900,7 @@ select:disabled,
 }
 
 /* ---------- The game: suspect cards and the city ----------
-   Each suspect is an index card pinned to the board: paper, a bold-ink portrait, a typed name.
+   Each suspect is an index card pinned to the board: paper, a portrait cropped to the face, the name.
    A red X marks a body, a blue stamp a cleared suspect. What you can pick right now is lit in brass;
    everything else steps back. */
 
@@ -920,6 +920,8 @@ select:disabled,
     0 6px 14px -6px rgb(0 0 0 / 0.8);
   font: inherit;
   text-align: center;
+  /* The name sizes itself to the card's width. */
+  container-type: inline-size;
   transition:
     transform 160ms ease-out,
     opacity 200ms ease-out,
@@ -933,8 +935,10 @@ button.suspect-card {
 .suspect-card__portrait {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 5;
+  /* The top square of the portrait: the face and the shoulders, as big as the card allows. */
+  aspect-ratio: 1;
   object-fit: cover;
+  object-position: top;
   background: #1b1d22;
   user-select: none;
   -webkit-user-drag: none;
@@ -942,10 +946,11 @@ button.suspect-card {
 
 .suspect-card__name {
   margin-top: 0.3em;
-  overflow: hidden;
   font: 700 1.1em / 1.1 var(--font-display);
+  /* The whole name always shows: a long one shrinks to the card's width (--chars is its length; the
+     widest letters measure about 0.54em each, capitals spaced included). */
+  font-size: min(1.1em, 100cqi / (var(--chars, 8) * 0.55));
   letter-spacing: 0.05em;
-  text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -1057,9 +1062,11 @@ button.suspect-card:focus-visible {
 }
 
 .board--tv {
-  --board-gap: clamp(0.4rem, 0.8vw, 1rem);
-  /* Five rows of cards (about 0.7 as wide as tall) fit between the masthead and the overscan margin. */
-  width: min(100%, calc((100dvh - 15rem) * 0.68));
+  --board-gap: clamp(0.35rem, 0.6vw, 0.8rem);
+  /* As tall as the screen allows: the rows fill the height between the masthead and the overscan
+     margin, and a board with labels is about 0.83 as wide as it is tall. */
+  width: calc((100dvh - 8vh - 8rem) * 0.83);
+  max-width: 100%;
   font-size: clamp(0.7rem, 1.05vw, 1.25rem);
 }
 
@@ -1136,16 +1143,19 @@ button.suspect-card:focus-visible {
 
 .duel-tv {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(18rem, 1.25fr);
+  grid-template-columns: auto minmax(18rem, 40rem);
+  justify-content: center;
   gap: 3vw;
   align-items: start;
   padding-top: 1vh;
 }
 
+/* The city sits on its own dark slate, so the cards read cleanly against the busy wall. */
 .duel-tv__city {
   display: grid;
   gap: 0.75rem;
   justify-items: center;
+  padding: clamp(0.75rem, 1.2vw, 1.25rem);
 }
 
 .duel-tv__turn {

@@ -89,8 +89,11 @@ bust (SVG, 200×250).
   nests one inside another SVG, keeping its ids under the prefix.
 
 ## 7. The game board (Shadow Duel)
-- **Suspect cards** (`game/SuspectCard.tsx`) are index cards: the portrait, a file number in the
-  corner, and the name in the condensed display face so ten letters fit on a phone.
+- **Suspect cards** (`game/SuspectCard.tsx`) are index cards: the portrait cropped to its top square
+  (the face and shoulders, as big as the card allows), a file number in the corner, and the name in
+  the condensed display face.
+  - **The whole name always shows.** The card is a size container, and a long name shrinks to the
+    card's width (`--chars` is its length) instead of being cut off with an ellipsis.
   - **Marks:** a dead suspect goes grey under a red grease-pencil X with the name struck through. A
     cleared suspect gets a blue "Cleared" stamp.
   - **Lit in brass:** what can be picked right now; everything else on the board fades back.
@@ -98,12 +101,15 @@ bust (SVG, 200×250).
 - **The board** (`game/Board.tsx`) is a grid keyed by suspect id. After a shift or a collapse each card
   glides from where it was, and a card that wrapped around slides in from the edge. Reduced motion
   turns this off.
-- **TV:** the board on the left, sized so five rows fit at 1080p, with row and column numbers that
-  match the case log ("row 3"). The line that moved last is highlighted. On the right, on a slate:
+- **TV:** the board on the left, on its own dark slate so the cards read cleanly against the wall. It
+  is as tall as the screen allows between the masthead and the overscan margin, with row and column
+  numbers that match the case log ("row 3"). The line that moved last is highlighted. On the right, on
+  a second slate:
   - who plays which side, with the player to move marked;
   - the turn, and the kill tally in strokes of five;
   - what's happening ("Ann to move."), and the case log, newest first.
-  - At the end, the verdict stamp, who won and why, and everyone's real identity and hand.
+  - At the end, the verdict stamp, who won and why, and everyone's real identity and hand. The case
+    log steps aside then, so the panel stays on screen.
 - **Phone, the player's turn: choose, then target, then confirm.**
   - The action bar offers the verbs (Kill, Disguise, Collapse…), side by side so the board stays in
     view, and the phone's mini-board has shift arrows on every edge.

@@ -57,7 +57,7 @@ describe('DuelTv', () => {
     expect(screen.getByText('The inspector caught the killer.')).toBeInTheDocument()
     expect(screen.queryByRole('status')).toBeNull()
     expect(screen.getByText('Waiting for Ann to start the next round')).toBeInTheDocument()
-    expect(screen.getByText('Nothing has happened yet.')).toBeInTheDocument()
+    expect(screen.queryByText('Nothing has happened yet.')).toBeNull()
     expect(screen.getByText('1 card left in the deck')).toBeInTheDocument()
     expect(document.querySelector('[data-moving]')).toBeNull()
   })
