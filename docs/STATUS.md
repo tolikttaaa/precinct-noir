@@ -269,6 +269,11 @@ the suspects on it, and folders that look real. Design notes: [DESIGN.md](DESIGN
 - [x] The drawing restyled after the reference cards' general look (brush ink, solid blacks, hatching,
   sepia parchment, a three-quarter turn, stronger expressions) and exported as the 60 pictures in
   `web/src/portraits/images/`, so the game shows static pictures now.
+- [x] The owner chose a look between production and the ink version: the sketch version's faces, soft
+  shading and detailed eyes, line and deep wash, on a plain grey wall with venetian-blind light. Then they
+  reviewed all 60 by number, and every flagged glitch was fixed: hair under hats, glasses, beards, stubble,
+  messy, wild and ponytail hair, the pencil behind the ear, Opal's loupe and Vera's far earring. The 60
+  pictures are exported from that drawing, and the owner approved them (2026-11-08).
 - [ ] The owner makes the 60 pictures (an artist or an image generator); an agent converts them to
   512 × 512 WebP and adds them.
 
