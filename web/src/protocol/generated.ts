@@ -21,6 +21,7 @@ export type ClientMessageRoomCommand =
   | ClientMessageSetConfig
   | ClientMessageSetMode
   | ClientMessageSetTimer
+  | ClientMessageShowGuide
   | ClientMessageStart
 
 export interface ClientMessageAct {
@@ -156,6 +157,12 @@ export interface ClientMessageSetTimer {
   t: 'set_timer'
   clientSeq: number
   seconds?: number
+}
+
+export interface ClientMessageShowGuide {
+  t: 'show_guide'
+  clientSeq: number
+  page?: number
 }
 
 export interface ClientMessageStart {
@@ -332,6 +339,7 @@ export interface RoomView {
   turnTimer?: number
   seats: number[]
   lastResult?: RoundResult
+  guide?: number
 }
 
 export type RoomStatus = 'lobby' | 'in_game' | 'finished'
@@ -472,9 +480,11 @@ export interface Officer {
 
 export interface SeatView {
   seat: Seat
-  role: Role
+  role: ShadowDuelRole
   handCount: number
 }
+
+export type ShadowDuelRole = 'killer' | 'inspector'
 
 export interface ShiftRecord {
   line: Line
@@ -493,7 +503,7 @@ export type PendingKind = 'setup' | 'turn' | 'substep' | 'trigger' | 'reaction' 
 
 export interface MeView {
   seat: Seat
-  role: Role
+  role: ShadowDuelRole
   identity?: SuspectId
   hand: SuspectId[]
 }
@@ -504,7 +514,7 @@ export interface Reveal {
 
 export interface SeatReveal {
   seat: Seat
-  role: Role
+  role: ShadowDuelRole
   identity?: SuspectId
   hand: SuspectId[]
 }

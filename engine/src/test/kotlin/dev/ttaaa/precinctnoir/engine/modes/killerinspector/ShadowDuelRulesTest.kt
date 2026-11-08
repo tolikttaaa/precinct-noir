@@ -152,7 +152,7 @@ class ShadowDuelRulesTest : FunSpec({
             val outcome = Outcome(listOf(KILLER), Reasons.INSPECTOR_ELIMINATED)
             r.state.outcome shouldBe outcome
             r.state.agenda.pending.shouldBeNull()
-            val reveal = Reveal(listOf(SeatReveal(KILLER, Role.KILLER, s(12), emptyList()), SeatReveal(INSPECTOR, Role.INSPECTOR, s(6), ids(0, 1, 2))))
+            val reveal = Reveal(listOf(SeatReveal(KILLER, ShadowDuelRole.KILLER, s(12), emptyList()), SeatReveal(INSPECTOR, ShadowDuelRole.INSPECTOR, s(6), ids(0, 1, 2))))
             r.public.last() shouldBe GameOver(outcome, reveal)
             ShadowDuel.project(r.state, Viewer.Spectator).reveal shouldBe reveal
             r.state.rejection(TargetChoice(Actions.KILL, s(7)), KILLER, 1) shouldBe Rejection.GAME_OVER
@@ -360,13 +360,13 @@ class ShadowDuelRulesTest : FunSpec({
         test("each viewer sees only their own secrets; spectators see none; menus only for the actor") {
             val state = duel(killer = 12, inspector = 0, hand = listOf(1, 2, 3), deck = listOf(4, 5))
             val killerView = ShadowDuel.project(state, Viewer.Player(KILLER))
-            killerView.me shouldBe MeView(KILLER, Role.KILLER, s(12), emptyList())
-            ShadowDuel.project(state, Viewer.Player(INSPECTOR)).me shouldBe MeView(INSPECTOR, Role.INSPECTOR, s(0), ids(1, 2, 3))
+            killerView.me shouldBe MeView(KILLER, ShadowDuelRole.KILLER, s(12), emptyList())
+            ShadowDuel.project(state, Viewer.Player(INSPECTOR)).me shouldBe MeView(INSPECTOR, ShadowDuelRole.INSPECTOR, s(0), ids(1, 2, 3))
             ShadowDuel.project(state, Viewer.Spectator).me.shouldBeNull()
             ShadowDuel.project(state, Viewer.Player(Seat(5))).me.shouldBeNull()
             killerView.reveal.shouldBeNull()
             killerView.deckCount shouldBe 2
-            killerView.seats shouldContainExactlyInAnyOrder listOf(SeatView(KILLER, Role.KILLER, 0), SeatView(INSPECTOR, Role.INSPECTOR, 3))
+            killerView.seats shouldContainExactlyInAnyOrder listOf(SeatView(KILLER, ShadowDuelRole.KILLER, 0), SeatView(INSPECTOR, ShadowDuelRole.INSPECTOR, 3))
             killerView.killsToWin shouldBe 14
             killerView.pending.shouldNotBeNull().actor shouldBe KILLER
             state.options(INSPECTOR).shouldBeEmpty()

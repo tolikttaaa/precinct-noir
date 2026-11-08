@@ -88,7 +88,56 @@ bust (SVG, 200×250).
 - **Using them:** `portraitUri(suspect)` gives an `<img>` source. `portraitSvg(suspect, prefix, attrs)`
   nests one inside another SVG, keeping its ids under the prefix.
 
-## 7. Layouts
+## 7. The game board (Shadow Duel)
+- **Suspect cards** (`game/SuspectCard.tsx`) are index cards: the portrait cropped to its top square
+  (the face and shoulders, as big as the card allows), a file number in the corner, and the name in
+  the condensed display face.
+  - **The whole name always shows.** The card is a size container, and a long name shrinks to the
+    card's width (`--chars` is its length) instead of being cut off with an ellipsis.
+  - **Marks:** a dead suspect goes grey under a red grease-pencil X with the name struck through. A
+    cleared suspect gets a "Cleared" stamp: solid blue on an opaque paper label with a paper margin,
+    so it reads over the darkest portrait, sized to fit the card in either language.
+  - **Lit in brass:** what can be picked right now; everything else on the board fades back.
+  - **Red ring:** what you chose. **Blue glow:** your own identity, only while you hold your file open.
+- **The board** (`game/Board.tsx`) is a grid keyed by suspect id. After a shift or a collapse each card
+  glides from where it was, and a card that wrapped around slides in from the edge. Reduced motion
+  turns this off.
+- **TV:** the board on the left, on its own dark slate so the cards read cleanly against the wall. It
+  is as tall as the screen allows between the masthead and the overscan margin, with row and column
+  numbers that match the case log ("row 3"). The line that moved last is highlighted. On the right, on
+  a second slate:
+  - who plays which side, with the player to move marked;
+  - the turn, and the kill tally in strokes of five;
+  - what's happening ("Ann to move."), and the case log, newest first.
+  - At the end, the verdict stamp, who won and why, and everyone's real identity and hand. The case
+    log steps aside then, so the panel stays on screen.
+- **Phone, the player's turn: choose, then target, then confirm.**
+  - The action bar offers the verbs (Kill, Disguise, Collapse…), side by side so the board stays in
+    view, and the phone's mini-board has shift arrows on every edge.
+  - **Targets are lit only after choosing Kill or Accuse.** Lighting them all the time would show your
+    neighbours, and so roughly where you stand, to anyone glancing at the phone.
+  - Every move ends with a confirm button that names it ("Kill Dorothy", "Shift row 2 right"), with
+    Cancel beside it.
+  - **Collapse:** a line with a single body picks itself. You tap a body only where a line has several.
+  - **Drawn cards** (the inspector's identity, the card to clear) replace the board with a 2×2 pick.
+- **The player's file** sits above the board and holds the secrets: identity and evidence in hand.
+  - It stays face down until pressed and held (or Space/Enter held), and closes on release.
+  - It keeps its size open or closed, so the board never jumps.
+  - Private draws never appear in the phone's visible case log.
+- **Help:** a "What can I do now?" list of your role's actions, and the "How to play" walkthrough.
+
+## 8. How to play
+- **Pages** (`game/guides.ts`): each mode has its own walkthrough pages, in our own words. A page has a
+  title, a few sentences and, optionally, a small picture of the city: you, your neighbours, a body, a
+  row on the move.
+- **Where it shows:**
+  - On any phone, from the lobby or during a game.
+  - On the TV, when the VIP presses "Show on the board": the board shows a folder with the VIP's
+    current page and follows it as they page through. Everyone else's phone says so.
+- **Adding a mode:** give it pages in `GUIDES` and texts under `guide.<mode>` in both languages. Tests
+  fail when any page lacks a text.
+
+## 9. Layouts
 - **TV / board screen** (`/tv/CODE`, priority):
   - Overscan-safe margins (5vw / 3–5vh).
   - Two columns: on the left, the case file with the stamped code, QR and join address; on the right,
@@ -102,17 +151,18 @@ bust (SVG, 200×250).
 - **Laptop:** the phone and TV layouts adapt (the TV layout goes to one column under 900px). Polishing
   remote play on one's own device is the final step (M11).
 
-## 8. Interaction rules
+## 10. Interaction rules
 - **Two taps for anything that affects others:** remove a player, leave, end the game. The first tap
-  arms the button (red outline, new label), and it disarms after 4 s.
+  arms the button (red outline, new label), and it disarms after 4 s. Game moves use the same idea: the
+  first tap chooses, a named confirm button acts.
+- **Russian words agree with a suspect's gender** ("Ада убита", "Бруно убит") through the `_f`/`_m`
+  i18n forms. Players' genders are unknown, so sentences about players avoid gendered verbs.
 - **Errors say what happened and what to do,** in the interface's voice ("No room has the code BKTR.
   Check the code on the board."). The server sends codes; the texts live in `web/src/i18n/`.
 - **Connection trouble is a blue bar at the top.** Refusals and timer nudges flash for 5 s above the
   action bar.
 - **Hints are descriptions, not part of a field's name** (`aria-describedby`).
 
-## 9. Coming next
-- **M5:** the board, made of case-file cards. Each card shows the suspect's portrait, name and number,
-  with Russian name transliterations.
+## 11. Notes for later
 - **The game's name stays "Precinct Noir" in Latin letters in every language,** since it is also the
   address players type. Never translate it as «Нуар»: that is the Russian edition title of another game.

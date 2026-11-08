@@ -4,7 +4,7 @@
 > built, and what is next, so development can resume from any point (a new session, a new agent,
 > or after a break). Update it in every milestone PR.
 >
-> **Last updated:** 2026-11-07. M4 merged and live (PR #13). P (portraits, evidence wall, realistic folders) is done on branch `p/portraits-evidence-wall` (PR open).
+> **Last updated:** 2026-11-08. P merged and live (PR #14). M5 (the Shadow Duel board, playable) is done on branch `m5/shadow-duel-board` (PR open); its browser end-to-end tests follow in M5b.
 >
 > **Legend:** ✅ done and merged · 🟡 done on a branch / PR open · ⬜ not started · ⚠️ known issue or follow-up
 
@@ -69,8 +69,9 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M3a | Platform: rooms, lobby, WS protocol, persistence, restore, shutdown, codegen | ✅ (live; no UI yet) | #11 |
 | M3b | Security: rate limits, Turnstile, WS limits, CSP nonce | ✅ (live) | #12 |
 | M4 | Look and feel, home, join flow, lobby on TV and phone, EN/RU | ✅ (live) | #13 |
-| P | Suspect portraits, evidence-wall background, realistic folders | 🟡 PR open | `p/portraits-evidence-wall` |
-| M5 | Shadow Duel board and game UI → **release v0.1, first playable** | ⬜ | – |
+| P | Suspect portraits, evidence-wall background, realistic folders | ✅ (live) | #14 |
+| M5 | Shadow Duel board and game UI → **release v0.1, first playable** | 🟡 PR open | `m5/shadow-duel-board` |
+| M5b | Browser end-to-end tests (TV + 2 phones) in CI | ⬜ | – |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
@@ -78,7 +79,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M10 | Casino Heist | ⬜ | – |
 | M11 | Hardening & polish, incl. remote-play polish | ⬜ | – |
 
-**Next action:** the owner merges P; then build M5 (the Shadow Duel board, with the portraits on its cards), which makes the game playable.
+**Next action:** the owner reviews and merges M5, then plays a real session (TV + two phones). Then M5b adds the end-to-end tests to CI, and Spy Ring (M6) starts.
 
 **Order of the next steps** (owner's choice, 2026-11-06; changed 2026-11-07): portraits first after all, because the owner asked for an evidence-wall background with the suspects on it, then the playable board. M5 then makes Shadow Duel playable, with the portraits on its case-file cards. Every later mode ships with its own UI in its milestone. TV + phones get the polish first; remote play on one's own device is polished last (M11).
 
@@ -214,16 +215,29 @@ Design system and reasoning: [DESIGN.md](DESIGN.md). Code: `web/src/`.
   - Checked in headless Chrome against the Spring-served build: no console errors under the real CSP, including Turnstile.
 - [ ] Laptop-specific polish → M11 (owner's choice: TV + phones first).
 
-### M5: Shadow Duel playable end-to-end → v0.1 ⬜
-- [ ] **Suspect cards:** case-file cards with the portrait (`portraitUri`), name and number, plus Russian name transliterations.
-- [ ] **Board UI:** a CSS grid keyed by suspect id; Motion `layout` animations for shifts, swaps and collapses.
-- [ ] **Interaction:** legal targets highlighted, edge arrows for shifts with the forbidden undo greyed out, and two-tap confirmation for kill/accuse.
-- [ ] **Decision panels** rendered from `Opt` (generic); game-over and reveal screens; case log; turn-timer nudge.
-- [ ] **"How to play" (EN/RU, own wording)** and a "your possible actions" helper on the phone.
-- [ ] **Playwright E2E** (`e2e/`): a seeded game (seed endpoint only in the `test` profile) with one TV + 2 players at phone and 1080p viewports.
+### M5: Shadow Duel playable end-to-end → v0.1 🟡 (PR open, branch `m5/shadow-duel-board`)
+Owner's choices (2026-11-08): a mini-board on each phone, the identity behind hold-to-reveal, and both a
+phone guide and a TV walkthrough. Design notes: [DESIGN.md](DESIGN.md) §7–8.
+- [x] **Suspect cards:** the portrait, name and file number; Russian names for all 60 (`i18n/suspectNames.ts`).
+- [x] **Board:** a grid keyed by suspect id. Shifts and collapses glide (Web Animations, no new dependency), and wrapped cards slide in from the edge.
+- [x] **TV:** the board with row and column numbers and the last shift marked, plus the sides, turn, kill tally, prompt, case log, deck and face-up cards. At the end, the verdict and the reveal.
+- [x] **Phone controls:**
+  - Choose a verb, then a target on the mini-board or an arrow on its edge, then confirm with a named button.
+  - The collapse picks bodies only where a line has several, and drawn cards appear as a 2×2 pick.
+  - Controls come back after a refusal.
+- [x] **The player's file:** hold-to-reveal identity and hand above the board, which also lights your card on the board while held.
+- [x] **Case log** in EN/RU from the events. Russian agrees with each suspect's gender, and private draws stay out of the phone's visible log.
+- [x] **"How to play"** (9 pages, own wording, EN/RU) on phones in the lobby and in game, and a "What can I do now?" list.
+- [x] **TV walkthrough:** a new `show_guide` command (VIP, lobby) puts the VIP's page on the board.
+- [x] **Fix:** the engine's role enum is now `ShadowDuelRole`. It used to share the TypeScript name `Role` with the room's host/player role, and the generator now fails on such clashes.
+- [x] **Tests:**
+  - Web: 151 tests; 100% lines, 99.5% branches.
+  - JVM: `check` green, with a test for the new command.
+  - Played start to finish in Chrome (TV + two phones, one in Russian).
+- [ ] **M5b: Playwright E2E** (`e2e/`) in CI: a seeded game (seed endpoint only in the `test` profile) with one TV + 2 players at phone and 1080p viewports.
 - [ ] **Release v0.1**, then a real session with phones and the TV.
 
-### P: portraits, evidence wall, realistic folders 🟡 (PR open, branch `p/portraits-evidence-wall`)
+### P: portraits, evidence wall, realistic folders ✅ (PR #14, live)
 The owner asked for this after seeing M4 (2026-11-07): a background like a detective's evidence wall with
 the suspects on it, and folders that look real. Design notes: [DESIGN.md](DESIGN.md) §5–6.
 - [x] **Portrait generator** (`web/src/portraits/portrait.ts`):
@@ -279,7 +293,7 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 
 - ⚠️ **CSP blocks Cloudflare's injected bot-detection script:** fixed in M3b (per-response nonce); confirm in production after the merge.
 - ⚠️ **TypeScript 7 and `typescript-eslint`:** Dependabot ignores `typescript` majors (PR #4 was closed). Upgrade both together once `typescript-eslint` supports TS 7.
-- ⚠️ **Planned, not written yet:** `e2e/` (M5).
+- ⚠️ **Planned, not written yet:** `e2e/` (M5b).
 - ℹ️ **Turnstile and `style-src`:** the invisible test widget runs without CSP errors locally; confirm with the real widget in production after the M4 merge.
 - ℹ️ **Shift options:** `Shift` lists explicit moves (not `amounts` + `forbidden`); the UI should render from `moves`.
 - ℹ️ **Rendering the rulebook PDFs:** poppler isn't installed. Pages can be rendered with a small Swift/PDFKit script, for mechanics only.
@@ -312,3 +326,5 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 | 2026-11-06 | Layout priority: TV + phones in one room first; remote play polished last (M11) |
 | 2026-11-07 | Portraits pulled forward (bold ink style) for an evidence-wall background; phones get a dimmed wall |
 | 2026-11-07 | The game's name stays "Precinct Noir" in Latin letters in Russian too |
+| 2026-11-08 | M5 phones: a mini-board with choose → target → confirm; the identity behind hold-to-reveal; rules taught by a phone guide **and** a VIP-driven TV walkthrough |
+| 2026-11-08 | Kill/accuse targets light up only after choosing the action, so a glance at a phone doesn't show where its player stands |

@@ -193,11 +193,11 @@ object ShadowDuel : FlowMode<ShadowDuelModel, ShadowDuelStep, ShadowDuelEvent, S
         }
     }
 
-    private fun turnOptions(view: ShadowDuelView, board: Board, role: Role, identity: SuspectId): List<Opt> = buildList {
+    private fun turnOptions(view: ShadowDuelView, board: Board, role: ShadowDuelRole, identity: SuspectId): List<Opt> = buildList {
         board.shiftMoves(1, view.lastShift).takeIf { it.isNotEmpty() }?.let { add(ShiftOpt(Actions.SHIFT, it)) }
         board.collapseOptions().takeIf { it.isNotEmpty() }?.let { add(CollapseOpt(Actions.COLLAPSE, it)) }
         val hasDeck = view.deckCount > 0 // KI-1: Disguise and Exonerate need a card to draw
-        if (role == Role.KILLER) {
+        if (role == ShadowDuelRole.KILLER) {
             killOpt(board, identity)?.let(::add)
             if (hasDeck) add(SimpleOpt(Actions.DISGUISE))
         } else {

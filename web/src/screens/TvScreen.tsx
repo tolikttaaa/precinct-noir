@@ -5,6 +5,10 @@ import { Lineup } from '../components/Lineup'
 import { playingIds } from '../components/seats'
 import { Link } from '../components/Link'
 import { QrCode } from '../components/QrCode'
+import { GuideBoard } from '../game/Guide'
+import { hasGuide } from '../game/guides'
+import { DuelTv } from '../game/shadowDuel/DuelTv'
+import { duelOf } from '../game/shadowDuel/moves'
 import { useModes } from '../hooks/useModes'
 import { useRoom } from '../hooks/useRoom'
 import { modeName, modeSummary } from '../i18n/text'
@@ -59,6 +63,18 @@ function TvRoom({ code, credentials }: { code: string; credentials: Credentials 
   const max = mode?.maxPlayers ?? room.members.length
   const vipName = room.members.find((m) => m.id === room.vip)?.name
   const address = `${window.location.host}/${code}`
+  const duel = duelOf(state, room)
+  const rematch = vipName === undefined ? '' : t('game.waitingForRematch', { name: vipName })
+
+  if (duel) {
+    return (
+      <div className="screen screen--tv">
+        <Masthead />
+        <ConnectionNotice connection={state.connection} />
+        <DuelTv room={room} duel={duel} status={room.status === 'finished' ? rematch : undefined} />
+      </div>
+    )
+  }
 
   return (
     <div className="screen screen--tv">
@@ -67,6 +83,8 @@ function TvRoom({ code, credentials }: { code: string; credentials: Credentials 
       <main className="tv">
         {room.status === 'in_game' ? (
           <GameUnderway room={room} />
+        ) : room.status === 'lobby' && room.guide !== undefined && hasGuide(room.mode) ? (
+          <GuideBoard mode={room.mode} page={room.guide} code={code} />
         ) : (
           <section className="folder" aria-labelledby="case-code">
             <h1 className="folder__tab" id="case-code">
@@ -102,7 +120,7 @@ function TvRoom({ code, credentials }: { code: string; credentials: Credentials 
                 ? t('lobby.waitingForPlayers')
                 : room.status === 'lobby'
                   ? t('lobby.waitingForVip', { name: vipName })
-                  : t('game.waitingForRematch', { name: vipName })}
+                  : rematch}
           </p>
           {room.status === 'lobby' && (
             <div className="tv__mode">

@@ -7,11 +7,11 @@ import { initI18n, preferredLanguage, setLanguage } from './index'
 import ru from './ru'
 import { errorText, modeName, modeSummary, optionText } from './text'
 
-/** All leaf keys, with plural forms folded into their base key. */
+/** All leaf keys, with plural forms and the f/m forms Russian needs for a suspect's gender folded into their base key. */
 function keys(messages: object, prefix = ''): Set<string> {
   const out = new Set<string>()
   for (const [key, value] of Object.entries(messages)) {
-    const path = prefix + key.replace(/_(zero|one|few|many|other)$/, '')
+    const path = prefix + key.replace(/_(zero|one|few|many|other|f|m)$/, '')
     if (typeof value === 'string') out.add(path)
     else keys(value as object, `${path}.`).forEach((k) => out.add(k))
   }

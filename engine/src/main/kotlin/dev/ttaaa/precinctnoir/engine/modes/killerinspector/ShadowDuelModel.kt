@@ -26,7 +26,7 @@ data class ShadowDuelConfig(
 )
 
 @Serializable
-enum class Role {
+enum class ShadowDuelRole {
     @SerialName("killer")
     KILLER,
 
@@ -67,7 +67,7 @@ data class ShadowDuelModel(
 
     val inspectorIdentity: SuspectId? get() = secret(inspector).identity
 
-    fun roleOf(seat: Seat): Role = if (seat == killer) Role.KILLER else Role.INSPECTOR
+    fun roleOf(seat: Seat): ShadowDuelRole = if (seat == killer) ShadowDuelRole.KILLER else ShadowDuelRole.INSPECTOR
 
     fun secret(seat: Seat): PlayerSecret = secrets[seat.index]
 }
@@ -157,14 +157,14 @@ sealed interface ShadowDuelEvent {
 }
 
 @Serializable
-data class SeatView(val seat: Seat, val role: Role, val handCount: Int)
+data class SeatView(val seat: Seat, val role: ShadowDuelRole, val handCount: Int)
 
 /** The viewer's own secrets. */
 @Serializable
-data class MeView(val seat: Seat, val role: Role, val identity: SuspectId?, val hand: List<SuspectId>)
+data class MeView(val seat: Seat, val role: ShadowDuelRole, val identity: SuspectId?, val hand: List<SuspectId>)
 
 @Serializable
-data class SeatReveal(val seat: Seat, val role: Role, val identity: SuspectId?, val hand: List<SuspectId>)
+data class SeatReveal(val seat: Seat, val role: ShadowDuelRole, val identity: SuspectId?, val hand: List<SuspectId>)
 
 /** Everything, shown once the game is over. */
 @Serializable
