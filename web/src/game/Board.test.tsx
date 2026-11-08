@@ -15,7 +15,10 @@ describe('Board', () => {
     const city = screen.getByRole('group', { name: 'The city' })
     expect(city.querySelectorAll('.suspect-card')).toHaveLength(25)
     expect(screen.getByRole('img', { name: 'Beatrice, dead' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Bruno, cleared' })).toHaveTextContent('Cleared')
+    const cleared = screen.getByRole('img', { name: 'Bruno, cleared' })
+    expect(cleared).toHaveTextContent('Cleared')
+    const stamp = cleared.querySelector('.suspect-card__cleared') as HTMLElement
+    expect(stamp.style.getPropertyValue('--chars')).toBe('7')
     expect(screen.queryAllByRole('button')).toHaveLength(0)
   })
 

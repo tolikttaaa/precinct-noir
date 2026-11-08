@@ -1000,23 +1000,27 @@ button.suspect-card {
   transform: rotate(-52deg);
 }
 
+/* The cleared stamp: solid blue on an opaque paper label, readable over the darkest portrait. A paper
+   margin outside the border keeps it standing off dark hats and coats. */
 .suspect-card__cleared {
   position: absolute;
-  top: 34%;
+  top: 42%;
   left: 50%;
-  max-width: 96%;
-  padding: 0.12em 0.35em 0.05em;
+  padding: 0.16em 0.4em 0.06em;
   white-space: nowrap;
-  border: 0.14em solid currentColor;
-  border-radius: 3px;
+  border: 0.16em solid currentColor;
+  border-radius: 4px;
   color: var(--evidence-blue);
-  background: rgb(243 236 218 / 0.35);
-  font: 800 0.85em / 1 var(--font-display);
+  background: #f3ecda;
+  box-shadow:
+    0 0 0 0.14em #f3ecda,
+    0 4px 10px -3px rgb(0 0 0 / 0.7);
+  font: 800 1em / 1 var(--font-display);
+  /* Fits the card in either language (--chars is the word's length). */
+  font-size: min(1.15em, 100cqi / (var(--chars, 8) * 0.62 + 1.3));
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transform: translate(-50%, -50%) rotate(-14deg);
-  -webkit-mask-image: var(--ink-texture);
-  mask-image: var(--ink-texture);
+  transform: translate(-50%, -50%) rotate(-12deg);
 }
 
 .suspect-card[data-lit] {

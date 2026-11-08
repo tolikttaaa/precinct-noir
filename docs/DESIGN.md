@@ -95,7 +95,8 @@ bust (SVG, 200×250).
   - **The whole name always shows.** The card is a size container, and a long name shrinks to the
     card's width (`--chars` is its length) instead of being cut off with an ellipsis.
   - **Marks:** a dead suspect goes grey under a red grease-pencil X with the name struck through. A
-    cleared suspect gets a blue "Cleared" stamp.
+    cleared suspect gets a "Cleared" stamp: solid blue on an opaque paper label with a paper margin,
+    so it reads over the darkest portrait, sized to fit the card in either language.
   - **Lit in brass:** what can be picked right now; everything else on the board fades back.
   - **Red ring:** what you chose. **Blue glow:** your own identity, only while you hold your file open.
 - **The board** (`game/Board.tsx`) is a grid keyed by suspect id. After a shift or a collapse each card
