@@ -1,6 +1,5 @@
 /**
- * Suspect portraits: original noir graphic-novel busts in black brush ink on sepia parchment, drawn as SVG
- * from the roster.
+ * Suspect portraits: original black-and-white ink-and-wash portraits, drawn as SVG from the roster.
  *
  * Deterministic: the same suspect always gets the same picture (board cards, the evidence wall, reviews).
  * Each face is drawn with real proportions and shaded by planes from one side; the job (archetype) picks
@@ -18,15 +17,17 @@ export interface Suspect {
   archetype: string
 }
 
-// Black brush ink on sepia parchment, like a noir graphic novel: solid-black shadows, hatching where light
-// turns to shadow, and a soft sepia glow behind the figure.
-const INK = '#1a120c'
-const PAPER = '#f2e3c2'
-const GREY = '#bba98a'
-/** Sepia airbrush: the soft brown of the paper's shading and the glow behind the figure. */
-const SHADE = '#6b4a2e'
-const IRIS = '#3b2a1d'
-const LIPS = '#7a5a40'
+// Ink line and grey wash, like a graphic novel's pencil-and-ink studies, on an old photograph's warm grey
+// with venetian-blind light across the wall.
+const INK = '#1b1815'
+const PAPER = '#f5efe3'
+const GREY = '#b9b2a6'
+/** What big dark shapes (hair, hats, coats) become inside their ink edge: a deep wash, nearly ink. */
+const WASH = '#3e3832'
+/** Soft shading on skin and light cloth. */
+const SHADE = '#6d655b'
+const IRIS = '#4f4943'
+const LIPS = '#8a7f75'
 
 export const TONES = ['dark', 'light', 'grey'] as const
 export type Tone = (typeof TONES)[number]
@@ -762,58 +763,60 @@ function headPath(g: Geo): string {
 }
 
 /**
- * Ink shading, as a comic inker lays it: a solid-black band down the far side of the face, hatching where
- * it turns toward the light, and small black accents in the far eye socket, under the nose, under the lower
- * lip and under the chin.
+ * Soft grey shading laid in by planes, as a wash would be: the far side of the face turning away from the
+ * light, the eye sockets, beside and under the nose, under the lower lip, the hollow under the cheekbone and
+ * the jaw's shadow on the neck.
  */
 function faceShading(g: Geo, id: string): string {
-  const { S, s, w, h, jw, cw, ex, top, eyeY, noseY, mouthY, chinY } = g
-  // [k] pulls the band's inner edge toward the middle of the face: 0 for the black, more for the hatching.
-  const band = (k: number) =>
-    d`M${S(w * 0.5 - k)} ${top - 10} C${S(w * 0.6 - k)} ${eyeY - 22} ${S(ex + 7 - k)} ${eyeY - 12} ${S(ex + 9 - k)} ${eyeY - 1} C${S(ex + 8 - k)} ${eyeY + 9} ${S(w * 0.72 - k)} ${eyeY + h * 0.22} ${S(w * 0.68 - k)} ${noseY} C${S(w * 0.62 - k)} ${mouthY} ${S(jw * 0.7 - k)} ${mouthY + 9} ${S(cw + 5 - k)} ${chinY + 4} L${S(95)} ${chinY + 6} L${S(95)} ${top - 10}Z`
-  const hatch = `fill="url(#${id}-hatch)"`
+  const { L, S, s, w, h, jw, cw, ex, top, eyeY, noseY, mouthY, chinY } = g
+  const soft = (shapes: string, opacity: number, blur = 'soft2') =>
+    `<g filter="url(#${id}-${blur})" opacity="${opacity}" fill="${SHADE}">${shapes}</g>`
+  const oval = (x: number, y: number, rx: number, ry: number) =>
+    `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="${r1(rx)}" ry="${r1(ry)}"/>`
+  const far = d`M${S(w * 0.45)} ${top - 10} C${S(w * 0.55)} ${eyeY - 22} ${S(ex + 5)} ${eyeY - 12} ${S(ex + 7)} ${eyeY - 1} C${S(ex + 6)} ${eyeY + 9} ${S(w * 0.66)} ${eyeY + h * 0.22} ${S(w * 0.62)} ${noseY} C${S(w * 0.56)} ${mouthY} ${S(jw * 0.62)} ${mouthY + 9} ${S(cw + 3)} ${chinY + 4} L${S(95)} ${chinY + 6} L${S(95)} ${top - 10}Z`
   return (
-    `<path d="${band(6)}" ${hatch}/>` +
-    fill(band(0), INK) +
-    `<ellipse cx="${r1(S(ex))}" cy="${r1(eyeY - 5)}" rx="8.5" ry="3.6" ${hatch}/>` +
-    fill(
-      d`M${S(1)} ${noseY + 2.4} L${S(7.5)} ${noseY - 2} L${S(6)} ${noseY + 2.6} Q${S(4)} ${noseY + 4.2} ${S(1)} ${noseY + 2.4}Z`,
-      INK,
-    ) +
-    fill(
-      d`M${S(6)} ${mouthY + 5.2} Q100 ${mouthY + 9.6} ${100 - s * 5} ${mouthY + 5.6} Q100 ${mouthY + 7.2} ${S(6)} ${mouthY + 5.2}Z`,
-      INK,
-    ) +
-    `<path d="${d`M${100 - w * 0.7} ${chinY - 3} Q100 ${chinY + 6} ${100 + w * 0.7} ${chinY - 3} L${100 + w * 0.7} ${chinY + 9} L${100 - w * 0.7} ${chinY + 9}Z`}" ${hatch}/>`
+    soft(`<path d="${far}"/>`, 0.48) +
+    soft(oval(L(ex - 1), eyeY - 4.5, 9, 4) + oval(L(5.5), eyeY + 1, 2.2, 3.6), 0.22) +
+    soft(oval(S(ex - 1), eyeY - 4.5, 9, 4), 0.32) +
+    soft(oval(S(4.6), (eyeY + noseY) / 2 + 1, 2.6, (noseY - eyeY) / 2), 0.42) +
+    soft(oval(100 + s * 1.5, noseY + 4, 5.5, 2), 0.42) +
+    soft(oval(100, mouthY + 7, 5.5, 2.2), 0.36) +
+    soft(oval(100, chinY + 3, w * 0.75, 8), 0.36, 'soft')
   )
 }
 
 function backdrop(g: Geo, id: string): string {
   const lightX = g.L(30)
   return (
-    `<defs><radialGradient id="${id}-light" cx="${r1(lightX / 200)}" cy="0.32" r="0.85">` +
-    `<stop offset="0" stop-color="#f4e6c8"/><stop offset="0.6" stop-color="#e9d3a6"/><stop offset="1" stop-color="#c79f68"/></radialGradient>` +
+    `<defs><radialGradient id="${id}-light" cx="${r1(lightX / 200)}" cy="0.35" r="0.8">` +
+    `<stop offset="0" stop-color="#ebe3d3"/><stop offset="0.6" stop-color="#d3c7ad"/><stop offset="1" stop-color="#9f896b"/></radialGradient>` +
     `<clipPath id="${id}-head"><path d="${headPath(g)}"/></clipPath>` +
     `<clipPath id="${id}-far"><rect x="${g.s > 0 ? 100 : -50}" y="-50" width="150" height="350"/></clipPath>` +
-    `<filter id="${id}-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="${g.seed}"/><feDisplacementMap in="SourceGraphic" scale="1.6"/></filter>` +
-    // Pen hatching for shading on skin and light cloth.
-    `<pattern id="${id}-hatch" width="3.4" height="3.4" patternUnits="userSpaceOnUse" patternTransform="rotate(${g.s > 0 ? 38 : -38})">` +
-    `<line x1="0.8" y1="0" x2="0.8" y2="3.4" stroke="${INK}" stroke-width="1.05"/></pattern>` +
-    // The sepia glow: the figure's silhouette, blurred and pushed toward the shadow side, behind the ink.
-    `<filter id="${id}-glow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">` +
-    `<feGaussianBlur in="SourceAlpha" stdDeviation="9" result="b"/><feOffset in="b" dx="${g.s * 9}" dy="4" result="o"/>` +
-    `<feFlood flood-color="${SHADE}" flood-opacity="0.72"/><feComposite in2="o" operator="in" result="glow"/>` +
-    `<feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` +
-    // The drawing fades out loosely toward the bottom.
-    `<linearGradient id="${id}-fade" x1="0" y1="0" x2="0" y2="250" gradientUnits="userSpaceOnUse">` +
-    `<stop offset="0.7" stop-color="#fff"/><stop offset="0.97" stop-color="#fff" stop-opacity="0"/></linearGradient>` +
-    `<mask id="${id}-fademask" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="250"><rect width="200" height="250" fill="url(#${id}-fade)"/></mask>` +
-    // Tea stains and foxing on old paper.
-    `<filter id="${id}-stain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="${g.seed + 5}"/>` +
-    `<feColorMatrix values="0 0 0 0 0.42  0 0 0 0 0.27  0 0 0 0 0.12  0 0 0 -2.2 1.25"/></filter>` +
-    `<filter id="${id}-grain"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="${g.seed + 1}"/><feColorMatrix values="0 0 0 0 0.25  0 0 0 0 0.16  0 0 0 0 0.08  0 0 0 -1.4 0.95"/></filter></defs>` +
+    `<filter id="${id}-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="${g.seed}"/><feDisplacementMap in="SourceGraphic" scale="1.2"/></filter>` +
+    // Line and wash: every dark shape keeps a thin ink edge, and its inside turns into a grey wash.
+    `<filter id="${id}-wash" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">` +
+    `<feColorMatrix in="SourceGraphic" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -0.34 -0.33 -0.33 0 1"/>` +
+    `<feComposite in2="SourceAlpha" operator="in" result="dark"/>` +
+    `<feMorphology in="dark" operator="erode" radius="1.3" result="core"/>` +
+    `<feFlood flood-color="${WASH}"/><feComposite in2="core" operator="in"/>` +
+    `<feComposite in2="SourceGraphic" operator="over"/></filter>` +
+    `<filter id="${id}-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>` +
+    `<filter id="${id}-soft2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>` +
+    `<filter id="${id}-grain"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="${g.seed + 1}"/><feColorMatrix values="0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 -1.4 0.95"/></filter>` +
+    // Under a hat that covers the crown, hair shows only below the brim.
+    `<clipPath id="${id}-underhat"><rect x="-60" y="${r1(g.top + g.h * 0.36 - 2)}" width="320" height="400"/></clipPath></defs>` +
     `<rect width="200" height="250" fill="url(#${id}-light)"/>` +
-    `<rect width="200" height="250" filter="url(#${id}-stain)" opacity="0.32"/>`
+    // Venetian-blind light across the wall behind the suspect.
+    [0, 1, 2, 3, 4, 5]
+      .map((i) => {
+        const y = -40 + i * 52
+        return fill(
+          d`M-20 ${y} L220 ${y - 70} L220 ${y - 48} L-20 ${y + 22}Z`,
+          '#fbf7ee',
+          ' opacity="0.18"',
+        )
+      })
+      .join('')
   )
 }
 
@@ -1047,11 +1050,12 @@ function hairFront(g: Geo, hair: Hair, hatted: boolean): string {
         ])
       )
     case 'rolls':
+      // Victory rolls: two rolls on the crown over hair swept up from the forehead.
       return (
         dot(L(w * 0.5), top + 4, 12, c, ` stroke="${INK}" stroke-width="2.2"`) +
         dot(S(w * 0.5), top + 4, 12, c, ` stroke="${INK}" stroke-width="2.2"`) +
         shape(
-          d`M${100 - w - 2} ${cy} C${100 - w - 3} ${line}, ${100 - w + 6} ${line - 6}, 100 ${line - 2} C${100 + w - 6} ${line - 6}, ${100 + w + 3} ${line}, ${100 + w + 2} ${cy}Z`,
+          d`M${100 - w - 2} ${cy - 2} C${100 - w - 4} ${top - 2}, ${100 + w + 4} ${top - 2}, ${100 + w + 2} ${cy - 2} L${100 + w - 2} ${cy - 6} C${100 + w - 6} ${line + 2}, ${S(8)} ${line - 2}, 100 ${line} C${L(8)} ${line - 2}, ${100 - w + 6} ${line + 2}, ${100 - w + 2} ${cy - 6}Z`,
           c,
           1.8,
         )
@@ -1084,7 +1088,7 @@ function browColor(g: Geo): string {
  */
 function eye(g: Geo, id: string, cx: number, out: 1 | -1, far: boolean): string {
   const { eyeY: y, f, old } = g
-  const hw = (f ? 8.2 : 7.8) * (far ? 0.84 : 1)
+  const hw = (f ? 8.2 : 7.8) * (far ? 0.94 : 1)
   const xi = cx - out * hw
   const xo = cx + out * hw
   const lift = f ? 1.5 : 0.5
@@ -1095,7 +1099,7 @@ function eye(g: Geo, id: string, cx: number, out: 1 | -1, far: boolean): string 
   const clip = `${id}-eye${far ? 'f' : 'n'}`
   return (
     `<defs><clipPath id="${clip}"><path d="${outline}"/></clipPath></defs>` +
-    fill(outline, '#f8eed6') +
+    fill(outline, '#fbf8f1') +
     `<g clip-path="url(#${clip})">` +
     dot(cx, y - 0.3, 3.4, IRIS) +
     dot(cx, y - 0.3, 1.7, INK) +
@@ -1137,9 +1141,9 @@ function brow(g: Geo, cx: number, out: 1 | -1, kind: Brow): string {
   const { eyeY: y, f } = g
   const inner = cx - out * 9
   const outer = cx + out * 10.5
-  const iy = kind === 'stern' ? y - 5.5 : kind === 'raised' ? y - 13.5 : y - 9.5
-  const py = kind === 'stern' ? y - 12 : kind === 'raised' ? y - 19.5 : y - 14
-  const oy = kind === 'stern' ? y - 12.5 : kind === 'raised' ? y - 13 : y - 10.5
+  const iy = kind === 'stern' ? y - 7.5 : kind === 'raised' ? y - 12.5 : y - 9.5
+  const py = kind === 'stern' ? y - 12.5 : kind === 'raised' ? y - 17 : y - 14
+  const oy = kind === 'stern' ? y - 10.5 : kind === 'raised' ? y - 12.5 : y - 10.5
   const t = f ? 1.7 : 2.9
   return fill(
     d`M${inner} ${iy - t * 0.5} C${cx - out * 2} ${py - t * 0.4} ${cx + out * 5} ${py - t * 0.2} ${outer} ${oy} C${cx + out * 5} ${py + t * 0.5} ${cx - out * 2} ${py + t * 0.7} ${inner} ${iy + t * 0.5}Z`,
@@ -1180,9 +1184,9 @@ function nose(g: Geo): string {
 function mouth(g: Geo, kind: Mouth): string {
   const { L, S, mouthY: y, noseY, f } = g
   const hw = f ? 9.2 : 10.5
-  const ends = kind === 'smile' ? -3.6 : kind === 'frown' ? 3.4 : 0
-  const near = kind === 'smirk' ? -4.4 : ends
-  const mid = kind === 'smile' ? 2 : 0
+  const ends = kind === 'smile' ? -2.2 : kind === 'frown' ? 2.2 : 0
+  const near = kind === 'smirk' ? -2.8 : ends
+  const mid = kind === 'smile' ? 1.2 : 0
   const bow = f ? 3.4 : 2.4
   const line = d`M${L(hw)} ${y + near} C${L(hw * 0.5)} ${y + mid - 0.6} ${S(hw * 0.5)} ${y + mid - 0.6} ${S(hw)} ${y + ends}`
   const upper = d`M${L(hw)} ${y + near} C${L(hw * 0.6)} ${y - bow * 0.7} ${L(2.6)} ${y - bow - 0.4} ${L(1)} ${y - bow} Q100 ${y - bow + 0.9} ${S(1)} ${y - bow} C${S(2.6)} ${y - bow - 0.4} ${S(hw * 0.6)} ${y - bow * 0.7} ${S(hw)} ${y + ends}`
@@ -1337,19 +1341,28 @@ function facialHair(g: Geo, facial: Facial | undefined, rand: () => number): str
       }
       return dots.join('')
     }
-    case 'chops':
-      return (
-        shape(
-          d`M${100 - w - 1} ${cy - 6} L${100 - w + 1} ${jawY + 2} Q${100 - jw + 4} ${jawY + 8} ${100 - jw + 10} ${jawY + 2} L${100 - w + 5} ${cy - 6}Z`,
-          c,
-          1.8,
-        ) +
-        shape(
-          d`M${100 + w + 1} ${cy - 6} L${100 + w - 1} ${jawY + 2} Q${100 + jw - 4} ${jawY + 8} ${100 + jw - 10} ${jawY + 2} L${100 + w - 5} ${cy - 6}Z`,
-          c,
-          1.8,
+    case 'chops': {
+      // Sideburns grown into mutton chops: in front of the ear, widening down the cheek to the jaw.
+      const chop = (k: 1 | -1) => {
+        const x = (dx: number) => 100 + k * dx
+        return (
+          shape(
+            d`M${x(w - 2)} ${cy - 10} L${x(w - 9)} ${cy - 10} C${x(w - 11)} ${cy + 10}, ${x(jw - 2)} ${jawY - 10}, ${x(jw - 12)} ${jawY - 2} Q${x(jw - 6)} ${jawY + 7} ${x(jw - 1)} ${jawY + 2} C${x(w - 1)} ${cy + 18}, ${x(w)} ${cy + 4}, ${x(w - 2)} ${cy - 10}Z`,
+            c,
+            1.6,
+          ) +
+          strands(
+            g,
+            [
+              d`M${x(w - 5)} ${cy - 6} q${-k * 1} 12 ${-k * 3} 22`,
+              d`M${x(w - 3)} ${cy + 4} q${-k * 1} 10 ${-k * 4} 18`,
+            ],
+            0.9,
+          )
         )
-      )
+      }
+      return chop(-1) + chop(1)
+    }
   }
 }
 
@@ -1369,7 +1382,7 @@ function outfit(g: Geo, o: Outfit, id: string): string {
     PAPER,
     ' opacity="0.85"',
   )
-  const shadowSide = `<g clip-path="url(#${id}-body)">${`<path d="${d`M${S(nw - 2)} ${y - 10} Q${S(nw + 14)} ${y + 34} ${S(sw * 0.55)} 260 L${S(140)} 260 L${S(140)} ${y - 10}Z`}" fill="url(#${id}-hatch)"/>`}</g>`
+  const shadowSide = `<g clip-path="url(#${id}-body)">${fill(d`M${S(nw - 2)} ${y - 10} Q${S(nw + 14)} ${y + 34} ${S(sw * 0.55)} 260 L${S(140)} 260 L${S(140)} ${y - 10}Z`, SHADE, ' opacity="0.35"')}</g>`
   const light = (color: string) =>
     fill(bodyPath, color, ` stroke="${INK}" stroke-width="2.6"`) + shadowSide
   const shirtV = (bottom: number, color = PAPER) =>
@@ -1765,10 +1778,15 @@ function neck(g: Geo, id: string): string {
     `<defs><clipPath id="${id}-neck"><path d="${neckPath}"/></clipPath></defs>` +
     fill(neckPath, PAPER, ` stroke="${INK}" stroke-width="2.4"`) +
     `<g clip-path="url(#${id}-neck)">` +
-    `<path d="${d`M${S(1)} ${chinY - 20} L${S(40)} ${chinY - 20} L${S(40)} ${shoulderY + 8} L${S(4)} ${shoulderY + 8}Z`}" fill="url(#${id}-hatch)"/>` +
     fill(
-      d`M${L(40)} ${chinY - 20} L${S(40)} ${chinY - 20} L${S(40)} ${chinY + 3} Q100 ${chinY + 6} ${L(40)} ${chinY - 1}Z`,
-      INK,
+      d`M${S(1)} ${chinY - 20} L${S(40)} ${chinY - 20} L${S(40)} ${shoulderY + 8} L${S(4)} ${shoulderY + 8}Z`,
+      SHADE,
+      ' opacity="0.22"',
+    ) +
+    fill(
+      d`M${L(40)} ${chinY - 20} L${S(40)} ${chinY - 20} L${S(40)} ${chinY + 9} Q100 ${chinY + 14} ${L(40)} ${chinY + 4}Z`,
+      SHADE,
+      ' opacity="0.3"',
     ) +
     `</g>`
   )
@@ -1931,7 +1949,7 @@ function hat(g: Geo, h: Hat, id: string): { back: string; front: string; shade: 
           `</g>` +
           (h === 'pillbox_strap'
             ? ink(
-                d`M${100 - w + 3} ${top + 8} C${100 - w - 1} ${eyeY + g.h * 0.16} ${100 - g.jw - 1} ${g.jawY - 4} ${100 - g.jw + 1} ${g.jawY + 3} Q${100 - g.cw - 6} ${g.chinY + 2} 100 ${g.chinY + 1.5} Q${100 + g.cw + 6} ${g.chinY + 2} ${100 + g.jw - 1} ${g.jawY + 3} C${100 + g.jw + 1} ${g.jawY - 4} ${100 + w + 1} ${eyeY + g.h * 0.16} ${100 + w - 3} ${top + 8}`,
+                d`M${100 - w + 2} ${cy + 2} C${100 - w + 1} ${cy + 14} ${100 - g.jw} ${g.jawY - 4} ${100 - g.jw + 2} ${g.jawY + 3} Q${100 - g.cw - 6} ${g.chinY + 2} 100 ${g.chinY + 1.5} Q${100 + g.cw + 6} ${g.chinY + 2} ${100 + g.jw - 2} ${g.jawY + 3} C${100 + g.jw} ${g.jawY - 4} ${100 + w - 1} ${cy + 14} ${100 + w - 2} ${cy + 2}`,
                 1.4,
                 INK,
               )
@@ -1948,11 +1966,8 @@ function hat(g: Geo, h: Hat, id: string): { back: string; front: string; shade: 
             PAPER,
             2,
           ) +
-          fill(
-            d`M${S(2)} ${top - 34} L${S(w + 18)} ${top - 24} L${S(w)} ${brimY} L${S(6)} ${brimY}Z`,
-            '#a9a59d',
-            ' opacity="0.7"',
-          ) +
+          `<clipPath id="${id}-toque"><path d="${d`M${100 - w + 2} ${brimY} L${100 - w} ${top - 8} C${100 - w - 14} ${top - 24}, ${100 - 10} ${top - 38}, 100 ${top - 29} C${100 + 10} ${top - 40}, ${100 + w + 14} ${top - 24}, ${100 + w} ${top - 8} L${100 + w - 2} ${brimY}Z`}"/></clipPath>` +
+          `<g clip-path="url(#${id}-toque)">${fill(d`M${S(2)} ${top - 40} L${S(w + 18)} ${top - 30} L${S(w + 4)} ${brimY} L${S(6)} ${brimY}Z`, '#a9a59d', ' opacity="0.7"')}</g>` +
           ink(d`M${100 - w + 1} ${brimY - 10} L${100 + w - 1} ${brimY - 10}`, 1.6),
         shade: 0,
       }
@@ -2078,7 +2093,7 @@ function hat(g: Geo, h: Hat, id: string): { back: string; front: string; shade: 
             ' opacity="0.7"',
           ) +
           ink(
-            d`M${100 - w - 2} ${cy + 22} L${100 - w + 6} ${g.chinY - 4} M${100 + w + 2} ${cy + 22} L${100 + w - 6} ${g.chinY - 4}`,
+            d`M${100 - w + 1} ${cy + 22} Q${100 - g.jw + 2} ${g.jawY + 10} 100 ${g.chinY + 2} Q${100 + g.jw - 2} ${g.jawY + 10} ${100 + w - 1} ${cy + 22}`,
             1.6,
           ),
         shade: 0,
@@ -2135,27 +2150,20 @@ function hat(g: Geo, h: Hat, id: string): { back: string; front: string; shade: 
             INK,
             2,
           ) +
-          `<g clip-path="url(#${id}-head)" opacity="0.55">` +
-          [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-            .map((i) =>
-              ink(
-                d`M${100 - w - 4 + i * 8} ${top + 2} L${100 - w - 16 + i * 8} ${g.noseY}`,
-                0.6,
-                INK,
-              ),
-            )
+          `<g clip-path="url(#${id}-head)" opacity="0.3">` +
+          [0, 1, 2, 3, 4, 5, 6, 7, 8]
+            .map((i) => ink(d`M${100 - w - 4 + i * 10} ${top + 4} l-7 ${eyeY - top + 6}`, 0.5, INK))
             .join('') +
-          [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-            .map((i) =>
-              ink(
-                d`M${100 - w - 16 + i * 8} ${top + 2} L${100 - w - 4 + i * 8} ${g.noseY}`,
-                0.6,
-                INK,
-              ),
-            )
+          [0, 1, 2, 3, 4, 5, 6, 7, 8]
+            .map((i) => ink(d`M${100 - w - 11 + i * 10} ${top + 4} l7 ${eyeY - top + 6}`, 0.5, INK))
             .join('') +
           `</g>` +
-          ink(d`M${100 - w - 2} ${g.noseY} Q100 ${g.noseY + 4} ${100 + w + 2} ${g.noseY}`, 0.9),
+          ink(
+            d`M${100 - w} ${eyeY + 9} Q100 ${eyeY + 13} ${100 + w} ${eyeY + 9}`,
+            0.8,
+            INK,
+            ' opacity="0.6"',
+          ),
         shade: 0,
       }
     case 'headscarf':
@@ -2170,8 +2178,8 @@ function hat(g: Geo, h: Hat, id: string): { back: string; front: string; shade: 
           [0, 1, 2, 3, 4, 5, 6]
             .map((i) =>
               dot(
-                100 - w * 0.8 + i * w * 0.27,
-                top + 2 + (i % 2) * 6,
+                100 - w * 0.72 + i * w * 0.24,
+                top + 16 + (i % 2) * 6 + Math.abs(i - 3) * 3,
                 1.8,
                 PAPER,
                 ' opacity="0.8"',
@@ -2307,12 +2315,17 @@ function hat(g: Geo, h: Hat, id: string): { back: string; front: string; shade: 
   }
 }
 
-function extras(g: Geo, list: Extra[], rand: () => number): { face: string; top: string } {
+function extras(
+  g: Geo,
+  list: Extra[],
+  rand: () => number,
+): { back: string; face: string; top: string } {
   const { L, S, ex, eyeY, noseY, mouthY, chinY, w, cy, s, shoulderY: y, nw, top } = g
+  const back: string[] = []
   const face: string[] = []
   const over: string[] = []
   const lens = (x: number, shapeD: string, lit: boolean) =>
-    ink(shapeD, lit ? 2.2 : 1.4, lit ? INK : PAPER) +
+    ink(shapeD, lit ? 2.2 : 1.4) +
     (lit ? ink(d`M${x - 3} ${eyeY - 4} l3 -2`, 1.2, INK, ' opacity="0.6"') : '')
   for (const e of list) {
     switch (e) {
@@ -2333,7 +2346,6 @@ function extras(g: Geo, list: Extra[], rand: () => number): { face: string; top:
           ink(
             d`M${S(ex + 10)} ${eyeY - 6} L${S(ex - 9)} ${eyeY - 6} L${S(ex - 8)} ${eyeY + 5} Q${S(ex)} ${eyeY + 8} ${S(ex + 9)} ${eyeY + 5}Z`,
             1.6,
-            PAPER,
           ),
           ink(d`M${L(ex - 9)} ${eyeY - 4} Q100 ${eyeY - 7} ${S(ex - 9)} ${eyeY - 4}`, 2.4),
           ink(d`M${L(ex + 10)} ${eyeY - 5} L${L(w + 1)} ${eyeY - 4}`, 2.4),
@@ -2342,11 +2354,7 @@ function extras(g: Geo, list: Extra[], rand: () => number): { face: string; top:
       case 'glasses_half':
         face.push(
           ink(d`M${L(ex + 8)} ${eyeY + 3} Q${L(ex)} ${eyeY + 12} ${L(ex - 8)} ${eyeY + 3}Z`, 1.8),
-          ink(
-            d`M${S(ex + 8)} ${eyeY + 3} Q${S(ex)} ${eyeY + 12} ${S(ex - 8)} ${eyeY + 3}Z`,
-            1.2,
-            PAPER,
-          ),
+          ink(d`M${S(ex + 8)} ${eyeY + 3} Q${S(ex)} ${eyeY + 12} ${S(ex - 8)} ${eyeY + 3}Z`, 1.2),
           ink(d`M${L(ex - 8)} ${eyeY + 3} Q100 ${eyeY + 1} ${S(ex - 8)} ${eyeY + 3}`, 1.4),
           ink(d`M${L(ex + 8)} ${eyeY + 3} L${L(w + 1)} ${eyeY - 1}`, 1.4),
           ink(
@@ -2360,11 +2368,11 @@ function extras(g: Geo, list: Extra[], rand: () => number): { face: string; top:
       case 'glasses_cat':
         face.push(
           ink(
-            d`M${L(ex - 8)} ${eyeY - 3} L${L(ex + 11)} ${eyeY - 8} Q${L(ex + 10)} ${eyeY + 4} ${L(ex)} ${eyeY + 6} Q${L(ex - 8)} ${eyeY + 5} ${L(ex - 8)} ${eyeY - 3}Z`,
-            2.6,
+            d`M${L(ex - 10)} ${eyeY - 7} L${L(ex + 13)} ${eyeY - 12} Q${L(ex + 12)} ${eyeY + 6} ${L(ex)} ${eyeY + 8} Q${L(ex - 10)} ${eyeY + 7} ${L(ex - 10)} ${eyeY - 7}Z`,
+            1.9,
           ),
           ink(
-            d`M${S(ex - 8)} ${eyeY - 3} L${S(ex + 11)} ${eyeY - 8} Q${S(ex + 10)} ${eyeY + 4} ${S(ex)} ${eyeY + 6} Q${S(ex - 8)} ${eyeY + 5} ${S(ex - 8)} ${eyeY - 3}Z`,
+            d`M${S(ex - 10)} ${eyeY - 7} L${S(ex + 13)} ${eyeY - 12} Q${S(ex + 12)} ${eyeY + 6} ${S(ex)} ${eyeY + 8} Q${S(ex - 10)} ${eyeY + 7} ${S(ex - 10)} ${eyeY - 7}Z`,
             1.4,
             PAPER,
           ),
@@ -2457,13 +2465,14 @@ function extras(g: Geo, list: Extra[], rand: () => number): { face: string; top:
         face.push(
           ink(d`M${L(w + 1)} ${cy + 16} l0 7`, 1.2),
           dot(L(w + 1), cy + 26, 3.2, PAPER, ` stroke="${INK}" stroke-width="1.4"`),
-          dot(S(w + 1), cy + 26, 2.6, PAPER, ' opacity="0.85"'),
+          ink(d`M${S(w + 1)} ${cy + 16} l0 7`, 1),
+          dot(S(w + 1), cy + 26, 2.8, PAPER, ` stroke="${INK}" stroke-width="1.2"`),
         )
         break
       case 'earrings_hoop':
         face.push(
           `<circle cx="${r1(L(w + 1))}" cy="${r1(cy + 24)}" r="6" fill="none" stroke="${INK}" stroke-width="1.8"/>`,
-          `<circle cx="${r1(S(w + 1))}" cy="${r1(cy + 24)}" r="6" fill="none" stroke="${PAPER}" stroke-width="1.4" opacity="0.8"/>`,
+          `<circle cx="${r1(S(w + 1))}" cy="${r1(cy + 24)}" r="5.5" fill="none" stroke="${INK}" stroke-width="1.4"/>`,
         )
         break
       case 'pearls':
@@ -2506,8 +2515,9 @@ function extras(g: Geo, list: Extra[], rand: () => number): { face: string; top:
         face.push(dot(L(11), mouthY - 6, 1.6, INK))
         break
       case 'pencil_ear':
-        over.push(
-          `<g transform="rotate(${s * 58} ${r1(L(w + 4))} ${r1(eyeY - 4)})">${shape(d`M${L(w + 4) - 2.3} ${eyeY - 19} L${L(w + 4) + 2.3} ${eyeY - 19} L${L(w + 4) + 2.3} ${eyeY + 8} L${L(w + 4)} ${eyeY + 13} L${L(w + 4) - 2.3} ${eyeY + 8}Z`, '#d9d5cc', 1.2)}</g>`,
+        back.push(
+          // Tucked behind the ear: drawn behind the head, so only the end sticking out past the ear shows.
+          `<g transform="translate(${r1(L(w + 4))} ${r1(cy - 8)}) rotate(${s * 62})">${shape('M-2.3 -16 L2.3 -16 L2.3 10 L0 15 L-2.3 10Z', '#d9d5cc', 1.2)}</g>`,
         )
         break
       case 'flower_hair':
@@ -2744,7 +2754,7 @@ function extras(g: Geo, list: Extra[], rand: () => number): { face: string; top:
         break
     }
   }
-  return { face: face.join(''), top: over.join('') }
+  return { back: back.join(''), face: face.join(''), top: over.join('') }
 }
 
 const sw = (g: Geo) => g.sw
@@ -2789,37 +2799,40 @@ export function renderPortrait(
       'eyeshade',
     ].includes(kit.hat)
   const h = kit.hat ? hat(g, kit.hat, id) : { back: '', front: '', shade: 0 }
-  // A three-quarter turn: the features move a little toward the far side of the head.
-  const turn = g.s * 3.5
-  const tg: Geo = { ...g, L: (dx) => g.L(dx) + turn, S: (dx) => g.S(dx) + turn }
-  const ex = extras(tg, kit.extras ?? [], rand)
+  // A headscarf or a turban covers all the hair; any other hat that covers the crown shows hair only
+  // below its brim, so curls and spikes never poke out above or around it.
+  const covered = kit.hat === 'headscarf' || kit.hat === 'turban'
+  const hair = (layer: string) =>
+    covered ? '' : hatted ? `<g clip-path="url(#${id}-underhat)">${layer}</g>` : layer
+  const ex = extras(g, kit.extras ?? [], rand)
   const head = headPath(g)
   const shade =
     h.shade > 0
-      ? `<g clip-path="url(#${id}-head)"><path d="${d`M0 0 L200 0 L200 ${h.shade} Q100 ${h.shade + 6} 0 ${h.shade}Z`}" fill="url(#${id}-hatch)"/>${fill(d`M0 0 L200 0 L200 ${h.shade - 4} Q100 ${h.shade + 1} 0 ${h.shade - 4}Z`, INK)}</g>`
+      ? `<g clip-path="url(#${id}-head)"><g filter="url(#${id}-soft2)">${fill(d`M0 0 L200 0 L200 ${h.shade} Q100 ${h.shade + 6} 0 ${h.shade}Z`, SHADE, ' opacity="0.3"')}</g></g>`
       : ''
   return (
     `<svg ${attrs} viewBox="0 0 200 250">` +
     backdrop(g, id) +
-    `<g mask="url(#${id}-fademask)"><g filter="url(#${id}-glow)"><g filter="url(#${id}-ink)">` +
+    `<g filter="url(#${id}-wash)"><g filter="url(#${id}-ink)">` +
     `<g transform="translate(100 ${FRAME_Y}) scale(${FRAME_SCALE}) translate(-100 -${FRAME_Y})">` +
     h.back +
-    hairBack(g, kit.hair) +
+    hair(hairBack(g, kit.hair)) +
+    ex.back +
     neck(g, id) +
     outfit(g, kit.outfit, id) +
     ears(g) +
-    fill(head, PAPER, ` stroke="${INK}" stroke-width="2.2"`) +
-    `<g clip-path="url(#${id}-far)">${ink(head, 3.6)}</g>` +
+    fill(head, PAPER, ` stroke="${INK}" stroke-width="1.8"`) +
+    `<g clip-path="url(#${id}-far)">${ink(head, 3)}</g>` +
     `<g clip-path="url(#${id}-head)">${faceShading(g, id)}</g>` +
-    features(tg, kit, id) +
-    facialHair(tg, kit.facial, rand) +
-    hairFront(g, kit.hair, hatted) +
+    features(g, kit, id) +
+    facialHair(g, kit.facial, rand) +
+    hair(hairFront(g, kit.hair, hatted)) +
     ex.face +
     shade +
     h.front +
     ex.top +
-    `</g></g></g></g>` +
-    `<rect width="200" height="250" filter="url(#${id}-grain)" opacity="0.12"/>` +
+    `</g></g></g>` +
+    `<rect width="200" height="250" filter="url(#${id}-grain)" opacity="0.15"/>` +
     `</svg>`
   )
 }

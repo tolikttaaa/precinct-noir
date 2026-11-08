@@ -75,7 +75,7 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
 
 ## 6. Suspect portraits
 **Pictures first.** A suspect's face is a picture file when there is one: a hand-drawn noir graphic-novel
-portrait in black ink (solid blacks, hatching) on sepia parchment, square, in `portraits/images/` named by id (`7.webp`). `portraits/photos.ts`
+portrait in black ink on paper, square, in `portraits/images/` named by id (`7.webp`). `portraits/photos.ts`
 finds them at build time; cards use the file's URL, and the wall (an SVG shown as an image, which can't
 load files) embeds its suspects' pictures as data URIs and appears once they've loaded.
 [PORTRAITS.md](PORTRAITS.md) is the brief, with a prompt for each suspect.
@@ -84,15 +84,15 @@ load files) embeds its suspects' pictures as data URIs and appears once they've 
 WebP), so the game already shows static pictures in this style. Hand-made pictures replace them file by
 file.
 
-**The drawing.** `portraits/portrait.ts` draws each suspect as an original noir graphic-novel bust (SVG,
-200×250) in black brush ink on sepia parchment. No other colour.
-- **Ink:** dark hair, hats and coats are solid black with paper-coloured highlight strokes. A solid-black
-  band runs down the far side of the face, with pen hatching (`-hatch`) where it turns toward the light,
-  on the far side of light clothes and the neck, and under a hat brim.
-- **Paper:** parchment with tea stains, a sepia glow behind the figure (`-glow`, the silhouette blurred
-  and pushed toward the shadow side), and the drawing fading out toward the bottom (`-fademask`).
-- **Turned and expressive:** the features sit a little toward the far side for a three-quarter turn, the
-  far eye narrower; stern brows dive at the nose, raised ones arch high, and smiles and frowns bend hard.
+**The drawing.** `portraits/portrait.ts` draws each suspect as an original black-and-white bust (SVG,
+200×250): ink line and a deep grey wash, between the old bold-ink look and a soft pencil study.
+- **Line and wash:** dark hair, hats and coats keep a thin ink edge and fill with a deep wash (`WASH`), so
+  they read nearly black but still show their shape.
+- **Wall:** an old photograph's warm grey, with venetian-blind light across it.
+- **Hair under hats:** under a hat that covers the crown, hair is clipped to below the brim
+  (`-underhat`); under a headscarf or a turban there is no hair at all.
+- **Props that sit where they should:** a pencil tucked behind the ear is drawn behind the head (the
+  `back` layer of `extras`); both lenses and both earrings are ink; mutton chops sit in front of the ears.
 - **A close portrait:** the figure is drawn 1.22× larger about the face (`FRAME_SCALE`), so the head fills
   about half the frame and sits in its top square, with the shoulders cropped below. Board cards can show
   just that top square. Tall hats (top hat, chef's toque) are kept short enough to stay in the frame.
