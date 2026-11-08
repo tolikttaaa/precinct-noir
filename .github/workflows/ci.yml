@@ -100,7 +100,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   e2e:
-    name: Browser games (TV + 2 phones)
+    name: Browser games
     runs-on: ubuntu-latest
     timeout-minutes: 25
     defaults:

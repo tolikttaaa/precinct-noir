@@ -81,7 +81,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M10 | Casino Heist | ⬜ | – |
 | M11 | Hardening & polish, incl. remote-play polish | ⬜ | – |
 
-**Next action:** the owner merges M5b and adds its check, `Browser games (TV + 2 phones)`, to the ruleset (RUNBOOK §1.3). Then the rules pages and sound (`p3/rules-pages`), a real session on the TV, and Spy Ring (M6).
+**Next action:** the owner merges M5b and adds its check, `Browser games`, to the ruleset (RUNBOOK §1.3). Then the rules pages and sound (`p3/rules-pages`), a real session on the TV, and Spy Ring (M6).
 
 **Order of the next steps** (owner's choice, 2026-11-06; changed 2026-11-07): portraits first after all, because the owner asked for an evidence-wall background with the suspects on it, then the playable board. M5 then makes Shadow Duel playable, with the portraits on its case-file cards. Every later mode ships with its own UI in its milestone. TV + phones get the polish first; remote play on one's own device is polished last (M11).
 
@@ -245,7 +245,7 @@ phone guide and a TV walkthrough. Design notes: [DESIGN.md](DESIGN.md) §7–8.
   - **Checks:** each verdict on the TV and both phones; the TV never shows a file or anyone's own card; no errors in any console.
   - **How it plays:** the test reads each player's identity by holding their file open, as a person can. It plans shifts with `e2e/support/grid.ts`, and finds buttons by the app's own EN/RU texts.
   - **No seed endpoint, unlike the plan:** deals are random, so the production server carries no test-only code, and every run covers a new deal. 40 runs in a row passed.
-  - **CI:** job `Browser games (TV + 2 phones)`, against the production image plus Postgres (`e2e/compose.yaml`) with Cloudflare's Turnstile test keys. It keeps a side-by-side video (`e2e/videos/session.mp4`) for 14 days when it fails, or when run by hand with "video" ticked.
+  - **CI:** job `Browser games`, against the production image plus Postgres (`e2e/compose.yaml`) with Cloudflare's Turnstile test keys. It keeps a side-by-side video (`e2e/videos/session.mp4`) for 14 days when it fails, or when run by hand with "video" ticked.
   - **The video:**
     - Each screen is recorded through Chrome's screencast (`support/recorder.ts`), and every frame is stamped with one shared clock.
     - `stitch.mjs` places the frames on a common 25 fps timeline, so the TV and both phones stay in step to within a frame, reloads included.
@@ -320,7 +320,7 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 | `new-app.sh precinctnoir` + Caddyfile commit (RUNBOOK §1.1) | ✅ |
 | `HOME_INFRA_DEPLOY_TOKEN` (fine-grained, home-infra only, Actions read/write) (§1.2) | ✅ |
 | Branch protection (§1.3): ruleset *Protect main* | ✅ |
-| Add `Browser games (TV + 2 phones)` to the ruleset's required checks (§1.3) | ⬜ after M5b's first CI run |
+| Add `Browser games` to the ruleset's required checks (§1.3) | ⬜ after M5b's first CI run |
 | Turnstile widget + keys in `/srv/apps/precinctnoir/.env` (§4.1) | ✅ |
 | Cloudflare rate-limiting rule on `/api/*` (§4.2) | ⬜ optional (edge layer on top of the app's limits) |
 | Delete the history backup `~/Projects/Personal/noir-game-backup-20261106.git` | ⬜ optional |
