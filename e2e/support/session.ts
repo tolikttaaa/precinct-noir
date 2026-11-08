@@ -62,7 +62,7 @@ export class Session {
         Recorder.start(
           page,
           join(VIDEO_DIR, SCREENS[i]),
-          i === 0 ? { width: 1280, height: 720 } : screens[i].viewport,
+          i === 0 ? { width: 1600, height: 900 } : screens[i].viewport,
         ),
       ),
     )
@@ -106,6 +106,7 @@ export class Session {
     for (let moves = 0; moves < 200; moves++) {
       const player = await this.nextToMove()
       if (!player) return
+      if (player.device === 'laptop') await player.expectOneScreen()
       await move(player)
       await this.tv.waitForTimeout(PACE)
       await after(moves + 1)

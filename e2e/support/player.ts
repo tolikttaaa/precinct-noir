@@ -101,6 +101,19 @@ export class Player {
     return (await this.controls.getByRole('status').count()) === 0
   }
 
+  /**
+   * On a laptop the game is one screen: nothing to scroll, and the player's file, the field (the board, or
+   * the cards to choose from) and the confirm bar all in full view.
+   */
+  async expectOneScreen(): Promise<void> {
+    const overflow = await this.page.evaluate(
+      () => document.documentElement.scrollHeight - window.innerHeight,
+    )
+    expect(overflow, 'the laptop page scrolls').toBeLessThanOrEqual(1)
+    for (const part of ['.dossier__folder', '.duel-phone__field > *', '.duel-controls'])
+      await expect(this.page.locator(part).first()).toBeInViewport({ ratio: 1 })
+  }
+
   async prompt(): Promise<string> {
     return this.page.locator('.duel-phone__prompt').innerText()
   }

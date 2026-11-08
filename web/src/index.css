@@ -1612,6 +1612,93 @@ button.suspect-card:focus-visible {
   gap: 0.5rem;
 }
 
+/* The game's three parts, top (prompt, file, actions), field (the board, or the cards to choose from)
+   and rest (tally, log, help, room buttons), lay out as one column on a phone, in that order. */
+.duel-phone__top,
+.duel-phone__field,
+.duel-phone__rest {
+  display: contents;
+}
+
+/* On a laptop (wide and landscape) the game is one screen with nothing to scroll: the field fills the
+   left at full height, and the top, the confirm bar and the rest stand in a column on the right, the
+   player's file always in view. */
+@media (min-width: 64rem) and (orientation: landscape) {
+  .screen--phone:has(> .duel-phone) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 26rem);
+    grid-template-rows: auto auto auto auto minmax(0, 1fr);
+    grid-template-areas:
+      'head head'
+      'notice notice'
+      'field top'
+      'field bar'
+      'field rest';
+    column-gap: clamp(1.5rem, 3vw, 3.5rem);
+    max-width: 100rem;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .screen--phone:has(> .duel-phone) > .masthead {
+    grid-area: head;
+  }
+
+  .screen--phone:has(> .duel-phone) > .connection {
+    grid-area: notice;
+  }
+
+  .screen--phone > .duel-phone {
+    display: contents;
+  }
+
+  .duel-phone__top {
+    grid-area: top;
+    display: grid;
+    align-content: start;
+    gap: 1.25rem;
+    padding-top: 0.5rem;
+  }
+
+  .duel-phone__field {
+    grid-area: field;
+    display: grid;
+    align-items: center;
+    min-height: 0;
+    padding: 0.5rem 0 1.5rem;
+    container-type: size;
+  }
+
+  /* The board as big as the field allows; a board of cards is about 0.82 as wide as it is tall per
+     row and column. */
+  .duel-phone__field .board {
+    width: min(100%, 100cqh * var(--cols) / var(--rows) * 0.82);
+  }
+
+  .duel-phone__field .pick {
+    width: min(100%, 100cqh * 0.8, 40rem);
+    font-size: 1rem;
+  }
+
+  .screen--phone:has(> .duel-phone) > .action-bar {
+    grid-area: bar;
+    position: static;
+    padding: 0.75rem 0 0;
+    background: none;
+  }
+
+  .duel-phone__rest {
+    grid-area: rest;
+    display: grid;
+    align-content: start;
+    gap: 1.5rem;
+    min-height: 0;
+    padding: 1.25rem 0 1.5rem;
+    overflow-y: auto;
+  }
+}
+
 /* The turn's actions: a tab for each, then what the chosen one does, or why it can't be done now. Tabs
    that can't be used now keep a dotted underline, so the state isn't carried by colour alone. */
 .actions {

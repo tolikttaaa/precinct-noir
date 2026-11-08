@@ -246,7 +246,7 @@ phone guide and a TV walkthrough. Design notes: [DESIGN.md](DESIGN.md) §7–8.
   - **Checks:** each verdict on the TV and both phones; the TV never shows a file or anyone's own card; no errors in any console.
   - **How it plays:** the test reads each player's identity by holding their file open, as a person can. It plans shifts with `e2e/support/grid.ts`, and finds buttons by the app's own EN/RU texts.
   - **No seed endpoint, unlike the plan:** deals are random, so the production server carries no test-only code, and every run covers a new deal. 40 runs in a row passed.
-  - **CI:** job `Browser games`, against the production image plus Postgres (`e2e/compose.yaml`) with Cloudflare's Turnstile test keys. It keeps a side-by-side video (`e2e/videos/session.mp4`) for 14 days when it fails, or when run by hand with "video" ticked.
+  - **CI:** job `Browser games`, against the production image plus Postgres (`e2e/compose.yaml`) with Cloudflare's Turnstile test keys. It keeps a video of all three screens (`e2e/videos/session.mp4`) for 14 days when it fails, or when run by hand with "video" ticked.
   - **The video:**
     - Each screen is recorded through Chrome's screencast (`support/recorder.ts`), and every frame is stamped with one shared clock.
     - `stitch.mjs` places the frames on a common 25 fps timeline, so the TV and both phones stay in step to within a frame, reloads included.
@@ -263,7 +263,9 @@ phone guide and a TV walkthrough. Design notes: [DESIGN.md](DESIGN.md) §7–8.
     - Bigger hands wrap four to a row, and the city shrinks to the height that's left. Checked with hands of 3, 4, 6 and 8 cards.
     - On a laptop (wide, landscape) the open file is a spread: you and your evidence left, the city right.
   - [x] **The verdict comes into view** when a round ends. The laptop test found it hidden above the fold after a kill low on the board.
-  - [ ] **Laptop play beyond the file** stays for M11, as planned: the game page is the phone's single column (640px) there. On a 900px-tall screen, the board's last rows fall below the fold, and the hints say "Tap".
+  - [x] **The game on a laptop** (from 1024px wide, landscape) is one screen with nothing to scroll: the board at full height on the left; the prompt, the file, the tabs, the confirm bar, the tally and the log on the right. The owner asked for it after seeing the laptop screenshots. The browser games check it on every laptop move.
+  - [x] **The video** shows the TV on top and the laptop and phone side by side under it, with brass lines between them (the owner's layout). The TV is recorded at 1600×900.
+  - [ ] Still for M11: the hints say "Tap" on a laptop, and the lobby keeps the phone's column.
   - [x] **Texts:** kill and accuse say "one of the eight tiles around you"; collapse says when it's possible.
   - [x] **Browser games:** Ann now plays from a laptop (1440×900, mouse) and Борис from a phone (390×844, touch), so every step runs on both layouts; the laptop's open file is checked to be a spread. The CI job is now just `Browser games` (renamed in #18 before it joins the ruleset). Round 1 builds up to a collapse and makes it, checking that the TV loses a line. The phones go through the tabs; the opening move checks the other tabs' reason; the inspector lights the accuse targets, then switches to clearing a suspect. The pick is checked in both directions between the cards and the city.
   - [ ] The PR.

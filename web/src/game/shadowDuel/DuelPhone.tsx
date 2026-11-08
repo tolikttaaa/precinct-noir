@@ -322,128 +322,135 @@ export function DuelPhone({ room, duel, send, refusalId, footer }: Props) {
   }
 
   /** The cards to choose from, or where they are in the city, by a switch; a choice shows in both. */
-  function pickPanel(picking: Extract<Mode, { t: 'pick' }>): ReactNode {
+  /** The switch between the cards to choose from and where they are in the city. */
+  function pickSwitch(): ReactNode {
     return (
-      <>
-        <fieldset className="segmented pick-view">
-          <legend className="visually-hidden">{t('duel.pickOnBoard')}</legend>
-          {(['cards', 'city'] as const).map((v) => (
-            <label key={v} className="segmented__option">
-              <input
-                type="radio"
-                name="pick-view"
-                checked={pickView === v}
-                onChange={() => setPickView(v)}
-              />
-              <span>{t(`duel.pickView.${v}`)}</span>
-            </label>
-          ))}
-        </fieldset>
-        {pickView === 'cards' ? pickCards(picking) : board}
-      </>
+      <fieldset className="segmented pick-view">
+        <legend className="visually-hidden">{t('duel.pickOnBoard')}</legend>
+        {(['cards', 'city'] as const).map((v) => (
+          <label key={v} className="segmented__option">
+            <input
+              type="radio"
+              name="pick-view"
+              checked={pickView === v}
+              onChange={() => setPickView(v)}
+            />
+            <span>{t(`duel.pickView.${v}`)}</span>
+          </label>
+        ))}
+      </fieldset>
     )
   }
 
   return (
     <>
+      {/* Three parts: one column on a phone, in this order; on a laptop the field (the board, or the cards
+          to choose from) fills the left, and the top and the rest stand beside it. */}
       <main className="room duel-phone">
-        {view.outcome ? (
-          <Outcome room={room} view={view} outcome={view.outcome} />
-        ) : (
-          <div className="duel-phone__status">
-            <p className="duel-phone__prompt" role="status">
-              {myTurn ? yourPromptText(t, view) : promptText(t, room, view)}
-            </p>
-            {!me && <p className="hint">{t('duel.watching')}</p>}
-          </div>
-        )}
-        {me && view.outcome === undefined && (
-          <Dossier
-            me={me}
-            city={
-              <Board
-                size="phone"
-                rows={view.board.rows}
-                cols={view.board.cols}
-                tiles={view.board.tiles}
-                mine={me.identity}
-                evidence={new Set(me.hand)}
-              />
-            }
-          />
-        )}
-        {acting && (
-          <section className="actions">
-            {tabs.length > 1 && (
-              <div className="actions__tabs" role="tablist" aria-label={t('duel.actions')}>
-                {tabs.map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    role="tab"
-                    id={`action-${tab}`}
-                    className="actions__tab"
-                    aria-selected={tab === acting.tab}
-                    aria-controls="action-panel"
-                    data-off={!available(moves, tab) || undefined}
-                    onClick={() => setMode(startTab(tab, moves))}
-                  >
-                    {t(`duel.action.${tab}`)}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div
-              className="actions__panel"
-              id="action-panel"
-              role="tabpanel"
-              aria-labelledby={`action-${acting.tab}`}
-              data-off={!open || undefined}
-            >
-              <p>
-                {open
-                  ? t(`duel.explain.${acting.tab}`)
-                  : t(`duel.unavailable.${unavailable(acting.tab, view)}`)}
+        <div className="duel-phone__top">
+          {view.outcome ? (
+            <Outcome room={room} view={view} outcome={view.outcome} />
+          ) : (
+            <div className="duel-phone__status">
+              <p className="duel-phone__prompt" role="status">
+                {myTurn ? yourPromptText(t, view) : promptText(t, room, view)}
               </p>
-              {open && acting.tab === 'collapse' && !acting.option && (
-                <div className="actions__ways">
-                  {(moves.collapse ?? []).map((o) => (
+              {!me && <p className="hint">{t('duel.watching')}</p>}
+            </div>
+          )}
+          {me && view.outcome === undefined && (
+            <Dossier
+              me={me}
+              city={
+                <Board
+                  size="phone"
+                  rows={view.board.rows}
+                  cols={view.board.cols}
+                  tiles={view.board.tiles}
+                  mine={me.identity}
+                  evidence={new Set(me.hand)}
+                />
+              }
+            />
+          )}
+          {acting && (
+            <section className="actions">
+              {tabs.length > 1 && (
+                <div className="actions__tabs" role="tablist" aria-label={t('duel.actions')}>
+                  {tabs.map((tab) => (
                     <button
-                      key={o.direction}
+                      key={tab}
                       type="button"
-                      className="button button--quiet"
-                      onClick={() => setMode({ ...acting, option: o })}
+                      role="tab"
+                      id={`action-${tab}`}
+                      className="actions__tab"
+                      aria-selected={tab === acting.tab}
+                      aria-controls="action-panel"
+                      data-off={!available(moves, tab) || undefined}
+                      onClick={() => setMode(startTab(tab, moves))}
                     >
-                      {t(`duel.collapseWay.${o.direction}`)}
+                      {t(`duel.action.${tab}`)}
                     </button>
                   ))}
                 </div>
               )}
-            </div>
-          </section>
-        )}
-        {picking ? pickPanel(picking) : board}
-        <KillMeter view={view} />
-        <CaseLog room={room} events={events} limit={4} publicOnly />
-        {me && (
-          <details className="help-now">
-            <summary>{t('duel.helpNow')}</summary>
-            <dl>
-              {ROLE_TABS[me.role].map((action) => (
-                <div key={action}>
-                  <dt>{t(`duel.action.${action}`)}</dt>
-                  <dd>{t(`duel.explain.${action}`)}</dd>
-                </div>
-              ))}
-            </dl>
-          </details>
-        )}
-        {hasGuide(room.mode) && (
-          <button type="button" className="button button--quiet" onClick={() => setGuide(true)}>
-            {t('duel.howToPlay')}
-          </button>
-        )}
-        {view.outcome === undefined && <div className="duel-phone__room">{footer}</div>}
+              <div
+                className="actions__panel"
+                id="action-panel"
+                role="tabpanel"
+                aria-labelledby={`action-${acting.tab}`}
+                data-off={!open || undefined}
+              >
+                <p>
+                  {open
+                    ? t(`duel.explain.${acting.tab}`)
+                    : t(`duel.unavailable.${unavailable(acting.tab, view)}`)}
+                </p>
+                {open && acting.tab === 'collapse' && !acting.option && (
+                  <div className="actions__ways">
+                    {(moves.collapse ?? []).map((o) => (
+                      <button
+                        key={o.direction}
+                        type="button"
+                        className="button button--quiet"
+                        onClick={() => setMode({ ...acting, option: o })}
+                      >
+                        {t(`duel.collapseWay.${o.direction}`)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+          {picking && pickSwitch()}
+        </div>
+        <div className="duel-phone__field">
+          {picking && pickView === 'cards' ? pickCards(picking) : board}
+        </div>
+        <div className="duel-phone__rest">
+          <KillMeter view={view} />
+          <CaseLog room={room} events={events} limit={4} publicOnly />
+          {me && (
+            <details className="help-now">
+              <summary>{t('duel.helpNow')}</summary>
+              <dl>
+                {ROLE_TABS[me.role].map((action) => (
+                  <div key={action}>
+                    <dt>{t(`duel.action.${action}`)}</dt>
+                    <dd>{t(`duel.explain.${action}`)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          )}
+          {hasGuide(room.mode) && (
+            <button type="button" className="button button--quiet" onClick={() => setGuide(true)}>
+              {t('duel.howToPlay')}
+            </button>
+          )}
+          {view.outcome === undefined && <div className="duel-phone__room">{footer}</div>}
+        </div>
       </main>
       <footer className="action-bar">
         {myTurn && <div className="duel-controls">{controls()}</div>}

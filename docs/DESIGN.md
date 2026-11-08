@@ -213,8 +213,14 @@ file.
   - The main action (Start, Play again, End game) sits in a sticky bar in the thumb zone, with Leave
     under it.
   - Touch targets are at least 44px.
-- **Laptop:** the phone and TV layouts adapt (the TV layout goes to one column under 900px). Polishing
-  remote play on one's own device is the final step (M11).
+- **Laptop** (a player's screen at least 1024px wide, in landscape):
+  - The game is one screen with nothing to scroll. The field (the board, or the cards to choose from)
+    fills the left at full height.
+  - On the right, in a column: the prompt, the player's file (always in view), the action tabs, the
+    confirm bar, then the tally, the case log, help and the room buttons. Only that last part scrolls,
+    if ever.
+  - The lobby and the other pages keep the phone's column; the TV layout goes to one column under
+    900px. The rest of remote-play polish stays for M11.
 
 ## 10. Interaction rules
 - **Two taps for anything that affects others:** remove a player, leave, end the game. The first tap
