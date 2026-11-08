@@ -88,7 +88,7 @@ file.
 200×250): ink line and a deep grey wash, between the old bold-ink look and a soft pencil study.
 - **Line and wash:** dark hair, hats and coats keep a thin ink edge and fill with a deep wash (`WASH`), so
   they read nearly black but still show their shape.
-- **Wall:** plain grey with no tint, lit from the suspect's lit side, with venetian-blind light across it.
+- **Wall:** plain grey with no tint and no pattern, lit from the suspect's lit side.
 - **Hair under hats:** under a hat that covers the crown, hair is clipped to below the brim
   (`-underhat`); under a headscarf or a turban there is no hair at all.
 - **Props that sit where they should:**

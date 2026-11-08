@@ -803,18 +803,7 @@ function backdrop(g: Geo, id: string): string {
     `<filter id="${id}-grain"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="${g.seed + 1}"/><feColorMatrix values="0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 -1.4 0.95"/></filter>` +
     // Under a hat that covers the crown, hair shows only below the brim.
     `<clipPath id="${id}-underhat"><rect x="-60" y="${r1(g.top + g.h * 0.36 - 2)}" width="320" height="400"/></clipPath></defs>` +
-    `<rect width="200" height="250" fill="url(#${id}-light)"/>` +
-    // Venetian-blind light across the wall behind the suspect.
-    [0, 1, 2, 3, 4, 5]
-      .map((i) => {
-        const y = -40 + i * 52
-        return fill(
-          d`M-20 ${y} L220 ${y - 70} L220 ${y - 48} L-20 ${y + 22}Z`,
-          '#ffffff',
-          ' opacity="0.16"',
-        )
-      })
-      .join('')
+    `<rect width="200" height="250" fill="url(#${id}-light)"/>`
   )
 }
 
