@@ -246,6 +246,11 @@ phone guide and a TV walkthrough. Design notes: [DESIGN.md](DESIGN.md) §7–8.
   - **How it plays:** the test reads each player's identity by holding their file open, as a person can. It plans shifts with `e2e/support/grid.ts`, and finds buttons by the app's own EN/RU texts.
   - **No seed endpoint, unlike the plan:** deals are random, so the production server carries no test-only code, and every run covers a new deal. 40 runs in a row passed.
   - **CI:** job `Browser games (TV + 2 phones)`, against the production image plus Postgres (`e2e/compose.yaml`) with Cloudflare's Turnstile test keys. It keeps a side-by-side video (`e2e/videos/session.mp4`) for 14 days when it fails, or when run by hand with "video" ticked.
+  - **The video:**
+    - Each screen is recorded through Chrome's screencast (`support/recorder.ts`), and every frame is stamped with one shared clock.
+    - `stitch.mjs` places the frames on a common 25 fps timeline, so the TV and both phones stay in step to within a frame, reloads included.
+    - Playwright's own video files couldn't be lined up: they drop the still stretches at their start and end.
+    - Every tap shows as a ring (`support/taps.ts`), including the press-and-hold that opens a player's file.
 - [ ] **Release v0.1**, then a real session with phones and the TV.
 
 ### P: portraits, evidence wall, realistic folders ✅ (PR #14, live)

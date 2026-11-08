@@ -66,16 +66,19 @@ export class Phone {
     return this.page.locator('.duel-phone__prompt').innerText()
   }
 
-  /** Who this player is: hold the file open, read it, let go. */
+  /** Who this player is: press and hold the file, read it, let go. */
   async identity(): Promise<number> {
     const folder = this.page.locator('.dossier__folder')
-    await folder.focus()
-    await this.page.keyboard.down(' ')
+    await folder.scrollIntoViewIfNeeded()
+    const box = await folder.boundingBox()
+    if (!box) throw new Error(`${this.name}'s file isn't on screen`)
+    await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await this.page.mouse.down()
     const label = await this.page
       .locator('.dossier__identity .suspect-card')
       .getAttribute('aria-label')
     await this.page.waitForTimeout(PACE)
-    await this.page.keyboard.up(' ')
+    await this.page.mouse.up()
     if (!label) throw new Error(`${this.name} has no identity`)
     return idOf(label.split(', ')[0])
   }

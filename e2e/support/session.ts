@@ -2,23 +2,28 @@ import { expect, type Browser, type BrowserContext, type Page } from '@playwrigh
 import { mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { PACE, Phone } from './phone'
+import { Recorder, writeTimeline } from './recorder'
+import { showTaps } from './taps'
 import { TEXTS, type Language } from './texts'
 
-/** Where the recordings go: tv.webm, phone-1.webm, phone-2.webm (and session.mp4 from stitch.mjs). */
+/** Where the recordings go: a folder of frames per screen, timeline.json, and session.mp4 from stitch.mjs. */
 export const VIDEO_DIR = join(__dirname, '..', 'videos')
 
 const TV = { width: 1920, height: 1080 }
 const PHONE = { width: 390, height: 844 }
+const SCREENS = ['tv', 'phone-1', 'phone-2']
 
 /**
- * A living room: the TV and two phones, each its own browser with its own storage, all recorded from the
- * start so the three videos line up.
+ * A living room: the TV and two phones, each its own browser with its own storage. All three are recorded
+ * on one clock, with every tap shown.
  */
 export class Session {
   readonly errors: string[] = []
+  private readonly start = Date.now()
 
   private constructor(
     private readonly contexts: BrowserContext[],
+    private readonly recorders: Recorder[],
     readonly tv: Page,
     readonly phones: Phone[],
   ) {}
@@ -37,16 +42,22 @@ export class Session {
           deviceScaleFactor: scale,
           locale: language === 'ru' ? 'ru-RU' : 'en-US',
           hasTouch: viewport === PHONE,
-          recordVideo: {
-            dir: VIDEO_DIR,
-            size: viewport === TV ? { width: 1280, height: 720 } : viewport,
-          },
         }),
       ),
     )
+    await Promise.all(contexts.map((c) => c.addInitScript(showTaps)))
     const pages = await Promise.all(contexts.map((c) => c.newPage()))
+    const recorders = await Promise.all(
+      pages.map((page, i) =>
+        Recorder.start(
+          page,
+          join(VIDEO_DIR, SCREENS[i]),
+          i === 0 ? { width: 1280, height: 720 } : PHONE,
+        ),
+      ),
+    )
     const phones = players.map(([name, language], i) => new Phone(pages[i + 1], name, language))
-    const session = new Session(contexts, pages[0], phones)
+    const session = new Session(contexts, recorders, pages[0], phones)
     pages.forEach((page, i) => {
       const who = i === 0 ? 'TV' : players[i - 1][0]
       page.on('pageerror', (e) => session.errors.push(`${who}: ${e.message}`))
@@ -104,20 +115,18 @@ export class Session {
     expect(this.errors, 'errors in the browser consoles').toEqual([])
   }
 
-  /** Closes the browsers and keeps the recordings, named by screen. */
+  /** Stops the recordings, writes their timeline and closes the browsers. */
   async close(): Promise<void> {
-    const pages = [this.tv, ...this.phones.map((p) => p.page)]
     // Let the last screen stay up for a moment in the recording.
     await this.tv.waitForTimeout(PACE * 3)
-    await Promise.all(this.contexts.map((c) => c.close()))
-    const names = ['tv', 'phone-1', 'phone-2']
-    await Promise.all(
-      pages.map(async (page, i) => {
-        const video = page.video()
-        if (!video) return
-        await video.saveAs(join(VIDEO_DIR, `${names[i]}.webm`))
-        await video.delete()
-      }),
+    const end = Date.now()
+    const frames = await Promise.all(this.recorders.map((r) => r.stop()))
+    writeTimeline(
+      VIDEO_DIR,
+      this.start,
+      end,
+      this.recorders.map((r, i) => ({ name: SCREENS[i], size: r.size, frames: frames[i] })),
     )
+    await Promise.all(this.contexts.map((c) => c.close()))
   }
 }

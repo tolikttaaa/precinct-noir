@@ -135,7 +135,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run format:check
       - run: npm run typecheck
-      - run: npx playwright install --with-deps chromium ffmpeg
+      - run: npx playwright install --with-deps chromium
 
       # A TV and two phones (one in Russian) play two rounds: the inspector wins, the VIP starts a rematch,
       # a phone reloads mid-game, and the killer wins.
@@ -157,7 +157,7 @@ jobs:
         with:
           name: browser-games
           path: |
-            e2e/videos/
+            e2e/videos/session.mp4
             e2e/test-results/
           retention-days: 14
           if-no-files-found: ignore
