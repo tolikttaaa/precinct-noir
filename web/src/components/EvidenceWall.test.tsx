@@ -1,6 +1,9 @@
 import { render } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { EvidenceWall } from './EvidenceWall'
+
+// A wall without pictures is drawn at once; EvidenceWall.photos.test.tsx covers the one with pictures.
+vi.mock('../portraits/photos', () => ({ PHOTOS: new Map(), photoData: vi.fn() }))
 
 describe('EvidenceWall', () => {
   it('is decoration only, drawn once, and dims where text sits on it', () => {

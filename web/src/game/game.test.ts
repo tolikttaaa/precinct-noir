@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { roomView } from '../test/fixtures'
+
+// These cases cover the drawn portraits; suspects.photos.test.ts covers suspects with pictures.
+vi.mock('../portraits/photos', () => ({ PHOTOS: new Map(), photoData: vi.fn() }))
 import type { RoomState } from '../net/roomSocket'
 import type { CollapseOption, Opt } from '../protocol/generated'
 import { GUIDES, guideText, hasGuide } from './guides'

@@ -80,10 +80,19 @@ finds them at build time; cards use the file's URL, and the wall (an SVG shown a
 load files) embeds its suspects' pictures as data URIs and appears once they've loaded.
 [PORTRAITS.md](PORTRAITS.md) is the brief, with a prompt for each suspect.
 
-**The drawn fallback.** Until a suspect has a picture, `portraits/portrait.ts` draws them as an original
-black-and-white "sketch" bust (SVG, 200×250): ink line and grey wash on cream paper. No colour.
-- **Line and wash:** a filter keeps a thin ink edge on every dark shape (hair, hats, coats) and fills its
-  inside with grey wash (`WASH`), so dark clothes read as shaded cloth, not solid black.
+**The pictures in the repo today** are exported from the drawing below (Chrome, the top 512×512 square,
+WebP), so the game already shows static pictures in this style. Hand-made pictures replace them file by
+file.
+
+**The drawing.** `portraits/portrait.ts` draws each suspect as an original noir graphic-novel bust (SVG,
+200×250) in black brush ink on sepia parchment. No other colour.
+- **Ink:** dark hair, hats and coats are solid black with paper-coloured highlight strokes. A solid-black
+  band runs down the far side of the face, with pen hatching (`-hatch`) where it turns toward the light,
+  on the far side of light clothes and the neck, and under a hat brim.
+- **Paper:** parchment with tea stains, a sepia glow behind the figure (`-glow`, the silhouette blurred
+  and pushed toward the shadow side), and the drawing fading out toward the bottom (`-fademask`).
+- **Turned and expressive:** the features sit a little toward the far side for a three-quarter turn, the
+  far eye narrower; stern brows dive at the nose, raised ones arch high, and smiles and frowns bend hard.
 - **A close portrait:** the figure is drawn 1.22× larger about the face (`FRAME_SCALE`), so the head fills
   about half the frame and sits in its top square, with the shoulders cropped below. Board cards can show
   just that top square. Tall hats (top hat, chef's toque) are kept short enough to stay in the frame.

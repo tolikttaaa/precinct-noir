@@ -266,6 +266,9 @@ the suspects on it, and folders that look real. Design notes: [DESIGN.md](DESIGN
   by planes; the figure is drawn closer, so the face fills the card's square.
 - [x] Picture portraits: files in `web/src/portraits/images/` named by id show on cards and the wall; the
   drawn portrait stays for anyone without one. `docs/PORTRAITS.md` has a ready prompt for each suspect.
+- [x] The drawing restyled after the reference cards' general look (brush ink, solid blacks, hatching,
+  sepia parchment, a three-quarter turn, stronger expressions) and exported as the 60 pictures in
+  `web/src/portraits/images/`, so the game shows static pictures now.
 - [ ] The owner makes the 60 pictures (an artist or an image generator); an agent converts them to
   512 × 512 WebP and adds them.
 
