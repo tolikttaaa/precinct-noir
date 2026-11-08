@@ -35,10 +35,23 @@ The same fine-grained PAT can serve every app repo. If you already have one, reu
 `main` is protected by the repository ruleset **Protect main**
 (Settings → Rules → Rulesets; id `26715638`). It is the only protection; there is no classic branch protection.
 - **Pull request required:** no direct pushes. 0 approvals, because GitHub doesn't let you approve your own PR.
-- **Required status checks** (from GitHub Actions): `Engine & server (Gradle)`, `Web client`, `Docker image (build only)`.
+- **Required status checks** (from GitHub Actions): `Engine & server (Gradle)`, `Web client`, `Docker image (build only)`,
+  `Browser games (TV + 2 phones)`.
   `build-and-deploy` is deliberately excluded because it runs after the merge.
 - **Blocked:** deleting `main` and force-pushes.
 - **Bypass:** repository admins may merge a PR despite failing checks, for emergencies only. They still can't push directly.
+
+**Adding the browser games check (M5b).** It appears in the picker once it has run on a PR.
+Settings → Rules → Rulesets → *Protect main* → Require status checks to pass → Add checks → type
+`Browser games (TV + 2 phones)` → pick it (source: GitHub Actions) → Save changes. Or from a terminal:
+```bash
+gh api repos/tolikttaaa/precinct-noir/rulesets/26715638 \
+  | jq '{name, target, enforcement, conditions, bypass_actors, rules: (.rules | map(
+      if .type == "required_status_checks"
+      then .parameters.required_status_checks += [{"context": "Browser games (TV + 2 phones)", "integration_id": 15368}]
+      else . end))}' \
+  | gh api -X PUT repos/tolikttaaa/precinct-noir/rulesets/26715638 --input -
+```
 
 If you rename a CI job in `.github/workflows/ci.yml`, update the ruleset's required checks too,
 or PRs will wait forever for a check that no longer exists. Inspect the rules with:

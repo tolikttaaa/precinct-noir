@@ -158,7 +158,7 @@ Each mode milestone covers: engine rules + tests → projections → UI panels a
 - **Engine:** `./gradlew :engine:check`, covering example tests per rule, Kotest property tests (shift is a permutation, shift then inverse is the identity, collapse keeps a rectangle, no projection leaks), and scripted scenarios reproducing the rulebook's worked examples.
 - **Server:** `./gradlew :server:check`, using Testcontainers Postgres for snapshot/restore, WS protocol tests, rate-limit and origin/frame-size rejection tests, and restart-mid-game resume.
 - **Web:** `npm run typecheck && npm run lint && npm test`; the protocol-drift check runs in CI.
-- **E2E:** Playwright with seeded games (seed endpoint enabled only in the `test` profile). One TV context plus N player contexts play a full game per mode at phone, laptop and 1080p TV viewports.
+- **E2E** (`e2e/`): Playwright against the production image. One TV context plus N player contexts play full games per mode at phone and 1080p TV viewports. Deals are random (no seed endpoint, so the server has no test-only code). The test reads each player's secrets from their own phone and plans moves that end each round the way the scenario needs.
 - **Manual:** `docker compose -f compose.dev.yaml up` + `bootRun` + `npm run dev`, driven in Chrome at 390×844, 1440×900 and 1920×1080 with screenshots for review.
 - **Production:**
   - `curl https://precinctnoir.ttaaa.dev/actuator/health`
