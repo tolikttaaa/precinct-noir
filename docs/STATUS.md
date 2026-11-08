@@ -4,7 +4,7 @@
 > built, and what is next, so development can resume from any point (a new session, a new agent,
 > or after a break). Update it in every milestone PR.
 >
-> **Last updated:** 2026-11-08. P merged and live (PR #14). M5 (the Shadow Duel board, playable) is done on branch `m5/shadow-duel-board` (PR open); its browser end-to-end tests follow in M5b.
+> **Last updated:** 2026-11-08. M5 (the Shadow Duel board, playable) is merged and live (PR #15), and P2 (picture portraits) too (PR #16). The approved portrait pictures are on branch `p2b/approved-portraits` (PR open). Next: M5b, the browser end-to-end tests.
 >
 > **Legend:** ✅ done and merged · 🟡 done on a branch / PR open · ⬜ not started · ⚠️ known issue or follow-up
 
@@ -70,9 +70,10 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M3b | Security: rate limits, Turnstile, WS limits, CSP nonce | ✅ (live) | #12 |
 | M4 | Look and feel, home, join flow, lobby on TV and phone, EN/RU | ✅ (live) | #13 |
 | P | Suspect portraits, evidence-wall background, realistic folders | ✅ (live) | #14 |
-| M5 | Shadow Duel board and game UI → **release v0.1, first playable** | 🟡 PR open | `m5/shadow-duel-board` |
+| M5 | Shadow Duel board and game UI → **release v0.1, first playable** | ✅ (live) | #15 |
 | M5b | Browser end-to-end tests (TV + 2 phones) in CI | ⬜ | – |
-| P2 | Picture portraits (files, with a drawn fallback) and the brief and prompts for making them | 🟡 PR open | `p2/portrait-sketch` |
+| P2 | Picture portraits (files, with a drawn fallback) and the brief and prompts for making them | ✅ (live) | #16 |
+| P2b | The 60 approved portrait pictures, and the drawing fixed to match | 🟡 PR open | `p2b/approved-portraits` |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
@@ -216,7 +217,7 @@ Design system and reasoning: [DESIGN.md](DESIGN.md). Code: `web/src/`.
   - Checked in headless Chrome against the Spring-served build: no console errors under the real CSP, including Turnstile.
 - [ ] Laptop-specific polish → M11 (owner's choice: TV + phones first).
 
-### M5: Shadow Duel playable end-to-end → v0.1 🟡 (PR open, branch `m5/shadow-duel-board`)
+### M5: Shadow Duel playable end-to-end → v0.1 ✅ (PR #15, live)
 Owner's choices (2026-11-08): a mini-board on each phone, the identity behind hold-to-reveal, and both a
 phone guide and a TV walkthrough. Design notes: [DESIGN.md](DESIGN.md) §7–8.
 - [x] **Suspect cards:** the portrait, name and file number; Russian names for all 60 (`i18n/suspectNames.ts`).
@@ -256,7 +257,7 @@ the suspects on it, and folders that look real. Design notes: [DESIGN.md](DESIGN
 - [ ] Check the wall on a real smart-TV browser after deploying. If it draws slowly there, pre-render it into an image at build time.
 - [x] **Game name:** stays "Precinct Noir" in Latin letters in Russian too (owner asked; never «Нуар», the Russian title of another game).
 
-### P2: picture portraits 🟡 (PR open, branch `p2/portrait-sketch`)
+### P2: picture portraits ✅ (PR #16, live); the approved pictures 🟡 (P2b, branch `p2b/approved-portraits`)
 - [x] The portraits become a black-and-white sketch: ink line with grey wash on cream paper, both eyes drawn,
   soft shading instead of solid-ink shadow. Same suspects, parts and ids, so the wall and the board change
   together.
@@ -266,7 +267,7 @@ the suspects on it, and folders that look real. Design notes: [DESIGN.md](DESIGN
   by planes; the figure is drawn closer, so the face fills the card's square.
 - [x] Picture portraits: files in `web/src/portraits/images/` named by id show on cards and the wall; the
   drawn portrait stays for anyone without one. `docs/PORTRAITS.md` has a ready prompt for each suspect.
-- [x] The drawing restyled after the reference cards' general look (brush ink, solid blacks, hatching,
+- [x] P2b, after PR #16 was merged: the drawing restyled after the reference cards' general look (brush ink, solid blacks, hatching,
   sepia parchment, a three-quarter turn, stronger expressions) and exported as the 60 pictures in
   `web/src/portraits/images/`, so the game shows static pictures now.
 - [x] The owner chose a look between production and the ink version: the sketch version's faces, soft
