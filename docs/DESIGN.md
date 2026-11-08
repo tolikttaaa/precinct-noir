@@ -74,8 +74,14 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
   another game's characters, card templates, title lettering or layouts.
 
 ## 6. Suspect portraits
-`portraits/portrait.ts` draws each of the 60 roster suspects as an original black-and-white "sketch"
-bust (SVG, 200×250): ink line and grey wash on cream paper, like a pencil-and-ink study. No colour.
+**Pictures first.** A suspect's face is a picture file when there is one: a hand-drawn noir comic portrait
+in ink with a sepia wash, square, in `portraits/images/` named by id (`7.webp`). `portraits/photos.ts`
+finds them at build time; cards use the file's URL, and the wall (an SVG shown as an image, which can't
+load files) embeds its suspects' pictures as data URIs and appears once they've loaded.
+[PORTRAITS.md](PORTRAITS.md) is the brief, with a prompt for each suspect.
+
+**The drawn fallback.** Until a suspect has a picture, `portraits/portrait.ts` draws them as an original
+black-and-white "sketch" bust (SVG, 200×250): ink line and grey wash on cream paper. No colour.
 - **Line and wash:** a filter keeps a thin ink edge on every dark shape (hair, hats, coats) and fills its
   inside with grey wash (`WASH`), so dark clothes read as shaded cloth, not solid black.
 - **A close portrait:** the figure is drawn 1.22× larger about the face (`FRAME_SCALE`), so the head fills
@@ -100,8 +106,6 @@ bust (SVG, 200×250): ink line and grey wash on cream paper, like a pencil-and-i
 
   The head's outline is thin on the lit side and heavier on the shadow side.
 - **Ink feel:** a light displacement filter wobbles the lines, and faint grain sits on top.
-- **Real pictures later:** [PORTRAITS.md](PORTRAITS.md) is the brief for replacing these drawings with
-  drawn or generated image files in the same style.
 - **One look per job (`KITS`):** the suspect's archetype picks the hat, hair, clothes, facial hair and
   props. Their id varies the face: proportions, which side is lit, jaw and chin.
 - **Deterministic:** a suspect looks the same everywhere (wall, board cards), with no randomness outside the

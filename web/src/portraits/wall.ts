@@ -68,17 +68,19 @@ const sheet = (w: number, h: number, color: string) =>
   rect(6, 8, w, h, '#000', ' opacity="0.45" filter="url(#wall-soft)"') +
   rect(0, 0, w, h, color, ' filter="url(#wall-paper)"')
 
-/** A suspect's index card: the photo, a typed name, and the file number on a manila tab. */
-function suspectCard(s: Suspect, mark: 'none' | 'cleared' | 'dead'): string {
+/**
+ * A suspect's index card: the photo, a typed name, and the file number on a manila tab. [picture] is their
+ * picture portrait as a data URI, when they have one; otherwise their drawn portrait goes in.
+ */
+function suspectCard(s: Suspect, mark: 'none' | 'cleared' | 'dead', picture?: string): string {
   const w = 168
   const h = 238
+  const box = `x="12" y="12" width="142" height="178"`
   const photo =
     rect(13, 13, 142, 178, '#000', ' opacity="0.25"') +
-    portraitSvg(
-      s,
-      `w${s.id}`,
-      `x="12" y="12" width="142" height="178" preserveAspectRatio="xMidYMid slice"`,
-    )
+    (picture === undefined
+      ? portraitSvg(s, `w${s.id}`, `${box} preserveAspectRatio="xMidYMid slice"`)
+      : `<image href="${picture}" ${box} preserveAspectRatio="xMidYMin slice"/>`)
   const number = String(s.id + 101).padStart(4, '0')
   let stamp = ''
   if (mark === 'cleared')
@@ -254,9 +256,14 @@ const SLOTS: WallSlot[] = [
 
 /**
  * The wall as one SVG document (1600×1000, cropped to fill any screen). [suspects] are drawn in slot order;
- * pass a shuffled roster for variety, or a fixed list for a stable look.
+ * pass a shuffled roster for variety, or a fixed list for a stable look. [pictures] holds picture
+ * portraits as data URIs by suspect id; anyone missing from it is drawn.
  */
-export function evidenceWallSvg(suspects: readonly Suspect[], seed = 7): string {
+export function evidenceWallSvg(
+  suspects: readonly Suspect[],
+  seed = 7,
+  pictures: ReadonlyMap<number, string> = new Map(),
+): string {
   const rand = seeded(seed)
   const W = 1600
   const H = 1000
@@ -266,7 +273,11 @@ export function evidenceWallSvg(suspects: readonly Suspect[], seed = 7): string 
       i % 3 === 0
         ? tape(84, 2, -8) + tape(84, 236, 6, 44)
         : pin(84, 12, i % 2 === 0 ? RED : '#b8945a')
-    return { slot, svg: at(slot.x, slot.y, slot.rot, suspectCard(suspects[i], mark) + fixing) }
+    const s = suspects[i]
+    return {
+      slot,
+      svg: at(slot.x, slot.y, slot.rot, suspectCard(s, mark, pictures.get(s.id)) + fixing),
+    }
   })
   const centre = (i: number) => {
     const { x, y } = SLOTS[i]
@@ -324,8 +335,12 @@ export function evidenceWallSvg(suspects: readonly Suspect[], seed = 7): string 
 }
 
 /** A data URI for `<img src>`: the browser rasterises the wall once instead of laying out its parts. */
-export function evidenceWallUri(suspects: readonly Suspect[], seed?: number): string {
-  return `data:image/svg+xml,${encodeURIComponent(evidenceWallSvg(suspects, seed))}`
+export function evidenceWallUri(
+  suspects: readonly Suspect[],
+  seed?: number,
+  pictures?: ReadonlyMap<number, string>,
+): string {
+  return `data:image/svg+xml,${encodeURIComponent(evidenceWallSvg(suspects, seed, pictures))}`
 }
 
 /** A stable pick of [count] suspects for the wall, the same on every device. */

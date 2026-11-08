@@ -72,7 +72,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | P | Suspect portraits, evidence-wall background, realistic folders | ✅ (live) | #14 |
 | M5 | Shadow Duel board and game UI → **release v0.1, first playable** | 🟡 PR open | `m5/shadow-duel-board` |
 | M5b | Browser end-to-end tests (TV + 2 phones) in CI | ⬜ | – |
-| P2 | Sketch portraits (ink line and grey wash) and a brief for image portraits | 🟡 PR open | `p2/portrait-sketch` |
+| P2 | Picture portraits (files, with a drawn fallback) and the brief and prompts for making them | 🟡 PR open | `p2/portrait-sketch` |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
@@ -256,13 +256,18 @@ the suspects on it, and folders that look real. Design notes: [DESIGN.md](DESIGN
 - [ ] Check the wall on a real smart-TV browser after deploying. If it draws slowly there, pre-render it into an image at build time.
 - [x] **Game name:** stays "Precinct Noir" in Latin letters in Russian too (owner asked; never «Нуар», the Russian title of another game).
 
-### P2: sketch portraits 🟡 (PR open, branch `p2/portrait-sketch`)
+### P2: picture portraits 🟡 (PR open, branch `p2/portrait-sketch`)
 - [x] The portraits become a black-and-white sketch: ink line with grey wash on cream paper, both eyes drawn,
   soft shading instead of solid-ink shadow. Same suspects, parts and ids, so the wall and the board change
   together.
 - [x] `docs/PORTRAITS.md`: the brief for 60 image portraits in this style (rules, style, file format, the
   roster table).
-- [ ] When the owner has the images: show image files when present, with the drawn portrait as the fallback.
+- [x] The drawn faces drawn like people: real proportions, eyes, nose, lips and ears, and soft shading
+  by planes; the figure is drawn closer, so the face fills the card's square.
+- [x] Picture portraits: files in `web/src/portraits/images/` named by id show on cards and the wall; the
+  drawn portrait stays for anyone without one. `docs/PORTRAITS.md` has a ready prompt for each suspect.
+- [ ] The owner makes the 60 pictures (an artist or an image generator); an agent converts them to
+  512 × 512 WebP and adds them.
 
 ### M6–M10: remaining modes ⬜
 Each mode follows the same recipe: engine rules + tests (every pinned ID) → projections → UI panels + tutorial (EN/RU) → E2E → deploy. Follow `CLAUDE.md` → *Engine conventions*.
@@ -337,4 +342,5 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 | 2026-11-07 | The game's name stays "Precinct Noir" in Latin letters in Russian too |
 | 2026-11-08 | M5 phones: a mini-board with choose → target → confirm; the identity behind hold-to-reveal; rules taught by a phone guide **and** a VIP-driven TV walkthrough |
 | 2026-11-08 | Kill/accuse targets light up only after choosing the action, so a glance at a phone doesn't show where its player stands |
+| 2026-11-08 | Portraits become **picture files** (hand-drawn noir comic style, ink with a sepia wash), not generated drawings; the drawings stay only as the fallback |
 | 2026-11-08 | Portraits: no colour. The bold-ink look becomes a black-and-white sketch (ink line, grey wash, cream paper). Later, 60 drawn or generated image files in that style replace the drawings (brief: `docs/PORTRAITS.md`) |
