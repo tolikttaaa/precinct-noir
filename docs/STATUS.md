@@ -4,7 +4,7 @@
 > built, and what is next, so development can resume from any point (a new session, a new agent,
 > or after a break). Update it in every milestone PR.
 >
-> **Last updated:** 2026-11-08. M5 (the Shadow Duel board, playable) is merged and live (PR #15), and P2 (picture portraits) too (PR #16). The approved portrait pictures are on branch `p2b/approved-portraits` (PR open). Next: M5b, the browser end-to-end tests.
+> **Last updated:** 2026-11-08. M5 (the Shadow Duel board, playable) and P2/P2b (the approved portrait pictures) are merged and live (PRs #15–#17). M5b, the browser games in CI, is on branch `m5b/e2e` (PR open).
 >
 > **Legend:** ✅ done and merged · 🟡 done on a branch / PR open · ⬜ not started · ⚠️ known issue or follow-up
 
@@ -71,7 +71,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M4 | Look and feel, home, join flow, lobby on TV and phone, EN/RU | ✅ (live) | #13 |
 | P | Suspect portraits, evidence-wall background, realistic folders | ✅ (live) | #14 |
 | M5 | Shadow Duel board and game UI → **release v0.1, first playable** | ✅ (live) | #15 |
-| M5b | Browser end-to-end tests (TV + 2 phones) in CI | ⬜ | – |
+| M5b | Browser end-to-end tests (TV + 2 phones) in CI | 🟡 PR open | `m5b/e2e` |
 | P2 | Picture portraits (files, with a drawn fallback) and the brief and prompts for making them | ✅ (live) | #16 |
 | P2b | The 60 approved portrait pictures, and the drawing fixed to match | 🟡 PR open | `p2b/approved-portraits` |
 | M6 | Spy Ring | ⬜ | – |
@@ -81,7 +81,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M10 | Casino Heist | ⬜ | – |
 | M11 | Hardening & polish, incl. remote-play polish | ⬜ | – |
 
-**Next action:** the owner reviews and merges M5, then plays a real session (TV + two phones). Then M5b adds the end-to-end tests to CI, and Spy Ring (M6) starts.
+**Next action:** the owner merges M5b and adds its check, `Browser games`, to the ruleset (RUNBOOK §1.3). Then the rules pages and sound (`p3/rules-pages`), a real session on the TV, and Spy Ring (M6).
 
 **Order of the next steps** (owner's choice, 2026-11-06; changed 2026-11-07): portraits first after all, because the owner asked for an evidence-wall background with the suspects on it, then the playable board. M5 then makes Shadow Duel playable, with the portraits on its case-file cards. Every later mode ships with its own UI in its milestone. TV + phones get the polish first; remote play on one's own device is polished last (M11).
 
@@ -236,7 +236,21 @@ phone guide and a TV walkthrough. Design notes: [DESIGN.md](DESIGN.md) §7–8.
   - Web: 151 tests; 100% lines, 99.5% branches.
   - JVM: `check` green, with a test for the new command.
   - Played start to finish in Chrome (TV + two phones, one in Russian).
-- [ ] **M5b: Playwright E2E** (`e2e/`) in CI: a seeded game (seed endpoint only in the `test` profile) with one TV + 2 players at phone and 1080p viewports.
+- [x] **M5b: browser games in CI** (`e2e/`, Playwright 1.64.1; branch `m5b/e2e`).
+  - **One session, on a TV (1920×1080) and two phones (390×844):** Ann in English and Борис in Russian.
+    1. The TV opens a room and both phones join.
+    2. Round 1: Ann (VIP) starts it. The inspector clears a suspect once, then slides the killer next to them and accuses.
+    3. Ann starts a rematch from the same room.
+    4. Round 2: the killer's phone reloads just before its turn and makes the move, then the killer hunts down the inspector.
+  - **Checks:** each verdict on the TV and both phones; the TV never shows a file or anyone's own card; no errors in any console.
+  - **How it plays:** the test reads each player's identity by holding their file open, as a person can. It plans shifts with `e2e/support/grid.ts`, and finds buttons by the app's own EN/RU texts.
+  - **No seed endpoint, unlike the plan:** deals are random, so the production server carries no test-only code, and every run covers a new deal. 40 runs in a row passed.
+  - **CI:** job `Browser games`, against the production image plus Postgres (`e2e/compose.yaml`) with Cloudflare's Turnstile test keys. It keeps a side-by-side video (`e2e/videos/session.mp4`) for 14 days when it fails, or when run by hand with "video" ticked.
+  - **The video:**
+    - Each screen is recorded through Chrome's screencast (`support/recorder.ts`), and every frame is stamped with one shared clock.
+    - `stitch.mjs` places the frames on a common 25 fps timeline, so the TV and both phones stay in step to within a frame, reloads included.
+    - Playwright's own video files couldn't be lined up: they drop the still stretches at their start and end.
+    - Every tap shows as a ring (`support/taps.ts`), including the press-and-hold that opens a player's file.
 - [ ] **Release v0.1**, then a real session with phones and the TV.
 
 ### P: portraits, evidence wall, realistic folders ✅ (PR #14, live)
@@ -306,6 +320,7 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 | `new-app.sh precinctnoir` + Caddyfile commit (RUNBOOK §1.1) | ✅ |
 | `HOME_INFRA_DEPLOY_TOKEN` (fine-grained, home-infra only, Actions read/write) (§1.2) | ✅ |
 | Branch protection (§1.3): ruleset *Protect main* | ✅ |
+| Add `Browser games` to the ruleset's required checks (§1.3) | ⬜ after M5b's first CI run |
 | Turnstile widget + keys in `/srv/apps/precinctnoir/.env` (§4.1) | ✅ |
 | Cloudflare rate-limiting rule on `/api/*` (§4.2) | ⬜ optional (edge layer on top of the app's limits) |
 | Delete the history backup `~/Projects/Personal/noir-game-backup-20261106.git` | ⬜ optional |
@@ -316,7 +331,6 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 
 - ⚠️ **CSP blocks Cloudflare's injected bot-detection script:** fixed in M3b (per-response nonce); confirm in production after the merge.
 - ⚠️ **TypeScript 7 and `typescript-eslint`:** Dependabot ignores `typescript` majors (PR #4 was closed). Upgrade both together once `typescript-eslint` supports TS 7.
-- ⚠️ **Planned, not written yet:** `e2e/` (M5b).
 - ℹ️ **Turnstile and `style-src`:** the invisible test widget runs without CSP errors locally; confirm with the real widget in production after the M4 merge.
 - ℹ️ **Shift options:** `Shift` lists explicit moves (not `amounts` + `forbidden`); the UI should render from `moves`.
 - ℹ️ **Rendering the rulebook PDFs:** poppler isn't installed. Pages can be rendered with a small Swift/PDFKit script, for mechanics only.

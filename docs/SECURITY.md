@@ -53,7 +53,7 @@ before creating anything:
   (5 s), or answering nonsense.
 - **Keys** come from the server's environment (RUNBOOK §4.1). The public site key reaches the web client
   through `GET /api/config`.
-- **In dev**, Cloudflare's always-pass test keys are used, with the hostname check off. Tests use a
+- **In dev and in the browser tests' stack** (`e2e/compose.yaml`), Cloudflare's always-pass test keys are used, with the hostname check off. Tests use a
   local stand-in for siteverify.
 
 Joining needs no bot check: it already requires a live room code, and §3 limits it.

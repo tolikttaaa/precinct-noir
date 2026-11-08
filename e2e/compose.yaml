@@ -1,0 +1,52 @@
+# The production image with its own database, for the browser tests. Never used in production.
+#   npm run stack:up     builds the image from the repo and waits until it's healthy
+#   npm run stack:down   stops it and drops the database
+# E2E_PORT (default 8080) picks the port on this machine; the server only accepts pages from that origin.
+name: precinctnoir-e2e
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: precinctnoir
+      POSTGRES_USER: precinctnoir
+      POSTGRES_PASSWORD: precinctnoir
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U precinctnoir -d precinctnoir']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  app:
+    image: precinctnoir:e2e
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '127.0.0.1:${E2E_PORT:-8080}:8080'
+    environment:
+      SERVER_PORT: '8080'
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/precinctnoir
+      SPRING_DATASOURCE_USERNAME: precinctnoir
+      SPRING_DATASOURCE_PASSWORD: precinctnoir
+      # Cloudflare's public Turnstile test keys: the widget always passes and siteverify accepts its dummy
+      # token (it reports hostname example.com, so the hostname check is off).
+      SPRING_APPLICATION_JSON: >-
+        {"app":{"allowed-origins":["http://localhost:${E2E_PORT:-8080}"],
+        "turnstile":{"site-key":"1x00000000000000000000BB",
+        "secret-key":"1x0000000000000000000000000000000AA","expected-hostname":""}}}
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/8080 &&
+          printf "GET /actuator/health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 &&
+          grep -q '"status":"UP"' <&3
+      interval: 2s
+      timeout: 3s
+      retries: 60

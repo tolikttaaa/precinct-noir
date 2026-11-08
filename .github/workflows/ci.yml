@@ -6,6 +6,14 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Run by hand (Actions → ci → Run workflow) with "video" ticked to keep the browser games' video even
+  # when they pass. From a terminal: gh workflow run ci.yml --ref <branch> -f video=true
+  workflow_dispatch:
+    inputs:
+      video:
+        description: Keep the video of the browser games, even if they pass
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -90,3 +98,66 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  e2e:
+    name: Browser games
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: e2e
+    env:
+      # Slower moves and a kept video only when asked for.
+      E2E_VIDEO: ${{ inputs.video && '1' || '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      # The production image, built as the image job builds it (and from its cache).
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: precinctnoir:e2e
+          cache-from: type=gha
+
+      - name: Start the server and its database
+        run: docker compose -f compose.yaml up -d --wait --no-build
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - run: npm ci --no-audit --no-fund
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npx playwright install --with-deps chromium
+
+      # A TV and two phones (one in Russian) play two rounds: the inspector wins, the VIP starts a rematch,
+      # a phone reloads mid-game, and the killer wins.
+      - run: npx playwright test
+
+      - name: Put the TV and the phones side by side in one video
+        if: failure() || inputs.video
+        run: |
+          command -v ffmpeg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+          npm run stitch
+
+      - name: Save the server log
+        if: failure()
+        run: mkdir -p test-results && docker compose -f compose.yaml logs app > test-results/server.log
+
+      - name: Upload the video and test results
+        if: failure() || inputs.video
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-games
+          path: |
+            e2e/videos/session.mp4
+            e2e/test-results/
+          retention-days: 14
+          if-no-files-found: ignore

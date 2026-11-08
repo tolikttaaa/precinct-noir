@@ -36,6 +36,8 @@ Toolchain: JDK 25 (the Gradle daemon is pinned in `gradle/gradle-daemon-jvm.prop
 | Run web client (http://localhost:5173, proxies `/api`, `/ws`, `/actuator`) | `cd web && npm run dev` |
 | Web checks (coverage report in `web/coverage/`) | `cd web && npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build` |
 | Production image | `docker build -t precinctnoir:dev .` |
+| Browser games, a TV and two phones (`e2e/`; needs Docker; `E2E_CHANNEL=chrome` uses your Chrome) | `cd e2e && npm ci && npm run stack:up && npm test` (then `npm run stack:down`) |
+| The same, slowed down and saved as `e2e/videos/session.mp4` (needs ffmpeg) | `cd e2e && npm run video` |
 | Regenerate `web/src/protocol/generated.ts` after changing protocol, view or event types (`check` fails while stale) | `./gradlew :server:generateProtocol` |
 
 ## Engine conventions
