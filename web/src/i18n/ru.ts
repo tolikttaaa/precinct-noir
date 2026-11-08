@@ -2,6 +2,7 @@
 const ru = {
   appName: 'Precinct Noir',
   language: 'Язык',
+  sound: 'Звук',
   languages: { en: 'English', ru: 'Русский' },
   home: {
     tagline:

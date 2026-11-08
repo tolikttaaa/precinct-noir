@@ -9,6 +9,7 @@ import { errorText } from '../i18n/text'
 import { api, ApiError } from '../net/api'
 import { saveCredentials } from '../net/credentials'
 import { humanToken } from '../net/turnstile'
+import { play } from '../sound/sound'
 import { navigate, normalizeCode } from '../routing'
 
 export function Home() {
@@ -26,6 +27,7 @@ export function Home() {
   const mode = picked ?? modes?.[0]?.id
 
   async function openRoom() {
+    play('stamp')
     setOpening(true)
     setHostError(undefined)
     try {
@@ -43,6 +45,7 @@ export function Home() {
   function join(event: FormEvent) {
     event.preventDefault()
     const room = normalizeCode(code)
+    play('stamp')
     if (room) navigate(`/${room}`)
     else setCodeError(true)
   }
@@ -98,6 +101,7 @@ export function Home() {
                   aria-describedby={`${codeId}-hint`}
                   aria-invalid={codeError || undefined}
                   onChange={(e) => {
+                    play('key')
                     setCode(e.target.value.toUpperCase())
                     setCodeError(false)
                   }}
