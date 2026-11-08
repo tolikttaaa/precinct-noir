@@ -20,7 +20,7 @@ export function DuelTv({
   const { view, events } = duel
   return (
     <main className="duel-tv">
-      <section className="duel-tv__city">
+      <section className="duel-tv__city slate">
         <Board
           size="tv"
           rows={view.board.rows}
@@ -42,7 +42,8 @@ export function DuelTv({
           </p>
         )}
         {status && <p className="tv__status">{status}</p>}
-        <CaseLog room={room} events={events} limit={view.outcome ? 2 : 6} publicOnly />
+        {/* Once the case is closed, the verdict and the reveal fill the panel; the log would push off screen. */}
+        {!view.outcome && <CaseLog room={room} events={events} limit={6} publicOnly />}
         <p className="hint">{t('duel.deck', { count: view.deckCount })}</p>
         {view.discard.length > 0 && (
           <p className="hint">

@@ -15,8 +15,18 @@ describe('Board', () => {
     const city = screen.getByRole('group', { name: 'The city' })
     expect(city.querySelectorAll('.suspect-card')).toHaveLength(25)
     expect(screen.getByRole('img', { name: 'Beatrice, dead' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Bruno, cleared' })).toHaveTextContent('Cleared')
+    const cleared = screen.getByRole('img', { name: 'Bruno, cleared' })
+    expect(cleared).toHaveTextContent('Cleared')
+    const stamp = cleared.querySelector('.suspect-card__cleared') as HTMLElement
+    expect(stamp.style.getPropertyValue('--chars')).toBe('7')
     expect(screen.queryAllByRole('button')).toHaveLength(0)
+  })
+
+  it('gives each name its length, so a long name shrinks to fit instead of being cut off', () => {
+    render(<Board size="tv" rows={5} cols={5} tiles={tiles} />)
+    const name = screen.getByRole('img', { name: 'Beatrice' }).querySelector('.suspect-card__name')
+    expect(name).toHaveTextContent('Beatrice')
+    expect((name as HTMLElement).style.getPropertyValue('--chars')).toBe('8')
   })
 
   it('lets only lit suspects be picked, and marks the chosen one and your own', () => {
