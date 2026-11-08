@@ -63,6 +63,7 @@ without running again, so resending after a reconnect is safe.
 | `set_mode` | `mode` | VIP | lobby |
 | `set_config` | `config` (keys from the mode's `configSpec`; missing keys get defaults) | VIP | lobby |
 | `set_timer` | `seconds`: 60, 90, 120, or absent for off | VIP | lobby |
+| `show_guide` | `page` (0–19), or absent to hide the walkthrough from the board | VIP | lobby |
 | `kick` | `playerId` (not yourself) | VIP | lobby or finished |
 | `leave` | | any player | lobby or finished |
 | `start` | | VIP | lobby |
@@ -71,7 +72,7 @@ without running again, so resending after a reconnect is safe.
 
 Each command is answered with `ack {clientSeq}` or `rejected {clientSeq, reason}`, where `reason` is one
 of `not_vip`, `not_a_player`, `wrong_status`, `unknown_mode`, `invalid_config`, `invalid_timer`,
-`invalid_target`, `not_enough_players`, or the engine's own `not_your_decision`, `stale_decision`,
+`invalid_target`, `not_enough_players` (`illegal_input` also covers a walkthrough page out of range), or the engine's own `not_your_decision`, `stale_decision`,
 `illegal_input`, `game_over`, `malformed`. A frame that isn't valid JSON for any message gets
 `error {code: "malformed"}`.
 
@@ -79,7 +80,7 @@ of `not_vip`, `not_a_player`, `wrong_status`, `unknown_mode`, `invalid_config`, 
 | `t` | Meaning |
 |---|---|
 | `welcome` | who you are |
-| `room` | the room changed, or someone connected or disconnected: code, status, `version`, round, VIP, members (with `connected`), whether the TV is connected, mode, config, timer, seats (member ids by seat), last result |
+| `room` | the room changed, or someone connected or disconnected: code, status, `version`, round, VIP, members (with `connected`), whether the TV is connected, mode, config, timer, seats (member ids by seat), last result, and the walkthrough page the board shows (`guide`, absent when hidden; starting a game or changing mode hides it) |
 | `game` | your projection of the game (`view`, mode-specific: `ShadowDuelView` …) and your `legal` options; `seat` is absent for the TV and spectators |
 | `events` | new case-log events you may see, each with its room-wide `seq` |
 | `nudge` | the turn timer ran out for the pending decision; nothing changes |
