@@ -74,11 +74,15 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
   another game's characters, card templates, title lettering or layouts.
 
 ## 6. Suspect portraits
-`portraits/portrait.ts` draws each of the 60 roster suspects as an original black-and-white "bold ink"
-bust (SVG, 200×250).
-- **Lighting:** hard from one side, so the far third of the face falls into solid ink. A small triangle of
-  light lands on the shadow cheek, and the shadow eye keeps only its glint.
-- **Ink feel:** a displacement filter wobbles the lines like brush ink, and grain sits on top.
+`portraits/portrait.ts` draws each of the 60 roster suspects as an original black-and-white "sketch"
+bust (SVG, 200×250): ink line and grey wash on cream paper, like a pencil-and-ink study. No colour.
+- **Line and wash:** a filter keeps a thin ink edge on every dark shape (hair, hats, coats) and fills its
+  inside with grey wash (`WASH`), so dark clothes read as shaded cloth, not solid black.
+- **Lighting:** from one side. Soft grey (`SHADE`) gathers on the far cheek and jaw, under the chin, beside
+  the nose and under a hat brim. Both eyes and brows are always drawn.
+- **Ink feel:** a light displacement filter wobbles the lines, and faint grain sits on top.
+- **Real pictures later:** [PORTRAITS.md](PORTRAITS.md) is the brief for replacing these drawings with
+  drawn or generated image files in the same style.
 - **One look per job (`KITS`):** the suspect's archetype picks the hat, hair, clothes, facial hair and
   props. Their id varies the face: proportions, which side is lit, jaw and chin.
 - **Deterministic:** a suspect looks the same everywhere (wall, board cards), with no randomness outside the

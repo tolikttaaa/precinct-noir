@@ -17,10 +17,14 @@ export interface Suspect {
   archetype: string
 }
 
-const INK = '#141414'
-const PAPER = '#f1efea'
-const GREY = '#c9c6bf'
-const WALL = '#bebbb4'
+// Ink line and grey wash on cream paper, like a graphic novel's pencil-and-ink studies.
+const INK = '#1b1815'
+const PAPER = '#f7f2e6'
+const GREY = '#b9b2a6'
+/** What big dark shapes (hair, hats, coats) become inside their ink edge. */
+const WASH = '#5d564e'
+/** Soft shading on skin and light cloth. */
+const SHADE = '#6d655b'
 
 export const TONES = ['dark', 'light', 'grey'] as const
 export type Tone = (typeof TONES)[number]
@@ -755,57 +759,39 @@ function headPath(g: Geo): string {
   )
 }
 
-/** The shadow half of the face: hard-edged, bending around the nose like a key light from the side. */
-function faceShadow(g: Geo): string {
-  const { S, top, eyeY, noseY, mouthY, chinY, ex } = g
-  return d`M${S(16)} ${top - 12} Q${S(11)} ${eyeY - 22} ${S(ex - 9)} ${eyeY - 10} Q${S(1)} ${eyeY - 4} ${S(-2)} ${noseY - 2} Q${S(-3)} ${noseY + 4} ${S(5)} ${noseY + 5} Q${S(14)} ${noseY + 8} ${S(9)} ${mouthY + 2} Q${S(6)} ${mouthY + 10} ${S(14)} ${chinY + 6} L${S(80)} ${chinY + 6} L${S(80)} ${top - 12}Z`
-}
-
-/** The small triangle of light that lands on the shadow cheek under the far eye (classic portrait lighting). */
-function cheekLight(g: Geo): string {
-  const { S, ex, eyeY, noseY } = g
-  return fill(
-    d`M${S(5)} ${eyeY + 8} L${S(ex + 3)} ${eyeY + 9} Q${S(ex - 2)} ${noseY - 2} ${S(6)} ${noseY + 3}Z`,
-    PAPER,
+/** Soft grey shading that gathers toward the far cheek and jaw, under the chin, beside the nose and in the far eye socket. */
+function washShadow(g: Geo, id: string): string {
+  const { S, w, h, cy, ex, eyeY, noseY, chinY } = g
+  const soft = (shape: string, opacity: number) =>
+    `<g filter="url(#${id}-soft)" opacity="${opacity}" fill="${SHADE}">${shape}</g>`
+  return (
+    soft(
+      `<ellipse cx="${r1(S(w * 1.02))}" cy="${r1(cy + h * 0.12)}" rx="${r1(w * 0.55)}" ry="${r1(h * 1.05)}"/>`,
+      0.4,
+    ) +
+    soft(`<ellipse cx="100" cy="${r1(chinY + 4)}" rx="${r1(w * 0.8)}" ry="9"/>`, 0.35) +
+    soft(`<ellipse cx="${r1(S(4))}" cy="${r1(noseY + 1)}" rx="4" ry="6"/>`, 0.45) +
+    soft(`<ellipse cx="${r1(S(ex))}" cy="${r1(eyeY - 2)}" rx="9" ry="5"/>`, 0.3)
   )
-}
-
-/** Dry-brush hatching on the lit side of the shadow edge: forehead, cheekbone and jaw. */
-function hatching(g: Geo): string {
-  const { S, top, eyeY, noseY, mouthY, ex, s } = g
-  const strokes: string[] = []
-  const run = (x: number, y0: number, n: number, len: number) => {
-    for (let i = 0; i < n; i++)
-      strokes.push(ink(d`M${x} ${y0 + i * 4.2} l${-s * len} ${len * 0.55}`, 1.1))
-  }
-  run(S(12), top + 14, 4, 7)
-  run(S(ex - 13), eyeY - 6, 3, 5)
-  run(S(13), noseY + 6, 4, 6)
-  run(S(9), mouthY + 6, 3, 6)
-  return strokes.join('')
 }
 
 function backdrop(g: Geo, id: string): string {
   const lightX = g.L(30)
-  // Venetian-blind light across the wall behind the suspect: the game's own signature, not just grey.
-  const stripes = [0, 1, 2, 3, 4, 5]
-    .map((i) => {
-      const y = -40 + i * 52
-      return fill(
-        d`M-20 ${y} L220 ${y - 70} L220 ${y - 48} L-20 ${y + 22}Z`,
-        PAPER,
-        ' opacity="0.16"',
-      )
-    })
-    .join('')
   return (
-    `<defs><radialGradient id="${id}-light" cx="${r1(lightX / 200)}" cy="0.35" r="0.75">` +
-    `<stop offset="0" stop-color="#dedbd4"/><stop offset="0.6" stop-color="${WALL}"/><stop offset="1" stop-color="#77746e"/></radialGradient>` +
+    `<defs><radialGradient id="${id}-light" cx="${r1(lightX / 200)}" cy="0.35" r="0.8">` +
+    `<stop offset="0" stop-color="${PAPER}"/><stop offset="0.65" stop-color="#efe7d6"/><stop offset="1" stop-color="#ddd1b8"/></radialGradient>` +
     `<clipPath id="${id}-head"><path d="${headPath(g)}"/></clipPath>` +
-    `<filter id="${id}-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="${g.seed}"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>` +
+    `<filter id="${id}-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="${g.seed}"/><feDisplacementMap in="SourceGraphic" scale="1.2"/></filter>` +
+    // Line and wash: every dark shape keeps a thin ink edge, and its inside turns into a grey wash.
+    `<filter id="${id}-wash" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">` +
+    `<feColorMatrix in="SourceGraphic" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -0.34 -0.33 -0.33 0 1"/>` +
+    `<feComposite in2="SourceAlpha" operator="in" result="dark"/>` +
+    `<feMorphology in="dark" operator="erode" radius="1.3" result="core"/>` +
+    `<feFlood flood-color="${WASH}"/><feComposite in2="core" operator="in"/>` +
+    `<feComposite in2="SourceGraphic" operator="over"/></filter>` +
+    `<filter id="${id}-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>` +
     `<filter id="${id}-grain"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="${g.seed + 1}"/><feColorMatrix values="0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 -1.4 0.95"/></filter></defs>` +
-    `<rect width="200" height="250" fill="url(#${id}-light)"/>` +
-    stripes
+    `<rect width="200" height="250" fill="url(#${id}-light)"/>`
   )
 }
 
@@ -1091,17 +1077,21 @@ function features(g: Geo, kit: Kit): string {
     ),
   )
   if (f) out.push(ink(d`M${L(ex + 8)} ${eyeY - 1} l${s * 3} -3`, 1.8))
-  // Shadow eye: only the glint survives in the ink.
-  out.push(dot(S(ex) + s * 0.5, eyeY - 0.6, 1.4, PAPER))
+  // The far eye: a slightly smaller twin, softened by the wash rather than lost in it.
+  const sx = S(ex - 1)
   out.push(
-    ink(
-      d`M${S(ex - 6)} ${eyeY + 3.5} Q${S(ex)} ${eyeY + 5.5} ${S(ex + 6)} ${eyeY + 3}`,
-      0.9,
+    shape(
+      d`M${sx - 8} ${eyeY} Q${sx} ${eyeY - 6.5} ${sx + 8} ${eyeY} Q${sx} ${eyeY + 5} ${sx - 8} ${eyeY}Z`,
       PAPER,
-      ' opacity="0.7"',
+      1.7,
     ),
   )
-  // Brow on the lit side.
+  out.push(dot(sx - s * 0.6, eyeY - 0.3, 3.6, INK))
+  out.push(dot(sx - s * 1.6, eyeY - 1.5, 1, PAPER))
+  out.push(
+    ink(d`M${sx - 9} ${eyeY - 0.5} Q${sx} ${eyeY - 8} ${sx + 9} ${eyeY - 0.5}`, f ? 2.8 : 2.1),
+  )
+  // Brows.
   const brow = kit.brow ?? 'level'
   const inner = brow === 'stern' ? eyeY - 8 : brow === 'raised' ? eyeY - 14 : eyeY - 11
   const outer = brow === 'stern' ? eyeY - 13 : brow === 'raised' ? eyeY - 13 : eyeY - 11
@@ -1111,6 +1101,13 @@ function features(g: Geo, kit: Kit): string {
       g.tone === 'grey' && !f ? '#555' : INK,
     ),
   )
+  out.push(
+    fill(
+      d`M${S(3)} ${inner} Q${S(ex)} ${Math.min(inner, outer) - 4} ${S(ex + 10)} ${outer} L${S(ex + 9)} ${outer + (f ? 1.6 : 3)} Q${S(ex)} ${Math.min(inner, outer) + (f ? -1.6 : 0)} ${S(3)} ${inner + (f ? 1.8 : 3)}Z`,
+      g.tone === 'grey' && !f ? '#555' : INK,
+    ),
+  )
+  out.push(ink(d`M${S(4)} ${noseY - 1} q${s * 2.5} -1 ${s * 3} 1.5`, 1.3))
   // Nose: one lit edge and the nostril.
   out.push(
     ink(
@@ -1261,7 +1258,7 @@ function outfit(g: Geo, o: Outfit, id: string): string {
     PAPER,
     ' opacity="0.85"',
   )
-  const shadowSide = `<g clip-path="url(#${id}-body)">${fill(d`M${S(nw - 2)} ${y - 10} Q${S(nw + 14)} ${y + 34} ${S(sw * 0.55)} 260 L${S(140)} 260 L${S(140)} ${y - 10}Z`, INK, ' opacity="0.9"')}</g>`
+  const shadowSide = `<g clip-path="url(#${id}-body)">${fill(d`M${S(nw - 2)} ${y - 10} Q${S(nw + 14)} ${y + 34} ${S(sw * 0.55)} 260 L${S(140)} 260 L${S(140)} ${y - 10}Z`, SHADE, ' opacity="0.35"')}</g>`
   const light = (color: string) =>
     fill(bodyPath, color, ` stroke="${INK}" stroke-width="2.6"`) + shadowSide
   const shirtV = (bottom: number, color = PAPER) =>
@@ -1659,11 +1656,13 @@ function neck(g: Geo, id: string): string {
     `<g clip-path="url(#${id}-neck)">` +
     fill(
       d`M${S(1)} ${chinY - 20} L${S(40)} ${chinY - 20} L${S(40)} ${shoulderY + 8} L${S(4)} ${shoulderY + 8}Z`,
-      INK,
+      SHADE,
+      ' opacity="0.22"',
     ) +
     fill(
       d`M${L(40)} ${chinY - 20} L${S(40)} ${chinY - 20} L${S(40)} ${chinY + 9} Q100 ${chinY + 14} ${L(40)} ${chinY + 4}Z`,
-      INK,
+      SHADE,
+      ' opacity="0.3"',
     ) +
     `</g>`
   )
@@ -1674,7 +1673,8 @@ function ears(g: Geo): string {
   return (
     `<ellipse cx="${r1(L(w + 0.5))}" cy="${r1(cy + 7)}" rx="6" ry="11" fill="${PAPER}" stroke="${INK}" stroke-width="2.2"/>` +
     ink(d`M${L(w + 2)} ${cy} q${-g.s * -2.5} 6 0 12`, 1.3) +
-    `<ellipse cx="${r1(S(w + 0.5))}" cy="${r1(cy + 7)}" rx="6" ry="11" fill="${INK}"/>`
+    `<ellipse cx="${r1(S(w + 0.5))}" cy="${r1(cy + 7)}" rx="6" ry="11" fill="${PAPER}" stroke="${INK}" stroke-width="2.2"/>` +
+    `<ellipse cx="${r1(S(w + 0.5))}" cy="${r1(cy + 7)}" rx="6" ry="11" fill="${SHADE}" opacity="0.35"/>`
   )
 }
 
@@ -2673,19 +2673,19 @@ export function renderPortrait(
   const head = headPath(g)
   const shade =
     h.shade > 0
-      ? `<g clip-path="url(#${id}-head)">${fill(d`M0 0 L200 0 L200 ${h.shade} Q100 ${h.shade + 4} 0 ${h.shade}Z`, INK, ' opacity="0.92"')}</g>`
+      ? `<g clip-path="url(#${id}-head)">${fill(d`M0 0 L200 0 L200 ${h.shade} Q100 ${h.shade + 4} 0 ${h.shade}Z`, SHADE, ' opacity="0.36"')}</g>`
       : ''
   return (
     `<svg ${attrs} viewBox="0 0 200 250">` +
     backdrop(g, id) +
-    `<g filter="url(#${id}-ink)">` +
+    `<g filter="url(#${id}-wash)"><g filter="url(#${id}-ink)">` +
     h.back +
     hairBack(g, kit.hair) +
     neck(g, id) +
     outfit(g, kit.outfit, id) +
     ears(g) +
     fill(head, PAPER, ` stroke="${INK}" stroke-width="2.6"`) +
-    `<g clip-path="url(#${id}-head)">${fill(faceShadow(g), INK)}${cheekLight(g)}${hatching(g)}</g>` +
+    `<g clip-path="url(#${id}-head)">${washShadow(g, id)}</g>` +
     features(g, kit) +
     facialHair(g, kit.facial, rand) +
     hairFront(g, kit.hair, hatted) +
@@ -2693,8 +2693,8 @@ export function renderPortrait(
     shade +
     h.front +
     ex.top +
-    `</g>` +
-    `<rect width="200" height="250" filter="url(#${id}-grain)" opacity="0.22"/>` +
+    `</g></g>` +
+    `<rect width="200" height="250" filter="url(#${id}-grain)" opacity="0.1"/>` +
     `</svg>`
   )
 }
