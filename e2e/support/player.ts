@@ -95,10 +95,13 @@ export class Player {
     return text === this.t.duel.youAre.killer ? 'killer' : 'inspector'
   }
 
-  /** True on this player's own decision, before they've sent it. */
+  /**
+   * True on this player's own decision, before they've sent it: the bar is there, and doesn't say "Sent".
+   * One query, so the answer can't mix two moments. Asked as two, a bar seen still saying "Sent" and then
+   * gone (the server's answer arriving in between) read as "my turn".
+   */
   async canAct(): Promise<boolean> {
-    if ((await this.controls.count()) === 0) return false
-    return (await this.controls.getByRole('status').count()) === 0
+    return (await this.page.locator('.duel-controls:not(:has([role="status"]))').count()) > 0
   }
 
   /**
