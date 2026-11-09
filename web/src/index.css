@@ -687,6 +687,11 @@ select:disabled,
   padding-bottom: 4rem;
 }
 
+/* The title's shadow pool reaches past the edges; clip it so the page never scrolls sideways. */
+.screen--home {
+  overflow-x: clip;
+}
+
 /* A pool of shadow behind the title, so it reads over the wall. */
 .screen--home .home::before {
   content: '';
@@ -733,7 +738,142 @@ select:disabled,
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
   gap: 2rem 2.5rem;
   margin-top: clamp(2.5rem, 6vh, 4.5rem);
-  align-items: start;
+}
+
+.home__choices > .folder {
+  display: flex;
+  flex-direction: column;
+}
+
+.home__choices .folder__front {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.home__choices .folder__front > .button {
+  align-self: start;
+}
+
+/* Side by side, the folders are the same size (the grid stretches them), and their buttons line up along the
+   bottom. Stacked on a phone, each is as tall as what it holds. */
+@media (min-width: 48rem) {
+  .home__choices .folder__front > .button {
+    margin-top: auto;
+  }
+}
+
+/* The host's choice of game: an index typed on the folder's sheet. */
+.game-pick {
+  min-width: 0;
+  margin: 1.25rem 0 1.75rem;
+  padding: 0;
+  border: 0;
+}
+
+.game-pick__option {
+  display: grid;
+  grid-template-columns: 1.1rem minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px dashed rgb(42 36 28 / 0.3);
+  cursor: pointer;
+}
+
+.game-pick__option:first-of-type {
+  border-top: 1px dashed rgb(42 36 28 / 0.3);
+}
+
+/* A ring inked on the sheet; the chosen game gets a dot, the ones to come a dashed ring. */
+.game-pick__option input {
+  appearance: none;
+  display: grid;
+  place-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  border: 2px solid var(--ribbon);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.game-pick__option input::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--ribbon);
+  transform: scale(0);
+}
+
+.game-pick__option input:checked::before {
+  transform: scale(1);
+}
+
+.game-pick__option input:disabled {
+  border-style: dashed;
+  border-color: var(--ribbon-faint);
+}
+
+.game-pick__option:has(input:checked) {
+  background: rgb(120 95 40 / 0.16);
+}
+
+.game-pick__option:has(input:focus-visible) {
+  outline: 3px solid var(--ribbon);
+  outline-offset: 2px;
+}
+
+.game-pick__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.65rem;
+  font: 750 var(--step-1) / 1.1 var(--font-display);
+}
+
+.game-pick__players {
+  color: var(--ribbon-faint);
+  font: 400 var(--step--1) / 1.3 var(--font-typed);
+  text-align: right;
+}
+
+/* Still being built: listed so people see what's coming, but not playable yet. */
+.game-pick__option[data-later] {
+  cursor: default;
+}
+
+.game-pick__option[data-later] .game-pick__name {
+  color: var(--ribbon-faint);
+  font-weight: 600;
+}
+
+.game-pick__later {
+  padding: 0 0.4em;
+  white-space: nowrap;
+  border: 1px dashed currentColor;
+  border-radius: 2px;
+  font: 400 var(--step--1) / 1.5 var(--font-typed);
+  transform: rotate(-1.5deg);
+}
+
+/* Narrow sheets: the player count goes under the game's name. */
+@media (max-width: 30rem) {
+  .game-pick__option {
+    grid-template-columns: 1.15rem minmax(0, 1fr);
+    row-gap: 0.15rem;
+    padding-block: 0.45rem;
+  }
+
+  .game-pick__option input {
+    grid-row: span 2;
+  }
+
+  .game-pick__players {
+    text-align: left;
+  }
 }
 
 /* Phones: one column, actions in the thumb zone. */

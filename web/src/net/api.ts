@@ -53,8 +53,8 @@ export const api = {
   config: () => call<ClientConfig>('/api/config'),
   modes: () => call<ModeInfo[]>('/api/modes'),
   summary: (code: string) => call<RoomSummary>(`/api/rooms/${code}`),
-  createRoom: (turnstileToken: string) =>
-    call<CreateRoomResponse>('/api/rooms', post({ turnstileToken })),
+  createRoom: (turnstileToken: string, mode?: string) =>
+    call<CreateRoomResponse>('/api/rooms', post({ turnstileToken, mode })),
   join: (code: string, name: string) =>
     call<JoinResponse>(`/api/rooms/${code}/players`, post({ name })),
 }

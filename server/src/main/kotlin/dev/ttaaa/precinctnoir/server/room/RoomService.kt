@@ -93,14 +93,17 @@ class RoomService(
 
     // --- HTTP ---
 
-    fun create(): CreatedRoom {
+    /** The mode a new room starts in: the one with [id], or the first mode when the host didn't pick one. */
+    fun modeFor(id: String?): AnyMode =
+        if (id == null) modes.first() else modes.firstOrNull { it.id == id } ?: throw ApiException(422, "unknown_mode")
+
+    fun create(mode: AnyMode = modes.first()): CreatedRoom {
         requireAccepting()
         createLock.withLock {
             if (rooms.size >= limits.maxRooms) throw ApiException(503, "capacity")
             val code = generateSequence { RoomCodes.generate(random) }.take(CODE_ATTEMPTS).firstOrNull { !rooms.containsKey(it) }
                 ?: throw ApiException(503, "capacity")
             val hostToken = Tokens.create(random)
-            val mode = modes.first()
             val now = clock.millis()
             val snap = RoomSnapshot(code, RoomStatus.LOBBY, now, now, Tokens.hash(hostToken), mode = mode.id, config = defaults(mode))
             repository.save(PersistedRoom(snap), 0)

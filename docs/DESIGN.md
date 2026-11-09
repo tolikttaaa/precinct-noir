@@ -67,6 +67,14 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
   - On phones and plain pages it is dimmed to 36% and blurred, so text can sit straight on it.
 - **Version line** (`.version`): "Version 0.1.0 · 1e96502" (or "Development build") in small typed grey, under the
   home folders and at the foot of the TV lobby's slate. Nowhere during a game.
+- **Home page:** the Host and Join folders sit side by side at the same size, with their buttons lined up
+  along the bottom; stacked on a phone, each is as tall as what it holds. The page never scrolls sideways
+  (the title's shadow pool is clipped).
+  - **Game picker** (`.game-pick`, in the Host folder): all six games typed as an index on the sheet, one
+    row each: an inked ring (a dot when chosen), the name, and the player count, which drops under the name
+    on narrow sheets. Games the server doesn't offer yet get a dashed ring, faint ink and a dashed
+    "Coming later" note, and can't be picked. Until the server has listed its games, nothing can be picked
+    and the room opens in the default game.
 - **Folders** (`.folder`) look like real manila folders:
   - the taller back panel carries the tab, with a typed label stuck on it;
   - two typed sheets peek out;

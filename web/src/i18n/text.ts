@@ -9,6 +9,11 @@ export function modeName(t: TFunction, mode: string): string {
   return t(`modes.${mode}.name` as ModeKey, { defaultValue: mode })
 }
 
+/** How many can play a mode, like "2 players". */
+export function modePlayers(t: TFunction, mode: string): string {
+  return t(`modes.${mode}.players` as ModeKey, { defaultValue: '' })
+}
+
 export function modeSummary(t: TFunction, mode: string): string {
   return t(`modes.${mode}.summary` as ModeKey, { defaultValue: '' })
 }
@@ -36,6 +41,7 @@ const KNOWN_ERRORS = new Set([
   'room_full',
   'name_taken',
   'invalid_name',
+  'unknown_mode',
 ])
 
 /** What to tell a person about a failed request. */

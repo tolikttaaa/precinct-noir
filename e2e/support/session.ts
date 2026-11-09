@@ -80,10 +80,18 @@ export class Session {
     return session
   }
 
-  /** The TV opens a room; returns its code. */
+  /** The TV picks Shadow Duel (the other games are still to come) and opens a room; returns its code. */
   async openRoom(): Promise<string> {
     const t = TEXTS.en
     await this.tv.goto('/')
+    const game = this.tv.getByRole('radio', {
+      name: `${t.modes.killer_inspector.name}, ${t.modes.killer_inspector.players}`,
+    })
+    await game.check()
+    await expect(game).toBeChecked()
+    const later = this.tv.getByRole('radio', { name: new RegExp(`^${t.modes.spy_games.name}, `) })
+    await expect(later).toBeDisabled()
+    await this.tv.waitForTimeout(PACE)
     await this.tv.getByRole('button', { name: t.home.host.action }).click()
     await this.tv.waitForURL(/\/tv\/[A-Z]{4}$/)
     await this.tv.waitForTimeout(PACE * 2)

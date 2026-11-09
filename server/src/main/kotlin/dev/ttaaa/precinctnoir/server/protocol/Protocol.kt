@@ -262,9 +262,12 @@ enum class CloseReason(val code: Int) {
 
 // --- HTTP API (/api) ---
 
-/** [turnstileToken] comes from the Turnstile widget on the TV (docs/SECURITY.md). */
+/**
+ * [turnstileToken] comes from the Turnstile widget on the TV (docs/SECURITY.md). [mode] is the game the host
+ * picked on the home screen; without it the room starts in the first mode. The VIP can change it in the lobby.
+ */
 @Serializable
-data class CreateRoomRequest(val turnstileToken: String)
+data class CreateRoomRequest(val turnstileToken: String, val mode: String? = null)
 
 @Serializable
 data class CreateRoomResponse(val code: String, val hostToken: String)

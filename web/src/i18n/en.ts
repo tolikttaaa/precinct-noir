@@ -9,11 +9,14 @@ const en = {
     host: {
       title: 'Host a game',
       body: 'Use this screen as the board. Players join with the room code it shows.',
+      game: 'Game',
+      later: 'Coming later',
       action: 'Open a room',
       working: 'Opening a room…',
     },
     join: {
       title: 'Join a game',
+      body: 'Type the code the board shows, or point your phone’s camera at the QR code next to it.',
       code: 'Room code',
       codeHint: 'Four letters, shown on the board',
       action: 'Join',
@@ -44,6 +47,7 @@ const en = {
     room_full: 'This room is full.',
     name_taken: 'Someone in this room already uses that name.',
     invalid_name: 'Use 1 to 16 letters, digits or spaces.',
+    unknown_mode: 'That game can’t be played yet. Pick another one.',
     unexpected: 'Something went wrong. Try again.',
   },
   lobby: {
@@ -79,6 +83,7 @@ const en = {
   modes: {
     killer_inspector: {
       name: 'Shadow Duel',
+      players: '2 players',
       summary:
         'Two players. One is a killer hiding among the suspects; the other is the inspector hunting them.',
       config: {
@@ -88,6 +93,11 @@ const en = {
         },
       },
     },
+    spy_games: { name: 'Spy Ring', players: '3–6, 8 or 9 players' },
+    hitman_sleuth: { name: 'The Hit List', players: '2 players' },
+    master_thief: { name: 'Cat Burglar', players: '2 players' },
+    fbi_mafia: { name: 'Feds vs. Mob', players: '6 or 8 players' },
+    heist: { name: 'Casino Heist', players: '5–7 players' },
   },
   game: {
     inProgress: '{{mode}} is on',

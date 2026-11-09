@@ -78,7 +78,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | P2 | Picture portraits (files, with a drawn fallback) and the brief and prompts for making them | ✅ (live) | #16 |
 | P2b | The 60 approved portrait pictures, and the drawing fixed to match | ✅ (live) | #17 |
 | V | Versioning: the deployed version on screen; releases (tags on GitHub) are the only deploys | 🟡 PR open | #22 |
-| H | Home: host and join folders the same size, and a game-type choice (owner's request) | ⬜ | – |
+| H | Home: host and join folders the same size, and a game-type choice (owner's request) | 🟡 PR open | `h/home-modes` |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
@@ -347,12 +347,18 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
   and the TV lobby show "Version 0.1.0 · 1e96502", or "Development build".
 - [ ] **After merging:** the owner publishes `v0.1.0` (RUNBOOK §5), and optionally protects the version tags.
 
-#### H: home screen
-- [ ] **Host and Join folders the same size:** equal width and height side by side on wide screens, and equal height stacked on a phone.
-- [ ] **Choose the game type when hosting:** the Host folder lists all six modes under their original names, with player counts.
-  - Shadow Duel is selectable. Spy Ring, The Hit List, Cat Burglar, Feds vs. Mob and Casino Heist are shown but marked "Coming later" and can't be picked.
-  - The room starts in the chosen mode: `POST /api/rooms` takes a `mode`, validated against the `ModeRegistry` (a protocol change: PROTOCOL.md, codegen, tests).
-  - EN/RU texts. As each later mode ships (M6–M10), it becomes selectable.
+#### H: home screen 🟡 (branch `h/home-modes`, stacked on V)
+- [x] **Host and Join folders the same size** side by side, with their buttons lined up along the bottom. Stacked on a
+  phone they share the width, and each is as tall as what it holds (forcing equal heights left the Join folder
+  half empty). The Join folder now also says the QR code on the board works.
+- [x] **Choose the game type when hosting:** the Host folder lists all six games with their player counts (EN/RU names:
+  Spy Ring / Шпионская сеть, The Hit List / Список целей, Cat Burglar / Домушник, Feds vs. Mob / Федералы против
+  синдиката, Casino Heist / Налёт на казино).
+  - A game is selectable when the server offers it (`GET /api/modes`); the others are marked "Coming later". So each
+    mode becomes selectable by itself as it ships (M6–M10).
+  - `POST /api/rooms` takes `mode`, checked against the `ModeRegistry` before the bot check (`422 unknown_mode`).
+  - The browser games pick Shadow Duel this way and check that Spy Ring can't be picked.
+- [x] Fixed on the way: the home page scrolled sideways by a few dozen pixels (the title's shadow pool), in production too.
 - [x] **Settled 2026-11-09:** keep both. The host picks the game on the home screen, and the VIP can still change it in the lobby (`set_mode`).
 
 ---
