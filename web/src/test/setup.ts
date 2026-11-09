@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import i18next from 'i18next'
 import { afterEach, beforeEach, vi } from 'vitest'
+import { resetConfigForTests } from '../hooks/useConfig'
 import { resetModesForTests } from '../hooks/useModes'
 import { initI18n } from '../i18n'
 import { resetTurnstileForTests } from '../net/turnstile'
@@ -23,6 +24,7 @@ afterEach(async () => {
   cleanup()
   localStorage.clear()
   resetModesForTests()
+  resetConfigForTests()
   resetTurnstileForTests()
   delete window.turnstile
   await i18next.changeLanguage('en')

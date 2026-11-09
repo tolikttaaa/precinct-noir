@@ -347,6 +347,10 @@ const ru = {
     home: 'На главную',
     openRoom: 'Открыть новую комнату',
   },
+  version: {
+    release: 'Версия {{version}}',
+    dev: 'Сборка для разработки',
+  },
   tv: {
     notHost: 'Этот экран — не игровое поле комнаты {{code}}.',
     notHostHint:

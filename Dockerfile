@@ -33,6 +33,11 @@ COPY --from=build /extracted/dependencies/ ./
 COPY --from=build /extracted/spring-boot-loader/ ./
 COPY --from=build /extracted/snapshot-dependencies/ ./
 COPY --from=build /extracted/application/ ./
+# Which release this is, from the release workflow (docs/RUNBOOK.md §5); blank in every other build.
+# Spring reads them as app.version and app.commit, and /api/config reports them.
+ARG APP_VERSION=""
+ARG APP_COMMIT=""
+ENV APP_VERSION=${APP_VERSION} APP_COMMIT=${APP_COMMIT}
 USER 1000:1000
 EXPOSE 8080
 # The JRE image has no curl/wget; bash's /dev/tcp is enough to probe the health endpoint.

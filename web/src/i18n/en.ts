@@ -332,6 +332,10 @@ const en = {
     home: 'Back to the start',
     openRoom: 'Open a new room',
   },
+  version: {
+    release: 'Version {{version}}',
+    dev: 'Development build',
+  },
   tv: {
     notHost: 'This screen isn’t the board for room {{code}}.',
     notHostHint: 'The board is the screen that opened the room. To play, join from your phone.',

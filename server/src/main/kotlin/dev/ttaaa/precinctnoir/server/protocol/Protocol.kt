@@ -284,6 +284,11 @@ data class ModeInfo(val id: String, val minPlayers: Int, val maxPlayers: Int, va
 @Serializable
 data class ApiError(val error: String)
 
-/** Public settings the web client needs at startup. */
+/**
+ * Public settings the web client needs at startup.
+ *
+ * @property version the release that is running, like `0.1.0`; absent between releases (a development build).
+ * @property commit the full commit hash of the running build, when known.
+ */
 @Serializable
-data class ClientConfig(val turnstileSiteKey: String? = null)
+data class ClientConfig(val turnstileSiteKey: String? = null, val version: String? = null, val commit: String? = null)

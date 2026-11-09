@@ -10,7 +10,10 @@ const host = { role: 'host' } as const
 describe('TvScreen', () => {
   beforeEach(() => {
     vi.stubGlobal('WebSocket', FakeWebSocket)
-    stubFetch({ 'GET /api/modes': () => json(200, [shadowDuel]) })
+    stubFetch({
+      'GET /api/modes': () => json(200, [shadowDuel]),
+      'GET /api/config': () => json(200, { version: '0.1.0', commit: '1e96502aaaa' }),
+    })
   })
 
   it('sends a screen that did not open the room to the join page', () => {
@@ -35,6 +38,7 @@ describe('TvScreen', () => {
     push(ws, { t: 'room', room: roomView() })
     expect(await screen.findByText('Waiting for Ann to start the game')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Shadow Duel' })).toBeInTheDocument()
+    expect(screen.getByText('Version 0.1.0 · 1e96502')).toBeInTheDocument()
 
     push(ws, { t: 'room', room: roomView({ status: 'in_game', round: 1, seats: [2, 1] }) })
     expect(screen.getByRole('heading', { name: 'Shadow Duel is on' })).toBeInTheDocument()
