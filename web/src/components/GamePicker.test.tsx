@@ -35,7 +35,7 @@ describe('GamePicker', () => {
     )
   })
 
-  it('pulls out a top-secret page with every game, the ones still to come stamped', () => {
+  it('pulls out a top-secret page with every game, the ones still to come greyed out', () => {
     render(<Picker offered={new Set(['killer_inspector'])} />)
     fireEvent.click(field())
     expect(page()).toHaveAttribute('aria-modal', 'true')

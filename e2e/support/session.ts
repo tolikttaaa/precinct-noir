@@ -81,7 +81,7 @@ export class Session {
   }
 
   /**
-   * The TV looks through the secret page of games, sees the others stamped "Coming later", keeps Shadow
+   * The TV looks through the secret page of games, sees the others greyed out as "Coming later", keeps Shadow
    * Duel and opens a room; returns its code.
    */
   async openRoom(): Promise<string> {

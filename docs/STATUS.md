@@ -358,7 +358,7 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
     folder with every game and what it's about (summaries for all six, EN/RU). Reviewed on 11 devices before merging.
   - The title and tagline shrink on small or short screens, so the folders show whole on the first screen (side by
     side everywhere from an iPad sideways up; the Host folder on phones).
-  - A game is selectable when the server offers it (`GET /api/modes`); the others are stamped "Coming later". So each
+  - A game is selectable when the server offers it (`GET /api/modes`); the others are greyed out as "Coming later". So each
     mode becomes selectable by itself as it ships (M6–M10).
   - `POST /api/rooms` takes `mode`, checked against the `ModeRegistry` before the bot check (`422 unknown_mode`).
   - The browser games pick Shadow Duel this way and check that Spy Ring can't be picked.

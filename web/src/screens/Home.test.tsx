@@ -80,7 +80,7 @@ describe('Home', () => {
     expect(screen.getByRole('button', { name: 'Open a room' })).toBeEnabled()
   })
 
-  it('lists every game on the secret page, with the ones still being built stamped', async () => {
+  it('lists every game on the secret page, with the ones still being built greyed out', async () => {
     stubFetch({ 'GET /api/modes': () => json(200, [shadowDuel]) })
     render(<Home />)
     const game = screen.getByRole('button', { name: 'Game Shadow Duel' })
