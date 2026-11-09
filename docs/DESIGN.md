@@ -219,6 +219,12 @@ file.
 - **Pages** (`game/guides.ts`): each mode has its own walkthrough pages, in our own words. A page has a
   title, a few sentences and, optionally, a small picture of the city: you, your neighbours, a body, a
   row on the move.
+  - **Every mark is a colour and a sign:** the killer a red square with the role's initial (K / У), the
+    inspector a blue one (I / И), you a blue "You", a body a dark square with a red ✕, a cleared suspect a
+    light blue ✓, a row on the move brass arrows, your neighbours brass. The signs scale with the
+    picture, so they read on the TV.
+  - **A key under each picture** (the owner asked for a legend) names only the marks that picture uses.
+    Picture and key are hidden from screen readers; the page's text says the same.
 - **Where it shows:**
   - On any phone, from the lobby or during a game.
   - On the TV, when the VIP presses "Show on the board": the board shows a folder with the VIP's
@@ -226,7 +232,11 @@ file.
 - **Typed sheets in a case file** (`game/PaperStack.tsx`, `game/paper.css`; the owner's request): the pages
   are off-white typed sheets with a red margin rule, held by a steel fastener at the top of an open manila
   file whose tab names the game.
-  - Turning a page lifts the top sheet up over the fastener; going back brings the last one down again.
+  - **A page turns like paper** (`Curl`, 0.8 s): its bottom edge lifts toward you and rolls up to the
+    fastener, showing the back of the sheet (plain paper, the margin rule faintly through it) and casting
+    a shadow on the page beneath, then goes over the top and fades out of sight. Going back unrolls the
+    page down again. The sheet is drawn as 32 bands hinged one below the other; a fold 10 bands deep
+    travels up the sheet, bending each hinge as it passes, with light catching the top of the bend.
     The sheets still to read show their edges under the top one, so the stack thins as you go.
   - **Every sheet is the same size,** as tall as the longest page (invisible copies of all the pages sit
     under the top one and hold the room), so the file keeps still while the pages turn, on the TV too.

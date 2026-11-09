@@ -318,9 +318,13 @@ the suspects on it, and folders that look real. Design notes: [DESIGN.md](DESIGN
 The owner asked: rules that look like separate papers in a file, turned one by one, animated, with sounds in the main
 menu and on the page turns.
 - [x] **Typed sheets in a case file** (`game/PaperStack.tsx`, `game/paper.css`): a steel fastener at the top; a turned
-  page lifts over it, going back brings it down; the sheets still to read show their edges. Every sheet is as tall
+  page bends like paper (the owner asked for a more realistic flip): it rolls up from the bottom edge to the fastener,
+  showing its back and shading the page beneath, and going back unrolls it; the sheets still to read show their edges. Every sheet is as tall
   as the longest page, so the file doesn't change size from page to page (the owner noticed it on the TV). Swipe, the arrow keys or
   Back/Next turn the pages; reduced motion just changes the page. The TV shows a wide sheet that follows the VIP.
+- [x] **Pictures you can read, with a key** (owner's review): the killer and inspector squares had lost their colours on
+  the paper (a rule for plain squares covered them). Now every mark is a colour and a sign (K/I, ✕ for a body, ✓ for
+  cleared), and a key under each picture names the marks it uses, in EN and RU.
 - [x] **The buttons stay at the thumb:** on a phone, Back, Next, "Show on the board" and Close sit in the bar at the
   bottom of the screen, in place of the lobby's or the game's bar (page 1's picture pushed them below the fold).
 - [x] **Sound** (`web/src/sound/`): synthesised with the Web Audio API, so nothing is downloaded and the CSP is

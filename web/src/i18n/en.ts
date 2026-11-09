@@ -305,6 +305,15 @@ const en = {
     onBoard: '{{name}} is showing how to play on the board.',
     roomCode: 'Room {{code}}',
     you: 'You',
+    legend: {
+      you: 'You',
+      killer: 'The killer',
+      inspector: 'The inspector',
+      near: 'Next to you',
+      body: 'A body',
+      cleared: 'Cleared',
+      moving: 'A row on the move',
+    },
     killer_inspector: {
       crowd: {
         title: 'Two hunters in one crowd',

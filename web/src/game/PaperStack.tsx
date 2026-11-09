@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+  type ReactNode,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { play } from '../sound/sound'
 import { guideText, type GuidePageSpec } from './guides'
@@ -16,33 +24,59 @@ const CELLS: Readonly<Record<string, string>> = {
 }
 
 /** How long a page takes to turn; keep in step with `--turn-ms` in paper.css. */
-const TURN_MS = 650
+const TURN_MS = 800
+/**
+ * The turning sheet is drawn as this many bands, hinged one below the other, so it can bend like paper.
+ * paper.css says how many of them the fold spans (`--w`).
+ */
+const BANDS = 32
 /** How far a finger must travel sideways before it counts as turning the page. */
 const SWIPE_PX = 48
 /** At most this many sheets show their edges under the top one. */
 const EDGES = 3
 
+/** The order the key lists a picture's marks in. */
+const KEY = ['you', 'killer', 'inspector', 'near', 'body', 'cleared', 'moving'] as const
+
+/** What each kind of square carries, so none is told apart by colour alone. */
+function useMarks(): Readonly<Record<string, string>> {
+  const { t } = useTranslation()
+  return {
+    you: t('guide.you'),
+    killer: t('duel.role.killer').charAt(0),
+    inspector: t('duel.role.inspector').charAt(0),
+    body: '✕',
+    cleared: '✓',
+    moving: '→',
+  }
+}
+
+/** A small picture of the city, and a key to the marks on it. */
 function Diagram({ rows }: { rows: readonly string[] }) {
   const { t } = useTranslation()
-  const marks: Readonly<Record<string, string>> = {
-    Y: t('guide.you'),
-    K: t('duel.role.killer').charAt(0),
-    I: t('duel.role.inspector').charAt(0),
-    '>': '→',
-  }
+  const marks = useMarks()
+  const used = new Set(rows.flatMap((row) => [...row].map((cell) => CELLS[cell])))
   return (
-    <div
-      className="diagram"
-      aria-hidden="true"
-      style={{ gridTemplateColumns: `repeat(${rows[0].length}, 1fr)` }}
-    >
-      {rows.flatMap((row, r) =>
-        [...row].map((cell, c) => (
-          <span key={`${r}-${c}`} className="diagram__cell" data-cell={CELLS[cell]}>
-            {marks[cell] ?? ''}
-          </span>
-        )),
-      )}
+    <div className="paper__picture" aria-hidden="true">
+      <div className="diagram" style={{ gridTemplateColumns: `repeat(${rows[0].length}, 1fr)` }}>
+        {rows.flatMap((row, r) =>
+          [...row].map((cell, c) => (
+            <span key={`${r}-${c}`} className="diagram__cell" data-cell={CELLS[cell]}>
+              {marks[CELLS[cell]] ?? ''}
+            </span>
+          )),
+        )}
+      </div>
+      <ul className="legend">
+        {KEY.filter((kind) => used.has(kind)).map((kind) => (
+          <li key={kind}>
+            <span className="diagram__cell" data-cell={kind}>
+              {marks[kind] ?? ''}
+            </span>
+            {t(`guide.legend.${kind}`)}
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
@@ -74,6 +108,44 @@ function Paper({ mode, spec, n, total, className, copy, sizer }: PaperProps) {
       {spec.diagram && <Diagram rows={spec.diagram} />}
       <p className="paper__body">{guideText(t, mode, spec.id, 'body')}</p>
     </article>
+  )
+}
+
+interface CurlProps {
+  readonly mode: string
+  readonly spec: GuidePageSpec
+  readonly n: number
+  readonly total: number
+  /** Coming back down over the fastener instead of going up over it. */
+  readonly back: boolean
+}
+
+/**
+ * A sheet being turned, the way paper turns: the bottom edge lifts toward you and rolls up to the
+ * fastener, showing the back of the sheet and casting a shadow on the page beneath, then goes over the
+ * fastener and out of sight. Turning back plays it in reverse. Each band is hinged to the one above, and
+ * paper.css bends the hinges in turn as the fold travels up the sheet.
+ */
+function Curl({ mode, spec, n, total, back }: CurlProps) {
+  const band = (i: number): ReactNode => (
+    <div className="paper-curl__band" style={{ '--i': i } as CSSProperties}>
+      <div className="paper-curl__face">
+        <Paper mode={mode} spec={spec} n={n} total={total} className="paper" copy />
+      </div>
+      <div className="paper-curl__back" />
+      {i + 1 < BANDS && band(i + 1)}
+    </div>
+  )
+  return (
+    <div
+      className="paper-curl"
+      data-way={back ? 'back' : 'forward'}
+      aria-hidden="true"
+      style={{ '--n': BANDS } as CSSProperties}
+    >
+      <span className="paper-curl__shadow" />
+      {band(0)}
+    </div>
   )
 }
 
@@ -194,11 +266,21 @@ export function PaperStack({ mode, pages, page, onTurn, describedBy }: Props) {
         <span key={`edge-${i}`} className="paper-stack__edge" data-depth={edges - i} />
       ))}
       {drawn && !drawn.forward && sheet(drawn.from, 'paper paper--under', true)}
+      {/* Going back, the page you return to is drawn by the curl until it has come down. */}
       {sheet(
         page,
-        drawn && !drawn.forward ? 'paper paper--current paper--returning' : 'paper paper--current',
+        drawn && !drawn.forward ? 'paper paper--current paper--waiting' : 'paper paper--current',
       )}
-      {drawn?.forward && sheet(drawn.from, 'paper paper--leaving', true)}
+      {drawn && (
+        <Curl
+          key={`curl-${drawn.id}`}
+          mode={mode}
+          spec={pages[drawn.forward ? drawn.from : page]}
+          n={(drawn.forward ? drawn.from : page) + 1}
+          total={total}
+          back={!drawn.forward}
+        />
+      )}
     </div>
   )
 }

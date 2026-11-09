@@ -320,6 +320,15 @@ const ru = {
     onBoard: '{{name}} показывает правила на игровом поле.',
     roomCode: 'Комната {{code}}',
     you: 'Вы',
+    legend: {
+      you: 'Вы',
+      killer: 'Убийца',
+      inspector: 'Инспектор',
+      near: 'Рядом с вами',
+      body: 'Тело',
+      cleared: 'Подозрение снято',
+      moving: 'Ряд сдвигается',
+    },
     killer_inspector: {
       crowd: {
         title: 'Два охотника в одной толпе',

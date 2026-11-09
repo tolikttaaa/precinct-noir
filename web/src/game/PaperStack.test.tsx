@@ -17,8 +17,9 @@ const motion = (allowed: boolean) =>
   vi.stubGlobal('matchMedia', (query: string) => ({
     matches: allowed && query.includes('no-preference'),
   }))
-/** The copies drawn for a turn (not the sizers, which are always there). */
-const copies = () => document.querySelectorAll('.paper[aria-hidden="true"]:not(.paper--sizer)')
+/** The copies drawn for a turn: the page underneath going back, and the bending sheet. */
+const copies = () => document.querySelectorAll('.paper--under, .paper-curl')
+const curl = () => document.querySelector('.paper-curl') as HTMLElement
 
 beforeEach(() => vi.mocked(play).mockClear())
 afterEach(() => vi.useRealTimers())
@@ -48,19 +49,29 @@ describe('PaperStack', () => {
     expect(screen.getByText('4 of 9')).toBeInTheDocument()
   })
 
-  it('lifts the top sheet away when turning forward, then tidies up', () => {
+  it('rolls the top sheet up over the fastener when turning forward, then tidies up', () => {
     vi.useFakeTimers()
     motion(true)
     const { container, rerender } = render(stack(0))
     rerender(stack(1))
     expect(play).toHaveBeenLastCalledWith('pageTurn')
     expect(container.firstChild).toHaveAttribute('data-turning', 'forward')
-    const leaving = copies()
-    expect(leaving).toHaveLength(1)
-    expect(leaving[0]).toHaveClass('paper--leaving')
-    expect(leaving[0]).toHaveTextContent('Two hunters in one crowd')
+    expect(copies()).toHaveLength(1)
+    expect(curl()).toHaveAttribute('data-way', 'forward')
+    expect(curl()).toHaveAttribute('aria-hidden', 'true')
+    // The sheet bends in 32 bands, each showing its strip of the page being turned, with a back.
+    const bands = curl().querySelectorAll('.paper-curl__band')
+    expect(bands).toHaveLength(32)
+    expect(bands[31]).toHaveStyle({ '--i': '31' })
+    expect(curl().querySelectorAll('.paper-curl__back')).toHaveLength(32)
+    expect(bands[0].querySelector('.paper-curl__face')).toHaveTextContent(
+      'Two hunters in one crowd',
+    )
+    // The page underneath is there to read at once.
     expect(screen.getByRole('heading', { name: 'Your secret' })).toBeInTheDocument()
-    act(() => vi.advanceTimersByTime(800))
+    act(() => vi.advanceTimersByTime(700))
+    expect(curl()).not.toBeNull()
+    act(() => vi.advanceTimersByTime(200))
     expect(copies()).toHaveLength(0)
     expect(container.firstChild).not.toHaveAttribute('data-turning')
   })
@@ -74,9 +85,14 @@ describe('PaperStack', () => {
     expect(container.firstChild).toHaveAttribute('data-turning', 'back')
     expect(copies()[0]).toHaveClass('paper--under')
     expect(copies()[0]).toHaveTextContent('The first round')
-    expect(container.querySelector('.paper--returning')).toHaveTextContent('Your secret')
+    // The page you go back to unrolls down over it, and the real one shows once it has landed.
+    expect(curl()).toHaveAttribute('data-way', 'back')
+    expect(curl()).toHaveTextContent('Your secret')
+    expect(container.querySelector('.paper--current')).toHaveClass('paper--waiting')
     rerender(stack(0)) // a quick second turn replaces the first
-    act(() => vi.advanceTimersByTime(800))
+    expect(document.querySelectorAll('.paper-curl')).toHaveLength(1)
+    act(() => vi.advanceTimersByTime(900))
+    expect(container.querySelector('.paper--current')).not.toHaveClass('paper--waiting')
     expect(copies()).toHaveLength(0)
   })
 

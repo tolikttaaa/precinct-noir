@@ -14,7 +14,12 @@ describe('GuideSheet', () => {
     expect(screen.getByRole('heading', { name: 'Two hunters in one crowd' })).toBeInTheDocument()
     expect(screen.getByText('1 of 9')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled()
-    expect(top().querySelectorAll('.diagram__cell')).toHaveLength(25)
+    expect(top().querySelectorAll('.diagram .diagram__cell')).toHaveLength(25)
+    // The key names the two marks on this picture.
+    expect([...top().querySelectorAll('.legend li')].map((li) => li.textContent)).toEqual([
+      'KThe killer',
+      'IThe inspector',
+    ])
     next()
     expect(screen.getByRole('heading', { name: 'Your secret' })).toBeInTheDocument()
     expect(top().querySelector('.diagram')).toBeNull()
@@ -66,7 +71,16 @@ describe('GuideBoard', () => {
   it('shows the chosen page with the room code, keeping the page in range', () => {
     const { rerender } = render(<GuideBoard mode="killer_inspector" page={3} code="BKTR" />)
     expect(screen.getByRole('heading', { name: 'Next to you' })).toBeInTheDocument()
-    expect(within(top()).getByText('You')).toBeInTheDocument()
+    // The picture marks you, and its key says so.
+    expect(
+      within(top().querySelector('.diagram') as HTMLElement).getByText('You'),
+    ).toBeInTheDocument()
+    // The key is part of the picture, which screen readers skip: the page's text says it all.
+    expect([...top().querySelectorAll('.legend li')].map((li) => li.textContent)).toEqual([
+      'YouYou',
+      'Next to you',
+    ])
+    expect(top().querySelector('.paper__picture')).toHaveAttribute('aria-hidden', 'true')
     expect(screen.getByText('Room BKTR')).toBeInTheDocument()
     rerender(<GuideBoard mode="killer_inspector" page={99} code="BKTR" />)
     expect(screen.getByText('9 of 9')).toBeInTheDocument()
