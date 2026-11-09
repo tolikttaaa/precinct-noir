@@ -170,12 +170,7 @@ function SecretPage({ offered, chosen, onChoose, onClose }: PageProps) {
             const name = modeName(t, game)
             const later = !offered.has(game)
             return (
-              <li
-                key={game}
-                className="secret__case"
-                data-later={later || undefined}
-                data-chosen={game === chosen || undefined}
-              >
+              <li key={game} className="secret__case" data-later={later || undefined}>
                 <h3 className="secret__name">{name}</h3>
                 <span className="secret__players">{modePlayers(t, game)}</span>
                 <p className="secret__summary">{modeSummary(t, game)}</p>
@@ -183,7 +178,7 @@ function SecretPage({ offered, chosen, onChoose, onClose }: PageProps) {
                   {later ? (
                     <span className="stamp secret__later">{t('home.host.later')}</span>
                   ) : game === chosen ? (
-                    <span className="secret__chosen">{t('home.cases.chosen')}</span>
+                    <span className="stamp secret__chosen">{t('home.cases.chosen')}</span>
                   ) : (
                     <button
                       type="button"

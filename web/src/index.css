@@ -973,27 +973,12 @@ select:disabled,
   text-transform: uppercase;
 }
 
-/* The chosen game: a red-pencil tick. */
+/* The chosen game: a big red rubber stamp, like the one at the page's top. */
 .secret__chosen {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
   color: var(--stamp-red);
-  font: 400 var(--step--1) / 1 var(--font-typed);
-}
-
-.secret__chosen::before {
-  content: '';
-  width: 0.45rem;
-  height: 0.9rem;
-  margin-top: -0.3rem;
-  border-right: 2.5px solid currentColor;
-  border-bottom: 2.5px solid currentColor;
-  transform: rotate(40deg);
-}
-
-.secret__case[data-chosen] {
-  background: linear-gradient(90deg, rgb(176 38 44 / 0.07), transparent 70%);
+  font-size: clamp(1.1rem, 0.95rem + 0.6vw, 1.35rem);
+  text-transform: uppercase;
+  transform: rotate(-7deg);
 }
 
 .secret__case[data-later] :is(.secret__name, .secret__summary) {

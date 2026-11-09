@@ -78,8 +78,9 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
     count and an "All games" note, and what the game is about under it. It pulls a **top-secret page** out
     of the folder (`.secret`, a modal dialog): a typed sheet with a paperclip and a red "Top secret"
     stamp, one entry per game with its name, player count and what it's about.
-    - The chosen game has a red-pencil tick; the others have a Choose button; the games still being built
-      are in faint ink with a red "Coming later" stamp.
+    - The chosen game gets a big red "Chosen" rubber stamp, like "Top secret" (no tint behind it); the
+      others have a Choose button; the games still being built are in faint ink with a smaller red "Coming
+      later" stamp.
     - Wide screens (60 rem and up) get two columns of games, so the page fits without scrolling; narrow
       ones get one column. A page taller than the screen gets a second Close at its end, measured live (it
       changes when the screen turns).
