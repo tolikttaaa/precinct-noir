@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FakeContext, withAudio } from '../test/fakeAudio'
-import { musicOn, resetMusicForTests, setMusicOn, startMusic, subscribeMusic } from './music'
-import { play, resetSoundForTests, setSoundOn } from './sound'
+import { setLevel, setMuted } from './levels'
+import { resetMusicForTests, startMusic } from './music'
+import { play, resetSoundForTests } from './sound'
 
-/** The music's own volume control: the first gain made after the master level. */
-const busOf = (ctx: FakeContext) => ctx.made.filter((node) => node.kind === 'gain')[1]
+/** The gains made, in order: the master level, the effects' level, then each band's own volume. */
+const gains = (ctx: FakeContext) => ctx.made.filter((node) => node.kind === 'gain')
+const busOf = (ctx: FakeContext) => gains(ctx)[2]
 const oscillators = (ctx: FakeContext) => ctx.made.filter((node) => node.kind === 'tone')
 
 /** Starts the music with a fake audio device; the device appears once something wants sound. */
@@ -26,31 +28,6 @@ afterEach(() => {
 })
 
 describe('music', () => {
-  it('is on until this device switches it off, and tells listeners', () => {
-    const listener = vi.fn()
-    const unsubscribe = subscribeMusic(listener)
-    expect(musicOn()).toBe(true)
-    setMusicOn(false)
-    expect(musicOn()).toBe(false)
-    expect(listener).toHaveBeenCalledTimes(1)
-    unsubscribe()
-    setMusicOn(true)
-    expect(musicOn()).toBe(true)
-    expect(listener).toHaveBeenCalledTimes(1)
-  })
-
-  it('still answers when storage is blocked', () => {
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('blocked')
-    })
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('blocked')
-    })
-    expect(() => setMusicOn(false)).not.toThrow()
-    expect(musicOn()).toBe(true)
-    vi.restoreAllMocks()
-  })
-
   it('waits for a first touch, then plays the band bar after bar through the master level', () => {
     const { ctx } = band()
     const bus = busOf(ctx)
@@ -84,7 +61,7 @@ describe('music', () => {
     const stopBoard = startMusic()
     vi.advanceTimersByTime(1000)
     expect(bus.gain.setTargetAtTime).not.toHaveBeenCalled()
-    expect(ctx.made.filter((node) => node.kind === 'gain')).toHaveLength(2)
+    expect(gains(ctx)).toHaveLength(3)
     stopBoard()
     vi.advanceTimersByTime(400)
     expect(bus.gain.setTargetAtTime).toHaveBeenCalledWith(0, 2, 0.25)
@@ -97,22 +74,27 @@ describe('music', () => {
     expect(ctx.made).toHaveLength(made)
   })
 
-  it('stops for its own switch and for the sound switch, and comes back with them', () => {
+  it('follows its slider, stops when muted or turned right down, and comes back', () => {
     const { ctx } = band()
     const first = busOf(ctx)
-    setMusicOn(false)
-    expect(first.gain.setTargetAtTime).toHaveBeenCalledWith(0, 2, 0.25)
-    setMusicOn(true)
-    const gains = () => ctx.made.filter((node) => node.kind === 'gain')
-    const second = gains().at(-1)
-    expect(second).not.toBe(first)
-    setSoundOn(false)
-    expect(second?.gain.setTargetAtTime).toHaveBeenCalledWith(0, 2, 0.25)
-    const count = gains().length
-    setMusicOn(true) // music on, sound still off: silent
-    expect(gains()).toHaveLength(count)
-    setSoundOn(true)
-    expect(gains().length).toBeGreaterThan(count)
+    expect(first.gain.exponentialRampToValueAtTime).toHaveBeenCalledWith(0.24, 4) // fades in to its level
+    setLevel('music', 35)
+    expect(first.gain.cancelScheduledValues).toHaveBeenCalledWith(2)
+    expect(first.gain.setTargetAtTime).toHaveBeenLastCalledWith(0.06, 2, 0.05)
+    setMuted('music', true)
+    expect(first.gain.setTargetAtTime).toHaveBeenLastCalledWith(0, 2, 0.25)
+    setMuted('music', false)
+    // Unmuted, a new band starts and fades in to the level it was left at.
+    expect(gains(ctx)).toHaveLength(4)
+    const again = gains(ctx)[3]
+    expect(again).not.toBe(first)
+    expect(again.gain.exponentialRampToValueAtTime).toHaveBeenCalledWith(0.06, 4) // back at its level
+    setLevel('music', 0)
+    expect(again.gain.setTargetAtTime).toHaveBeenLastCalledWith(0, 2, 0.25)
+    // The effects have no say over the music.
+    setMuted('effects', true)
+    setLevel('music', 70)
+    expect(gains(ctx)).toHaveLength(5)
   })
 
   it('steps back while a loud sound plays', () => {

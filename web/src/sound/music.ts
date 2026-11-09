@@ -4,12 +4,12 @@
  * chords on top, and a muted trumpet takes a phrase every other time round, so the loop doesn't wear.
  *
  * Only the board and the home screen play it: ten phones playing their own copies out of step would
- * be noise. It has its own switch, and stays silent while sound is off. Loud game sounds (a shot, the
- * closing sting) push it down for a moment.
+ * be noise. It has its own level on each device (`levels.ts`). Loud game sounds (a shot, the closing
+ * sting) push it down for a moment.
  */
-import { burst, onLoudSound, sharedAudio, soundOn, subscribeSound } from './sound'
+import { gainOf, subscribeLevels } from './levels'
+import { burst, onLoudSound, sharedAudio } from './sound'
 
-const STORAGE_KEY = 'precinctnoir.music'
 /** The music's level under the game sounds. */
 const VOLUME = 0.24
 /** How far the music drops while a loud sound plays. */
@@ -235,32 +235,6 @@ function playBar(ctx: AudioContext, out: AudioNode, at: number, n: number): void
 
 // ---------- Playing it ----------
 
-const listeners = new Set<() => void>()
-
-/** Whether this device plays the music (on unless switched off here). */
-export function musicOn(): boolean {
-  try {
-    return localStorage.getItem(STORAGE_KEY) !== 'off'
-  } catch {
-    return true
-  }
-}
-
-export function setMusicOn(on: boolean): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, on ? 'on' : 'off')
-  } catch {
-    // The choice lasts for this page only.
-  }
-  listeners.forEach((listener) => listener())
-  update()
-}
-
-export function subscribeMusic(listener: () => void): () => void {
-  listeners.add(listener)
-  return () => listeners.delete(listener)
-}
-
 /** How many screens want the music now. */
 let wanted = 0
 let stopTimer: ReturnType<typeof setTimeout> | undefined
@@ -290,14 +264,26 @@ export function startMusic(): () => void {
   }
 }
 
-/** Starts or stops the band to match what's wanted and switched on. */
+/** Starts or stops the band to match what's wanted and how loud the music may be. */
 function update(): void {
-  const play = wanted > 0 && musicOn() && soundOn()
+  const play = wanted > 0 && gainOf('music') > 0
   if (play && !band) begin()
   else if (!play && band) end()
 }
 
-subscribeSound(update)
+// A band already playing follows its slider; one that just started fades in to it anyway.
+subscribeLevels(() => {
+  const playing = band
+  update()
+  if (band && band === playing) {
+    const now = band.ctx.currentTime
+    band.bus.gain.cancelScheduledValues(now)
+    band.bus.gain.setTargetAtTime(level(), now, 0.05)
+  }
+})
+
+/** The music's volume now: the mix's level times this device's slider. */
+const level = () => VOLUME * gainOf('music')
 
 function begin(): void {
   const audio = sharedAudio()
@@ -305,7 +291,7 @@ function begin(): void {
   const ctx = audio.context
   const bus = ctx.createGain()
   bus.gain.setValueAtTime(0.0001, ctx.currentTime)
-  bus.gain.exponentialRampToValueAtTime(VOLUME, ctx.currentTime + 2)
+  bus.gain.exponentialRampToValueAtTime(level(), ctx.currentTime + 2)
   bus.connect(audio.output)
   const stopListening = onLoudSound(() => duck(bus, ctx))
   // Browsers keep audio off until someone touches the page: the first touch starts the band.
@@ -355,8 +341,8 @@ function end(): void {
 function duck(bus: GainNode, ctx: AudioContext): void {
   const now = ctx.currentTime
   bus.gain.cancelScheduledValues(now)
-  bus.gain.setTargetAtTime(VOLUME * DUCKED, now, 0.04)
-  bus.gain.setTargetAtTime(VOLUME, now + 1.6, 0.6)
+  bus.gain.setTargetAtTime(level() * DUCKED, now, 0.04)
+  bus.gain.setTargetAtTime(level(), now + 1.6, 0.6)
 }
 
 /** Stops everything and forgets it, so each test starts quiet. */

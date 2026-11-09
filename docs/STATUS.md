@@ -80,7 +80,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | V | Versioning: the deployed version on screen; releases (tags on GitHub) are the only deploys | ✅ (live, v0.1.0) | #22 |
 | H | Home: host and join folders the same size, and a game-type choice (owner's request) | ✅ (live, v0.1.0) | #23 |
 | P3 | The rules as typed pages in a case file, turned one by one with animation, and sound (owner's request) | 🟡 PR open | #24 |
-| P4 | Noir background music on the board and the home screen, and a sound for each action in the game (owner's request) | 🟡 PR open | #25 |
+| P4 | Noir background music on the board and the home screen, a sound for each action in the game, volume sliders and a language dropdown (owner's requests) | 🟡 PR open | #25 |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
@@ -342,6 +342,10 @@ The owner asked for background music with a noir atmosphere, and during the game
 - [x] **Game sounds** (`game/sounds.ts`, `sound/useEventSounds.ts`): a sound per public Shadow Duel event (stamp, shot,
   slam, drawer, rumble, coat, cards, clock, a closing sting for each outcome). The board plays them; phones only when no
   board is connected. One action's sounds follow each other 0.4 s apart.
+- [x] **Volume and language menus** (owner's review: "configure music/effect sound", "make language a dropdown"): the
+  speaker opens a paper slip with a Music slider (where music plays) and an Effects slider, 0–100 with a mute each,
+  remembered per device (`sound/levels.ts`, `components/SoundMenu.tsx`); a limiter guards the loud end. The language is
+  a dropdown slip listing each language by its own name (`components/LanguageMenu.tsx`). Both replace the old switches.
 - [x] **Protocol:** `events` carries `replay: true` for what a client catches up on when connecting, so screens show it
   without sound (PROTOCOL §2.1).
 - [x] Checked by recording a round on a TV, a laptop and a phone with the TV's audio captured on the audio clock: no

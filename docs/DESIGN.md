@@ -256,14 +256,22 @@ file.
   is: a typewriter key, a rubber stamp, a page turning forward or back, and a folder opening.
 - **Where:** the home screen types a key for each letter of a room code and stamps the Host and Join
   choices; the rules open with the folder and turn with the paper.
-- **A switch beside the languages** (a speaker icon in the masthead) turns sound off on this device; the
-  choice is remembered. Browsers only start sound after a first tap, so nothing plays on arrival.
+- **The speaker in the masthead** opens a slip of paper with a slider for the effects and, on the
+  screens that play music, one for the music (`components/SoundMenu.tsx`, `sound/levels.ts`). Each
+  goes from 0 to 100 and has its own mute that keeps the level for later; both are remembered per
+  device. At 70 (the start) a channel plays as mixed, at 100 about twice as loud; a limiter keeps the
+  loudest moments from clipping. Moving the effects slider answers with a key's click, so you hear the
+  level. The speaker shows a cross when nothing on the screen can be heard. Browsers only start sound
+  after a first tap, so nothing plays on arrival.
+- **The language** is a dropdown too (`components/LanguageMenu.tsx`): the masthead shows the code (EN,
+  RU) and a caret; the slip lists each language by its own name, the one in use checked in stamp red.
+  Arrow keys, Home and End move through it; Escape, a tap elsewhere or tabbing away closes it.
 - **Music** (`web/src/sound/music.ts`, owner's request): a slow minor-key jazz loop written for this game and
   played live by the browser. A walking upright bass, brushes and a ride cymbal, soft piano chords, and a
   muted trumpet phrase every other time round, so it doesn't wear (eight bars at 66 bpm, about 29 s).
   - **Only the board and the home screen play it**: phones in a room stay quiet, since ten phones out
-    of step would be noise. A note icon beside the speaker turns it off on this device; turning it on
-    turns sound on too. The music keeps playing when the home screen hands over to the board.
+    of step would be noise, and their sound slip has the effects slider only. The music keeps playing
+    when the home screen hands over to the board.
   - **It sits under the game:** about 15 dB below the game sounds, and it steps back further for a
     moment under a shot, a slam, the city closing up or the closing sting.
 - **Game sounds** (`game/sounds.ts`): each public event of a game has one: the room's stamp when a game

@@ -1,15 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { FakeContext, withAudio } from '../test/fakeAudio'
-import {
-  onLoudSound,
-  play,
-  resetSoundForTests,
-  sharedAudio,
-  setSoundOn,
-  soundOn,
-  subscribeSound,
-  type SoundName,
-} from './sound'
+import { setLevel, setMuted } from './levels'
+import { onLoudSound, play, resetSoundForTests, sharedAudio, type SoundName } from './sound'
+
+/** The way out, made first: the master level, its limiter, then the effects' own level. */
+const OUTPUT = ['gain', 'limiter', 'gain']
 
 afterEach(() => {
   resetSoundForTests()
@@ -17,30 +12,6 @@ afterEach(() => {
 })
 
 describe('sound', () => {
-  it('is on until this device switches it off, and tells listeners', () => {
-    const listener = vi.fn()
-    const unsubscribe = subscribeSound(listener)
-    expect(soundOn()).toBe(true)
-    setSoundOn(false)
-    expect(soundOn()).toBe(false)
-    expect(listener).toHaveBeenCalledTimes(1)
-    unsubscribe()
-    setSoundOn(true)
-    expect(soundOn()).toBe(true)
-    expect(listener).toHaveBeenCalledTimes(1)
-  })
-
-  it('still answers when storage is blocked', () => {
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('blocked')
-    })
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('blocked')
-    })
-    expect(() => setSoundOn(false)).not.toThrow()
-    expect(soundOn()).toBe(true)
-  })
-
   it.each<[SoundName, string[]]>([
     ['pageTurn', ['noise', 'filter', 'gain', 'noise', 'filter', 'gain']],
     ['pageBack', ['noise', 'filter', 'gain', 'noise', 'filter', 'gain']],
@@ -51,7 +22,13 @@ describe('sound', () => {
     const made = withAudio()
     play(name)
     expect(made).toHaveLength(1)
-    expect(made[0].nodes).toEqual(['gain', ...nodes]) // the master volume comes first
+    expect(made[0].nodes).toEqual([...OUTPUT, ...nodes])
+    // Every sound goes out through the effects' level, then the master and the limiter.
+    const [master, limiter, effects] = made[0].made
+    expect(master.connect).toHaveBeenCalledWith(limiter)
+    expect(limiter.connect).toHaveBeenCalledWith(made[0].destination)
+    expect(effects.connect).toHaveBeenCalledWith(master)
+    expect(made[0].made[3].connect).not.toHaveBeenCalledWith(master)
     expect(made[0].resume).toHaveBeenCalled()
   })
 
@@ -101,6 +78,16 @@ describe('sound', () => {
     expect(audio?.output).toBe(made[0].made[0]) // the master gain, made first
   })
 
+  it('turns the effects up and down with their slider, even while they play', () => {
+    const made = withAudio()
+    setLevel('effects', 35)
+    play('key')
+    const effects = made[0].made[2]
+    expect(effects.gain.value).toBe(0.25) // half the level, a quarter of the gain
+    setLevel('effects', 100)
+    expect(effects.gain.setTargetAtTime).toHaveBeenLastCalledWith(expect.closeTo(2.04, 2), 2, 0.03)
+  })
+
   it('keeps one audio context and one noise buffer for every sound', () => {
     const made = withAudio()
     play('key')
@@ -112,10 +99,10 @@ describe('sound', () => {
 
   it('stays silent when switched off, without audio, or when audio fails', () => {
     const made = withAudio()
-    setSoundOn(false)
+    setMuted('effects', true)
     play('stamp')
     expect(made).toHaveLength(0)
-    setSoundOn(true)
+    setMuted('effects', false)
     FakeContext.failing = true
     expect(() => play('stamp')).not.toThrow()
     vi.unstubAllGlobals()

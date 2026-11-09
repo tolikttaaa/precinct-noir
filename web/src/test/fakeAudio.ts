@@ -36,6 +36,11 @@ export class FakeContext {
       gain: param(),
       frequency: param(),
       Q: param(),
+      threshold: param(),
+      knee: param(),
+      ratio: param(),
+      attack: param(),
+      release: param(),
       connect: vi.fn(),
       disconnect: vi.fn(),
       start: vi.fn(),
@@ -49,6 +54,7 @@ export class FakeContext {
   createBiquadFilter = () => this.node('filter')
   createBufferSource = () => this.node('noise')
   createOscillator = () => this.node('tone')
+  createDynamicsCompressor = () => this.node('limiter')
   createBuffer = (_channels: number, length: number) => {
     const data = new Float32Array(length)
     return { getChannelData: () => data }

@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Connection } from '../net/roomSocket'
-import { LanguageSwitch } from './LanguageSwitch'
-import { MusicSwitch, SoundSwitch } from './SoundSwitch'
+import { LanguageMenu } from './LanguageMenu'
+import { SoundMenu } from './SoundMenu'
 import { Link } from './Link'
 
 /**
- * The strip at the top of every screen: the game's name (home link), the room code, languages, sound.
- * Screens that play music ([music]: the board and the home screen) also get its switch.
+ * The strip at the top of every screen: the game's name (home link), the room code, the language and
+ * the sound. Screens that play music ([music]: the board and the home screen) also get its slider.
  */
 export function Masthead({
   code,
@@ -27,9 +27,8 @@ export function Masthead({
         </Link>
       )}
       {code && <span className="masthead__code">{code}</span>}
-      <LanguageSwitch />
-      {music && <MusicSwitch />}
-      <SoundSwitch />
+      <LanguageMenu />
+      <SoundMenu music={music} />
     </header>
   )
 }

@@ -2,8 +2,9 @@
  * The game's sounds, synthesised with the Web Audio API: paper, typewriter keys, rubber stamps, and the
  * sounds of the game itself (a shot, a drawer of suspects sliding, the closing sting). Nothing is
  * downloaded (the CSP allows no media sources), and nothing plays until someone has touched the page,
- * as browsers require. Each device can switch sound off; the choice is remembered.
+ * as browsers require. Each device sets how loud the effects are (`levels.ts`); the choice is remembered.
  */
+import { gainOf, subscribeLevels } from './levels'
 
 export type SoundName =
   | 'pageTurn'
@@ -24,49 +25,32 @@ export type SoundName =
 /** Sounds loud enough that the music steps back for them. */
 const LOUD: ReadonlySet<SoundName> = new Set(['shot', 'slam', 'rumble', 'caseClosed', 'killerWins'])
 
-const STORAGE_KEY = 'precinctnoir.sound'
 const MASTER_GAIN = 0.55
 
 let context: AudioContext | undefined
+/** Everything on its way out: the effects and the music. */
 let master: GainNode | undefined
+/** The effects' own volume, before the master. */
+let effects: GainNode | undefined
 let noise: AudioBuffer | undefined
-const listeners = new Set<() => void>()
 const loudListeners = new Set<() => void>()
 
-/** Whether this device plays sounds (on unless switched off here). */
-export function soundOn(): boolean {
-  try {
-    return localStorage.getItem(STORAGE_KEY) !== 'off'
-  } catch {
-    return true
-  }
-}
-
-export function setSoundOn(on: boolean): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, on ? 'on' : 'off')
-  } catch {
-    // The choice lasts for this page only.
-  }
-  listeners.forEach((listener) => listener())
-}
-
-export function subscribeSound(listener: () => void): () => void {
-  listeners.add(listener)
-  return () => listeners.delete(listener)
-}
+// The effects follow their slider at once, even mid-sound.
+subscribeLevels(() => {
+  if (context && effects) effects.gain.setTargetAtTime(gainOf('effects'), context.currentTime, 0.03)
+})
 
 /**
- * Plays [name] after [delay] seconds (now by default), if sound is on and the browser can make it.
- * Never throws.
+ * Plays [name] after [delay] seconds (now by default), unless the effects are muted here or the browser
+ * can't make sound. Never throws.
  */
 export function play(name: SoundName, delay = 0): void {
-  if (!soundOn()) return
+  if (gainOf('effects') === 0) return
   const ctx = audio()
-  if (!ctx || !master) return
+  if (!ctx || !effects) return
   if (ctx.state === 'suspended') ctx.resume().catch(() => undefined)
   if (LOUD.has(name)) loudListeners.forEach((listener) => listener())
-  RECIPES[name](ctx, master, ctx.currentTime + delay)
+  RECIPES[name](ctx, effects, ctx.currentTime + delay)
 }
 
 /** Tells [listener] whenever a loud sound starts (the music ducks under it). */
@@ -89,6 +73,7 @@ export function sharedAudio():
 export function resetSoundForTests(): void {
   context = undefined
   master = undefined
+  effects = undefined
   noise = undefined
 }
 
@@ -103,7 +88,18 @@ function audio(): AudioContext | undefined {
   }
   master = context.createGain()
   master.gain.value = MASTER_GAIN
-  master.connect(context.destination)
+  // Turned right up, a shot over the music could clip: a limiter keeps the peaks under full scale.
+  const limiter = context.createDynamicsCompressor()
+  limiter.threshold.value = -3
+  limiter.knee.value = 0
+  limiter.ratio.value = 20
+  limiter.attack.value = 0.002
+  limiter.release.value = 0.2
+  master.connect(limiter)
+  limiter.connect(context.destination)
+  effects = context.createGain()
+  effects.gain.value = gainOf('effects')
+  effects.connect(master)
   return context
 }
 
