@@ -5,6 +5,7 @@ import { Lineup } from '../components/Lineup'
 import { playingIds } from '../components/seats'
 import { Link } from '../components/Link'
 import { QrCode } from '../components/QrCode'
+import { Version } from '../components/Version'
 import { GuideBoard } from '../game/Guide'
 import { hasGuide } from '../game/guides'
 import { DuelTv } from '../game/shadowDuel/DuelTv'
@@ -128,6 +129,7 @@ function TvRoom({ code, credentials }: { code: string; credentials: Credentials 
               <p>{modeSummary(t, room.mode)}</p>
             </div>
           )}
+          {room.status === 'lobby' && <Version />}
         </div>
       </main>
     </div>

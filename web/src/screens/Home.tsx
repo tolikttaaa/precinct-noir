@@ -1,6 +1,8 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Masthead } from '../components/Chrome'
+import { Version } from '../components/Version'
+import { loadConfig } from '../hooks/useConfig'
 import { errorText } from '../i18n/text'
 import { api, ApiError } from '../net/api'
 import { saveCredentials } from '../net/credentials'
@@ -20,7 +22,7 @@ export function Home() {
     setOpening(true)
     setHostError(undefined)
     try {
-      const { turnstileSiteKey } = await api.config()
+      const { turnstileSiteKey } = await loadConfig()
       if (!turnstileSiteKey) throw new ApiError(503, 'captcha_unavailable')
       const room = await api.createRoom(await humanToken(turnstileSiteKey, widget.current!))
       saveCredentials(room.code, 'host', { token: room.hostToken, clientSeq: 0 })
@@ -101,6 +103,7 @@ export function Home() {
             </div>
           </form>
         </div>
+        <Version />
       </main>
     </div>
   )

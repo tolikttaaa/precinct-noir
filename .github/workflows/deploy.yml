@@ -1,5 +1,5 @@
-# Build & deploy workflow for an app repo.
-# Copy to <app repo>/.github/workflows/deploy.yml and set APP_NAME below.
+# Build & deploy a release. Based on home-infra's templates/deploy-workflow.yaml, changed so that only
+# releases deploy (docs/RUNBOOK.md §5). Merging to main runs CI but doesn't deploy.
 #
 # Prerequisites (once per app):
 #   1. On the server:  /srv/infra/bin/new-app.sh <app> [port]   (then commit + push home-infra)
@@ -8,35 +8,63 @@
 #        HOME_INFRA_DEPLOY_TOKEN = fine-grained PAT, repository access: only tolikttaaa/home-infra,
 #                                  permissions: Actions = Read and write (nothing else).
 #
-# Flow: push to main -> `build` (GitHub-hosted) pushes ghcr.io/tolikttaaa/<app>:<sha> and :latest
-#       -> `deploy` (GitHub-hosted) triggers home-infra's `deploy` workflow, which runs on the
-#          self-hosted runner at home, and waits for its result.
+# Flow: publish a GitHub Release vX.Y.Z on a commit of main
+#       -> `build` (GitHub-hosted) checks the tag, then pushes ghcr.io/tolikttaaa/<app>:<sha>, :vX.Y.Z and
+#          :latest, with the version baked in (APP_VERSION, APP_COMMIT)
+#       -> `deploy` (GitHub-hosted) triggers home-infra's `deploy` workflow with the commit sha, which runs
+#          on the self-hosted runner at home, waits for its result, then checks the site reports the version.
+# To redeploy a release (or roll back to one): Actions -> build-and-deploy -> Run workflow, from its tag.
 # No app code ever runs on the home server — only the image built here.
 name: build-and-deploy
+run-name: release ${{ github.ref_name }}
 
 on:
-  push:
-    branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
 
 env:
   APP_NAME: precinctnoir         # must match /srv/apps/<name> on the server (lowercase)
   INFRA_REPO: tolikttaaa/home-infra
+  SITE: https://precinctnoir.ttaaa.dev
 
+# One release at a time, in the order they were published.
 concurrency:
-  group: build-and-deploy-${{ github.ref }}
+  group: build-and-deploy
   cancel-in-progress: false
 
 jobs:
   build:
+    # Pre-releases are for notes only; they don't deploy.
+    if: github.event_name != 'release' || !github.event.release.prerelease
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     outputs:
-      image: ${{ steps.image.outputs.name }}
+      version: ${{ steps.release.outputs.version }}
+      commit: ${{ steps.release.outputs.commit }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0         # main's history, to check the tag is on it
+
+      - name: Check the release tag
+        id: release
+        run: |
+          set -euo pipefail
+          semver='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+          if [[ "$GITHUB_REF_TYPE" != tag || ! "$GITHUB_REF_NAME" =~ $semver ]]; then
+            echo "::error::Releases are tags like v1.2.3. Run this from a release tag, not '$GITHUB_REF_NAME'."
+            exit 1
+          fi
+          commit="$(git rev-parse 'HEAD^{commit}')"
+          if ! git merge-base --is-ancestor "$commit" origin/main; then
+            echo "::error::$GITHUB_REF_NAME points at $commit, which isn't on main. Only merged code is released."
+            exit 1
+          fi
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
 
       - name: Image name (lowercase)
         id: image
@@ -54,31 +82,36 @@ jobs:
         with:
           context: .
           push: true
+          build-args: |
+            APP_VERSION=${{ steps.release.outputs.version }}
+            APP_COMMIT=${{ steps.release.outputs.commit }}
           tags: |
-            ${{ steps.image.outputs.name }}:${{ github.sha }}
+            ${{ steps.image.outputs.name }}:${{ steps.release.outputs.commit }}
+            ${{ steps.image.outputs.name }}:${{ github.ref_name }}
             ${{ steps.image.outputs.name }}:latest
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.revision=${{ steps.release.outputs.commit }}
+            org.opencontainers.image.version=${{ steps.release.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions: {}
     steps:
       - name: Deploy on ttaaa-home and wait for the result
         env:
           GH_TOKEN: ${{ secrets.HOME_INFRA_DEPLOY_TOKEN }}
+          COMMIT: ${{ needs.build.outputs.commit }}
           REQUEST_ID: ${{ github.repository }}#${{ github.run_id }}.${{ github.run_attempt }}
         run: |
           set -euo pipefail
-          # --ref skips gh's default-branch lookup, which would need Contents:read on home-infra;
-          # the deploy token is deliberately limited to Actions:read/write.
+          # home-infra deploys images by their full commit sha. --ref skips gh's default-branch lookup,
+          # which would need Contents:read on home-infra; the deploy token is deliberately Actions-only.
           gh workflow run deploy.yml -R "$INFRA_REPO" --ref main \
-            -f app="$APP_NAME" -f tag="$GITHUB_SHA" -f request_id="$REQUEST_ID"
+            -f app="$APP_NAME" -f tag="$COMMIT" -f request_id="$REQUEST_ID"
 
           # Find the dispatched run by the request id in its run-name.
           run_id=""
@@ -93,3 +126,19 @@ jobs:
 
           echo "Deploy run: ${GITHUB_SERVER_URL}/${INFRA_REPO}/actions/runs/${run_id}"
           gh run watch "$run_id" -R "$INFRA_REPO" --exit-status --interval 10
+
+      - name: Check the site runs this release
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -uo pipefail
+          for _ in $(seq 1 12); do
+            running="$(curl -fsS --max-time 10 "$SITE/api/config" | jq -r '.version // "a development build"')" \
+              && [ "$running" = "$VERSION" ] && { echo "$SITE runs $VERSION"; exit 0; }
+            sleep 5
+          done
+          if [ -n "${running:-}" ]; then
+            echo "::error::$SITE runs ${running}, not $VERSION"; exit 1
+          fi
+          # The deploy itself passed its health check; the site may just be refusing this runner.
+          echo "::warning::couldn't read $SITE/api/config to confirm the version"

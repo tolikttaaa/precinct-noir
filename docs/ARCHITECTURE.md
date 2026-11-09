@@ -21,7 +21,7 @@
 | Screen model | TV is display-only. The first player is the VIP (starts the game, picks the mode, kicks). Every device also shows the board, so remote play without a TV works |
 | Turn timer | Optional, set in the lobby (off / 60 / 90 / 120 s). Nudge only, never auto-move |
 | Edge defense | Cloudflare Turnstile on *Create room* + one documented CF rate-limit rule, on top of app-level limits |
-| Git | Feature branch + PR per milestone; merging to main deploys |
+| Git | Feature branch + PR per milestone; the owner publishes a release (`vX.Y.Z` tag on main) to deploy (since 2026-11-09; merges used to deploy) |
 | Mode order | 1 → 3 → 2 → 4 → 5 → 6 |
 | Server setup | User runs it; I prepare a runbook with copy-paste commands |
 | Shadow Duel roles | Random for the first game; "Play again" swaps them (the server passes `killerSeat`) |
@@ -114,7 +114,7 @@ See **Engine design** below.
 - **Portraits:** a deterministic layered SVG generator driven by `shared/roster.json` traits: gender, age, archetype, headwear, hair, facial hair, accessories, collar, and chiaroscuro lighting. The roster is ~60 original characters with distinct, easy-to-call first names, roughly gender-balanced. Each game draws N² of them at random (digital play doesn't need the tabletop's 5/6/7 tiers). **There is a user review checkpoint on portraits before gameplay UI.**
 - **Rules UX:** a per-mode "How to play" (EN/RU, own wording) shown in the lobby and in game, and a "your possible actions" helper on the phone.
 
-## Milestones (each one = feature branch + PR, CI green, user merges → auto-deploy)
+## Milestones (each one = feature branch + PR, CI green, user merges, then releases to deploy)
 0. **M0 Repo hygiene & English.**
    - Make a mirror backup, copy the PDFs and logo to the gitignored `reference/`, then `git filter-repo --invert-paths` on them. Stash and restore the user's staged/modified files around this. **Confirm before force-pushing main.**
    - Rewrite the README in English (original text). Add `docs/RULES.md` (EN, own words, with the pinned ambiguity IDs) and `docs/ARCHITECTURE.md` (this document). Delete the stale scratch `TestMain.kt` (superseded by real tests).

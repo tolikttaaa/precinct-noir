@@ -42,6 +42,8 @@ describe('Home', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open a room' }))
     expect(screen.getByRole('button', { name: 'Opening a room…' })).toBeDisabled()
     await waitFor(() => expect(window.location.pathname).toBe('/tv/BKTR'))
+    // One look at the settings serves both the version line and the bot check.
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual(['/api/config', '/api/rooms'])
     expect(fetchMock.mock.calls[1][1]!.body).toBe('{"turnstileToken":"human"}')
     expect(loadCredentials('BKTR', 'host')).toEqual({
       token: 'host-token',
@@ -70,6 +72,12 @@ describe('Home', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open a room' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(message)
     expect(screen.getByRole('button', { name: 'Open a room' })).toBeEnabled()
+  })
+
+  it('says which version is running', async () => {
+    stubFetch({ 'GET /api/config': () => json(200, { version: '0.1.0', commit: '1e96502aaaa' }) })
+    render(<Home />)
+    expect(await screen.findByText('Version 0.1.0 · 1e96502')).toBeInTheDocument()
   })
 
   it('explains a rate limit with the wait', async () => {

@@ -8,7 +8,7 @@ App name: **`precinctnoir`**, URL: **https://precinctnoir.ttaaa.dev**, port **80
 ---
 
 ## 1. Before the first deploy (do this before merging the M1 PR)
-Merging to `main` runs `.github/workflows/deploy.yml`, which needs both steps below.
+Deploying runs `.github/workflows/deploy.yml` (since 2026-11-09, on each published release: §5), which needs both steps below.
 
 ### 1.1 Create the app on the server
 ```bash
@@ -37,7 +37,7 @@ The same fine-grained PAT can serve every app repo. If you already have one, reu
 - **Pull request required:** no direct pushes. 0 approvals, because GitHub doesn't let you approve your own PR.
 - **Required status checks** (from GitHub Actions): `Engine & server (Gradle)`, `Web client`, `Docker image (build only)`,
   `Browser games`.
-  `build-and-deploy` is deliberately excluded because it runs after the merge.
+  `build-and-deploy` is deliberately excluded because it runs on releases, not on PRs.
 - **Blocked:** deleting `main` and force-pushes.
 - **Bypass:** repository admins may merge a PR despite failing checks, for emergencies only. They still can't push directly.
 
@@ -60,7 +60,8 @@ gh api repos/tolikttaaa/precinct-noir/rules/branches/main
 ```
 
 ## 2. Verify a deploy
-1. GitHub → Actions → `build-and-deploy`: both jobs green. The deploy log links the home-infra run.
+1. GitHub → Actions → `build-and-deploy`: both jobs green. The deploy log links the home-infra run, and its last
+   step confirms the site reports the new version.
 2. Health check:
    ```bash
    curl -sS https://precinctnoir.ttaaa.dev/actuator/health        # {"groups":[...],"status":"UP"}
@@ -81,7 +82,11 @@ gh api repos/tolikttaaa/precinct-noir/rules/branches/main
 ```bash
 # logs
 docker compose -f /srv/apps/precinctnoir/compose.yaml logs -f --tail=200
-# roll back / redeploy a specific commit (from any machine with gh)
+# which version is live
+curl -sS https://precinctnoir.ttaaa.dev/api/config     # {..."version":"0.1.0","commit":"<full sha>"}
+# redeploy a release, or roll back to an earlier one (rebuilds it from its tag, then deploys)
+gh workflow run deploy.yml -R tolikttaaa/precinct-noir --ref v0.1.0
+# deploy any image already built, by its full commit sha (images from before v0.1.0 show "Development build")
 gh workflow run deploy.yml -R tolikttaaa/home-infra -f app=precinctnoir -f tag=<full-commit-sha>
 ```
 Every deploy restarts the container and drops live WebSockets. From M3, rooms are snapshotted to
@@ -122,3 +127,43 @@ Cloudflare dashboard → `ttaaa.dev` → **Security → WAF → Rate limiting ru
 
 The free plan allows one rate-limiting rule. If yours is already used, skip this; the app enforces
 its own per-client limits regardless (SECURITY.md §3).
+
+---
+
+## 5. Releasing a version
+Merging to `main` runs CI but doesn't deploy. **Publishing a GitHub Release deploys.**
+
+Versions are `vMAJOR.MINOR.PATCH`:
+- `v0.1.0`: Shadow Duel, the first playable game (the first release, 2026-11);
+- a minor bump for each new mode (`v0.2.0` with Spy Ring, and so on);
+- a patch for fixes and small improvements (`v0.1.1`);
+- `v1.0.0` after the final polish (M11).
+
+**To release**, once the PRs you want are merged and `main` is green:
+```bash
+gh release create v0.1.0 --target main --generate-notes
+```
+Or on GitHub: **Releases → Draft a new release → Choose a tag**: type `v0.1.0` and pick *Create new tag on
+publish*, target `main` → **Generate release notes** → **Publish release**.
+
+Publishing starts `build-and-deploy`, which:
+1. checks the tag is a version (`v1.2.3`) on a commit of `main`, and refuses anything else;
+2. builds the image with the version inside, and pushes it as `:<commit sha>`, `:v0.1.0` and `:latest`;
+3. deploys it through home-infra, then checks that `/api/config` on the site reports the new version.
+
+The generated notes list the PRs merged since the previous release. A **pre-release** doesn't deploy.
+
+**What's live:** the home page and the TV lobby say "Version 0.1.0 · 1e96502" (a build that isn't a
+release says "Development build"), or:
+```bash
+curl -sS https://precinctnoir.ttaaa.dev/api/config     # {..."version":"0.1.0","commit":"<full sha>"}
+```
+
+**Optional: protect the version tags,** so a published version can't be moved or deleted:
+```bash
+gh api -X POST repos/tolikttaaa/precinct-noir/rulesets --input - <<'JSON'
+{"name": "Protect versions", "target": "tag", "enforcement": "active",
+ "conditions": {"ref_name": {"include": ["refs/tags/v*"], "exclude": []}},
+ "rules": [{"type": "deletion"}, {"type": "update", "parameters": {"update_allows_fetch_and_merge": false}}]}
+JSON
+```

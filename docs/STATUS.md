@@ -4,7 +4,7 @@
 > built, and what is next, so development can resume from any point (a new session, a new agent,
 > or after a break). Update it in every milestone PR.
 >
-> **Last updated:** 2026-11-09. Shadow Duel is playable and live: M5 (board), P/P2/P2b (portraits), M5b (browser games in CI) and M5c (clearer turns, full-screen file, laptop layout) are merged (PRs #14–#19). Next up: the owner's requests V (versioning) and H (home screen), then Spy Ring (M6).
+> **Last updated:** 2026-11-09. Shadow Duel is playable and live (M5–M5c, PRs #14–#21). V (versioning, PR open) makes releases the only way to deploy; the owner then publishes `v0.1.0`. Next up: H (home screen), then Spy Ring (M6).
 >
 > **Legend:** ✅ done and merged · 🟡 done on a branch / PR open · ⬜ not started · ⚠️ known issue or follow-up
 
@@ -21,6 +21,8 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
    git fetch --prune && git status && git log --oneline -10
    gh pr list --state all -L 15            # open PRs = unfinished milestones
    gh run list -L 5                         # CI and deploy health
+   gh release list -L 3                     # releases (each one deployed)
+   curl -sS https://precinctnoir.ttaaa.dev/api/config   # the version that's live
    curl -sS https://precinctnoir.ttaaa.dev/actuator/health
    ```
 3. **Toolchain:** JDK 25 (the Gradle daemon is pinned), Node 24, and Docker (needed for Testcontainers and the image).
@@ -30,7 +32,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
    ```
 4. **Workflow rules (agreed with the owner):**
    - Before a big piece of work, put the open questions to the owner first; don't re-ask settled decisions.
-   - Each milestone gets one feature branch and one PR. Never push to `main`: merging deploys to production.
+   - Each milestone gets one feature branch and one PR. Never push to `main`. Merging doesn't deploy; the owner publishes a release, which does (RUNBOOK §5).
    - The owner runs every server-side and credential step; agents write copy-paste commands into `docs/RUNBOOK.md`.
    - Coverage stays near 100%. Never lower a floor to get a build through.
 5. **Claude memory** (owner's machine): `~/.claude/projects/-Users-ttaaa-Projects-Personal-precinct-noir/memory/` holds decisions, workflow and progress. This file is the in-repo equivalent.
@@ -52,7 +54,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
   - React 19 + TypeScript + Vite `web`, served from the same container.
 - **Hosting:**
   - The owner's home server runs the app behind Cloudflare (tunnel → Caddy → container) at `https://precinctnoir.ttaaa.dev`.
-  - Contract: [HOSTING.md](HOSTING.md). Deploy: the `build-and-deploy` workflow → home-infra `deploy` workflow.
+  - Contract: [HOSTING.md](HOSTING.md). Deploy: publishing a GitHub Release `vX.Y.Z` runs `build-and-deploy` → home-infra `deploy` workflow (RUNBOOK §5).
 - **Security:**
   - Server-authoritative; per-viewer projections never leak secrets.
   - Abuse protection: Turnstile on room creation, Cloudflare rate rule, app-level rate limits, WebSocket limits, origin allowlist, strict CSP.
@@ -75,7 +77,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M5c | Clearer turns: action tabs, reasons, drawn cards in the city, a full-screen file, a laptop layout; a collapse in the browser games | ✅ (live) | #19 |
 | P2 | Picture portraits (files, with a drawn fallback) and the brief and prompts for making them | ✅ (live) | #16 |
 | P2b | The 60 approved portrait pictures, and the drawing fixed to match | ✅ (live) | #17 |
-| V | Versioning: the deployed version on screen, and release tags on GitHub (owner's request) | ⬜ | – |
+| V | Versioning: the deployed version on screen; releases (tags on GitHub) are the only deploys | 🟡 PR open | `v/versioning` |
 | H | Home: host and join folders the same size, and a game-type choice (owner's request) | ⬜ | – |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
@@ -332,21 +334,18 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 
 ### Owner's feature requests ⬜ (added 2026-11-09)
 
-#### V: versioning
-The owner wants to see which version is deployed, and versions tagged on GitHub.
-- [ ] **Scheme:** semantic versions `vMAJOR.MINOR.PATCH`. A proposal for the owner to confirm:
-  - `v0.1.0` for what's live once M5b/M5c are merged (Shadow Duel, the first playable);
-  - a minor bump per mode milestone (`v0.2.0` with Spy Ring, and so on);
-  - a patch for fixes;
-  - `v1.0.0` after M11.
-- [ ] **Tags and releases:** each version is a git tag `vX.Y.Z` with a GitHub Release, whose notes list the PRs merged since the last one.
-- [ ] **The build knows its version:** from the tag, or `0.0.0-dev+<short sha>` between tags. Gradle and the web build read it, and the Docker image is labelled and tagged with it (deploys use `$GITHUB_SHA` today).
-- [ ] **Visible:**
-  - a quiet "v0.1.0 · abc1234" on the home page and in a corner of the TV lobby;
-  - the same in `GET /api/config` (or `/actuator/info`), so a script can check what's live.
-- [ ] **Open questions for the owner:**
-  - Who cuts a version: by hand when the owner decides to release, or automatically on every merge to `main`?
-  - Does production keep deploying on every merge, or only on a tag?
+#### V: versioning 🟡 (branch `v/versioning`)
+The owner wants to see which version is deployed, and versions tagged on GitHub. Settled 2026-11-09:
+- [x] **Scheme:** `vMAJOR.MINOR.PATCH`. `v0.1.0` is Shadow Duel, the first playable game; a minor bump per mode
+  (`v0.2.0` with Spy Ring); a patch for fixes and small improvements; `v1.0.0` after M11.
+- [x] **Releases are cut by hand and are the only deploys.** The owner publishes a GitHub Release (RUNBOOK §5);
+  merging to `main` no longer deploys. `build-and-deploy` runs on a published release (or by hand from a tag):
+  - it refuses tags that aren't `vX.Y.Z` or aren't on `main`, and skips pre-releases;
+  - the image gets the version baked in (`APP_VERSION`, `APP_COMMIT`) and the tags `:<sha>`, `:vX.Y.Z`, `:latest`;
+  - home-infra still deploys by the full commit sha; afterwards the workflow checks `/api/config` reports the version.
+- [x] **Visible:** `GET /api/config` returns `version` and `commit` (absent in builds between releases). The home page
+  and the TV lobby show "Version 0.1.0 · 1e96502", or "Development build".
+- [ ] **After merging:** the owner publishes `v0.1.0` (RUNBOOK §5), and optionally protects the version tags.
 
 #### H: home screen
 - [ ] **Host and Join folders the same size:** equal width and height side by side on wide screens, and equal height stacked on a phone.
@@ -354,7 +353,7 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
   - Shadow Duel is selectable. Spy Ring, The Hit List, Cat Burglar, Feds vs. Mob and Casino Heist are shown but marked "Coming later" and can't be picked.
   - The room starts in the chosen mode: `POST /api/rooms` takes a `mode`, validated against the `ModeRegistry` (a protocol change: PROTOCOL.md, codegen, tests).
   - EN/RU texts. As each later mode ships (M6–M10), it becomes selectable.
-- [ ] **Open question for the owner:** keep the VIP's mode picker in the lobby too (`set_mode`), or fix the mode at the host's choice?
+- [x] **Settled 2026-11-09:** keep both. The host picks the game on the home screen, and the VIP can still change it in the lobby (`set_mode`).
 
 ---
 
@@ -369,6 +368,8 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
 | Turnstile widget + keys in `/srv/apps/precinctnoir/.env` (§4.1) | ✅ |
 | Cloudflare rate-limiting rule on `/api/*` (§4.2) | ⬜ optional (edge layer on top of the app's limits) |
 | Delete the history backup `~/Projects/Personal/noir-game-backup-20261106.git` | ⬜ optional |
+| Publish release `v0.1.0` once V is merged (§5) | ⬜ |
+| Protect the version tags with a tag ruleset (§5) | ⬜ optional |
 
 ---
 
@@ -412,3 +413,6 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
 | 2026-11-08 | Kill/accuse targets light up only after choosing the action, so a glance at a phone doesn't show where its player stands |
 | 2026-11-08 | Portraits become **picture files** (hand-drawn noir comic style, ink with a sepia wash), not generated drawings; the drawings stay only as the fallback |
 | 2026-11-08 | Portraits: no colour. The bold-ink look becomes a black-and-white sketch (ink line, grey wash, cream paper). Later, 60 drawn or generated image files in that style replace the drawings (brief: `docs/PORTRAITS.md`) |
+| 2026-11-09 | Versions `vMAJOR.MINOR.PATCH`: `v0.1.0` = Shadow Duel; a minor bump per mode, a patch for fixes; `v1.0.0` after M11 |
+| 2026-11-09 | The owner cuts releases by hand (a GitHub Release); only releases deploy, merges to `main` don't |
+| 2026-11-09 | The game type is chosen on the home screen when hosting, and the VIP can still change it in the lobby |

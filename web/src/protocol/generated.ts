@@ -439,6 +439,8 @@ export interface ApiError {
 
 export interface ClientConfig {
   turnstileSiteKey?: string
+  version?: string
+  commit?: string
 }
 
 export interface ShadowDuelView {

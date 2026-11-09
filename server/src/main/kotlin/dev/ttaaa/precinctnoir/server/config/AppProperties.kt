@@ -9,10 +9,15 @@ import java.time.Duration
  *
  * @property allowedOrigins browser origins allowed to open WebSockets and send `POST`s to the API.
  *   Blocks cross-site WebSocket hijacking and cross-site room creation.
+ * @property version the release this build is, like `0.1.0`; blank between releases. The release workflow
+ *   bakes it into the image as `APP_VERSION` (docs/RUNBOOK.md §5).
+ * @property commit the full commit hash the build was made from (`APP_COMMIT`); blank for local builds.
  */
 @ConfigurationProperties("app")
 data class AppProperties(
     val allowedOrigins: List<String> = listOf("https://precinctnoir.ttaaa.dev"),
+    val version: String = "",
+    val commit: String = "",
     val rooms: RoomLimits = RoomLimits(),
     val ws: WsSettings = WsSettings(),
     val limits: AbuseLimits = AbuseLimits(),

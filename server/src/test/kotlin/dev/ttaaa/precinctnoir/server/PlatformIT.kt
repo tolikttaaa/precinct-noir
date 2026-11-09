@@ -103,7 +103,7 @@ class PlatformIT {
         val modes = ProtocolJson.decodeFromString(ListSerializer(ModeInfo.serializer()), get("/api/modes").body())
         assertThat(modes.map { it.id }).containsExactly("killer_inspector")
         assertThat(get("/api/modes").body()).contains(""""t":"toggle","key":"interrogateDeadOnBoard"""")
-        assertThat(get("/api/config").body()).isEqualTo("{}") // no Turnstile site key configured here
+        assertThat(get("/api/config").body()).isEqualTo("{}") // no Turnstile site key, and not a release build
     }
 
     @Test

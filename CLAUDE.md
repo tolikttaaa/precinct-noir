@@ -9,7 +9,7 @@ A Jackbox-style hidden-identity deduction party game. The TV shows the board; pl
 - [docs/PROTOCOL.md](docs/PROTOCOL.md): the HTTP API and WebSocket protocol, close codes and room rules.
 - [docs/SECURITY.md](docs/SECURITY.md): abuse limits, Turnstile, origin checks, CSP and log privacy.
 - [docs/DESIGN.md](docs/DESIGN.md): the look (tokens, type, layouts) and the UI rules to keep.
-- [docs/HOSTING.md](docs/HOSTING.md): the hosting contract for the home server. Merging to `main` deploys.
+- [docs/HOSTING.md](docs/HOSTING.md): the hosting contract for the home server. Only published releases deploy ([RUNBOOK §5](docs/RUNBOOK.md)).
 - [docs/RUNBOOK.md](docs/RUNBOOK.md): one-time server and credential steps. The repo owner runs these, not agents.
 
 ## Hard rules
@@ -22,7 +22,8 @@ A Jackbox-style hidden-identity deduction party game. The TV shows the board; pl
 - **Tests ship with the code.** Coverage is ~100% and CI enforces floors (JVM: Kover on the JaCoCo engine, 90% lines / 85% branches,
   aggregated over `:engine` and `:server`; web: Vitest V8, 95% lines/statements/functions and 90% branches). Never lower
   a floor to make a build pass. Write the missing test instead.
-- **Git:** one feature branch + PR per milestone. Never push to `main`: merging deploys to production.
+- **Git:** one feature branch + PR per milestone. Never push to `main`. Merging doesn't deploy: the owner publishes a
+  release (a `vX.Y.Z` tag on `main`), and that deploys to production. Never create, move or delete release tags.
 
 ## Commands
 Toolchain: JDK 25 (the Gradle daemon is pinned in `gradle/gradle-daemon-jvm.properties`) and Node 24.

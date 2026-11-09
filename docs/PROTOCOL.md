@@ -20,7 +20,7 @@ How browsers talk to the server. The Kotlin `@Serializable` types in
 | `POST /api/rooms/{code}/players` `{name}` | `201 {playerId, playerToken}` | `404 room_not_found`, `409 room_locked` (game running), `409 room_full` (9 players), `409 name_taken`, `422 invalid_name`, `400 malformed`, `503 unavailable` |
 | `GET /api/rooms/{code}` | `200 {code, status, players, maxPlayers, mode}` | `404 room_not_found` |
 | `GET /api/modes` | `200 [{id, minPlayers, maxPlayers, config}]` | |
-| `GET /api/config` | `200 {turnstileSiteKey?}` (public settings for the web client) | |
+| `GET /api/config` | `200 {turnstileSiteKey?, version?, commit?}` (public settings for the web client; `version` is the running release, like `0.1.0`, absent in builds between releases; `commit` is the full commit hash) | |
 
 Any API request can also be refused with `429 rate_limited` (with `Retry-After` in seconds), and a
 state-changing request from another site with `403 forbidden_origin`. Limits and the Turnstile check are

@@ -39,6 +39,8 @@ private const val SITE = "http://allowed.test"
         "app.allowed-origins=$SITE",
         "app.turnstile.secret-key=test-secret",
         "app.turnstile.site-key=site-key-for-tests",
+        "app.version=1.4.2",
+        "app.commit=0123456789abcdef0123456789abcdef01234567",
         "app.turnstile.timeout=500ms",
         "app.limits.create-room.requests=2",
         "app.limits.create-room.per=1h",
@@ -120,8 +122,11 @@ class SecurityIT {
     }
 
     @Test
-    fun `the client config carries the public Turnstile site key`() {
-        assertThat(get("/api/config", "10.7.0.1").body()).isEqualTo("""{"turnstileSiteKey":"site-key-for-tests"}""")
+    fun `the client config carries the public Turnstile site key and the running version`() {
+        assertThat(get("/api/config", "10.7.0.1").body()).isEqualTo(
+            """{"turnstileSiteKey":"site-key-for-tests","version":"1.4.2",""" +
+                """"commit":"0123456789abcdef0123456789abcdef01234567"}""",
+        )
     }
 
     @Test

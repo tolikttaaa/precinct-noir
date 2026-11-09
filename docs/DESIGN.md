@@ -65,6 +65,8 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
   - On the home page and the TV the wall shows at 78% brightness. A shadow pool sits behind the home title,
     and a dark `.slate` sits behind the TV's line-up.
   - On phones and plain pages it is dimmed to 36% and blurred, so text can sit straight on it.
+- **Version line** (`.version`): "Version 0.1.0 · 1e96502" (or "Development build") in small typed grey, under the
+  home folders and at the foot of the TV lobby's slate. Nowhere during a game.
 - **Folders** (`.folder`) look like real manila folders:
   - the taller back panel carries the tab, with a typed label stuck on it;
   - two typed sheets peek out;

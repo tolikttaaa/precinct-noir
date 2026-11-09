@@ -67,8 +67,15 @@ class RoomController(private val rooms: RoomService, private val humans: HumanCh
     fun modes(): ResponseEntity<String> = json(OK, ListSerializer(ModeInfo.serializer()), rooms.modeInfo())
 
     @GetMapping("/config")
-    fun config(): ResponseEntity<String> =
-        json(OK, ClientConfig.serializer(), ClientConfig(props.turnstile.siteKey.ifBlank { null }))
+    fun config(): ResponseEntity<String> = json(
+        OK,
+        ClientConfig.serializer(),
+        ClientConfig(
+            turnstileSiteKey = props.turnstile.siteKey.ifBlank { null },
+            version = props.version.ifBlank { null },
+            commit = props.commit.ifBlank { null },
+        ),
+    )
 
     @ExceptionHandler(ApiException::class)
     fun failed(e: ApiException): ResponseEntity<String> = json(e.status, ApiError.serializer(), ApiError(e.code))

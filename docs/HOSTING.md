@@ -2,6 +2,9 @@
      The source of truth is the private repo tolikttaaa/home-infra. Server operations,
      troubleshooting and secret locations (§7–§10) are intentionally not published here. -->
 
+> **Precinct Noir differs in one way:** pushes to `main` don't deploy. Publishing a GitHub Release
+> `vX.Y.Z` does (RUNBOOK §5); the image is still deployed by its full commit SHA.
+
 # Hosting an app on ttaaa-home — guide for developers and AI agents
 
 This document describes the platform that hosts my personal web apps and the
