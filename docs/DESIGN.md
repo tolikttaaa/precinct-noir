@@ -81,7 +81,8 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
     - The chosen game has a red-pencil tick; the others have a Choose button; the games still being built
       are in faint ink with a red "Coming later" stamp.
     - Wide screens (60 rem and up) get two columns of games, so the page fits without scrolling; narrow
-      ones get one column and a second Close at the end.
+      ones get one column. A page taller than the screen gets a second Close at its end, measured live (it
+      changes when the screen turns).
     - It opens at its top with the focus on the page, keeps the focus inside, and goes back into the folder
       with Close, Escape or a press beside it; the focus returns to the field. It slides up out of the
       folder unless motion is reduced.

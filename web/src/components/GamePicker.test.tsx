@@ -82,8 +82,21 @@ describe('GamePicker', () => {
     expect(field()).toHaveAccessibleDescription(/^Three to nine players/)
   })
 
+  it('has a second Close at its end only when it is taller than the screen', () => {
+    render(<Picker />)
+    fireEvent.click(field())
+    expect(screen.getAllByRole('button', { name: 'Close' })).toHaveLength(1)
+    const tall = vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(2000)
+    act(() => void window.dispatchEvent(new Event('resize'))) // turned to a shorter screen
+    expect(screen.getAllByRole('button', { name: 'Close' })).toHaveLength(2)
+    tall.mockRestore()
+    act(() => void window.dispatchEvent(new Event('resize')))
+    expect(screen.getAllByRole('button', { name: 'Close' })).toHaveLength(1)
+  })
+
   it('goes back into the folder with Close, Escape or a press beside the page', () => {
     const onChange = vi.fn()
+    const tall = vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(2000)
     render(<Picker onChange={onChange} />)
     for (const putBack of [
       () => fireEvent.click(screen.getAllByRole('button', { name: 'Close' })[0]),
@@ -100,6 +113,7 @@ describe('GamePicker', () => {
       expect(field()).toHaveFocus()
     }
     expect(onChange).not.toHaveBeenCalled()
+    tall.mockRestore()
   })
 
   it('keeps the focus on the page while it is out', () => {

@@ -1018,7 +1018,7 @@ select:disabled,
   outline-offset: 2px;
 }
 
-/* The second Close, at the end of the list. */
+/* The second Close, at the end of a page taller than the screen. */
 .secret__close--end {
   display: block;
   margin-top: 1.25rem;
@@ -1038,10 +1038,6 @@ select:disabled,
 
   .secret__case:last-child {
     border-bottom: 0;
-  }
-
-  .secret__close--end {
-    display: none;
   }
 }
 

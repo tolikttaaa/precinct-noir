@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { modeName, modePlayers, modeSummary } from '../i18n/text'
@@ -93,6 +93,16 @@ function SecretPage({ offered, chosen, onChoose, onClose }: PageProps) {
   const { t } = useTranslation()
   const id = useId()
   const page = useRef<HTMLElement>(null)
+  const sheet = useRef<HTMLDivElement>(null)
+  // Taller than the screen, so it scrolls: then it gets a second Close at its end.
+  const [long, setLong] = useState(false)
+
+  useLayoutEffect(() => {
+    const measure = () => setLong(sheet.current!.scrollHeight > sheet.current!.clientHeight)
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
 
   useEffect(() => {
     // The page opens at its top; focusing it mustn't scroll it into the middle.
@@ -129,6 +139,7 @@ function SecretPage({ offered, chosen, onChoose, onClose }: PageProps) {
 
   return (
     <div
+      ref={sheet}
       className="secret"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose()
@@ -188,10 +199,11 @@ function SecretPage({ offered, chosen, onChoose, onClose }: PageProps) {
             )
           })}
         </ul>
-        {/* On a narrow page the list is long: a second way out at its end. */}
-        <button type="button" className="secret__close secret__close--end" onClick={onClose}>
-          {t('home.cases.close')}
-        </button>
+        {long && (
+          <button type="button" className="secret__close secret__close--end" onClick={onClose}>
+            {t('home.cases.close')}
+          </button>
+        )}
       </section>
     </div>
   )
