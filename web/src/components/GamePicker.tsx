@@ -176,7 +176,7 @@ function SecretPage({ offered, chosen, onChoose, onClose }: PageProps) {
                 <p className="secret__summary">{modeSummary(t, game)}</p>
                 <div className="secret__action">
                   {later ? (
-                    <span className="stamp secret__later">{t('home.host.later')}</span>
+                    <span className="secret__later">{t('home.host.later')}</span>
                   ) : game === chosen ? (
                     <span className="stamp secret__chosen">{t('home.cases.chosen')}</span>
                   ) : (
