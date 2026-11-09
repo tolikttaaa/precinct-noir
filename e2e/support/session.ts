@@ -84,13 +84,21 @@ export class Session {
   async openRoom(): Promise<string> {
     const t = TEXTS.en
     await this.tv.goto('/')
-    const game = this.tv.getByRole('radio', {
-      name: `${t.modes.killer_inspector.name}, ${t.modes.killer_inspector.players}`,
+    const game = this.tv.getByRole('combobox', { name: t.home.host.game })
+    await expect(game).not.toHaveAttribute('aria-disabled')
+    await game.click()
+    const later = this.tv.getByRole('option', {
+      name: new RegExp(`^${t.modes.spy_games.name}, ${t.home.host.later}`),
     })
-    await game.check()
-    await expect(game).toBeChecked()
-    const later = this.tv.getByRole('radio', { name: new RegExp(`^${t.modes.spy_games.name}, `) })
-    await expect(later).toBeDisabled()
+    await expect(later).toHaveAttribute('aria-disabled', 'true')
+    await this.tv.waitForTimeout(PACE)
+    await this.tv
+      .getByRole('option', {
+        name: `${t.modes.killer_inspector.name}, ${t.modes.killer_inspector.players}`,
+      })
+      .click()
+    await expect(this.tv.getByRole('listbox')).toBeHidden()
+    await expect(game).toContainText(t.modes.killer_inspector.name)
     await this.tv.waitForTimeout(PACE)
     await this.tv.getByRole('button', { name: t.home.host.action }).click()
     await this.tv.waitForURL(/\/tv\/[A-Z]{4}$/)

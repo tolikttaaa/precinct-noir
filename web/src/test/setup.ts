@@ -12,6 +12,7 @@ initI18n('en')
 
 // jsdom doesn't scroll; tests check that the app asked to.
 window.scrollTo = vi.fn() as typeof window.scrollTo
+Element.prototype.scrollIntoView = vi.fn()
 
 beforeEach(() => {
   vi.mocked(window.scrollTo).mockClear()

@@ -70,11 +70,18 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
 - **Home page:** the Host and Join folders sit side by side at the same size, with their buttons lined up
   along the bottom; stacked on a phone, each is as tall as what it holds. The page never scrolls sideways
   (the title's shadow pool is clipped).
-  - **Game picker** (`.game-pick`, in the Host folder): all six games typed as an index on the sheet, one
-    row each: an inked ring (a dot when chosen), the name, and the player count, which drops under the name
-    on narrow sheets. Games the server doesn't offer yet get a dashed ring, faint ink and a dashed
-    "Coming later" note, and can't be picked. Until the server has listed its games, nothing can be picked
-    and the room opens in the default game.
+  - **Game picker** (`.game-pick`, in the Host folder): our own drop-down, not the browser's. Closed, it is a
+    field inked on the sheet (the game's name, its player count, a chevron), with what the game is under it.
+    Open, it drops an index card from the case files (`.game-menu`): a red rule at the top, blue rules between
+    rows, a red-pencil tick by the chosen game, and the player count, which drops under the name on a narrow
+    card. Games the server doesn't offer yet are in faint ink with a red "Coming later" rubber stamp, and
+    can't be picked.
+    - It works like a select: the ARIA select-only combobox, with arrows, Home, End, Enter, Space, Escape
+      and Tab, and the focus stays on the field.
+    - The card floats above the page (a portal), because the folder's front panel is masked for its thumb
+      cut and would clip it. It opens under the field when it fits whole, else over it, else on the roomier
+      side and scrolls; it follows the page on scroll and resize, and closes on a press elsewhere.
+    - Until the server has listed its games, the field can't be opened and the room opens in the default game.
 - **Folders** (`.folder`) look like real manila folders:
   - the taller back panel carries the tab, with a typed label stuck on it;
   - two typed sheets peek out;

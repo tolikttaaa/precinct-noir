@@ -354,7 +354,9 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
 - [x] **Choose the game type when hosting:** the Host folder lists all six games with their player counts (EN/RU names:
   Spy Ring / Шпионская сеть, The Hit List / Список целей, Cat Burglar / Домушник, Feds vs. Mob / Федералы против
   синдиката, Casino Heist / Налёт на казино).
-  - A game is selectable when the server offers it (`GET /api/modes`); the others are marked "Coming later". So each
+  - A drop-down in the game's style (owner, 2026-11-09: "not a native drop down"): an index card drops from an inked
+    field, keyboard- and screen-reader-friendly like a select. Reviewed on 11 devices before merging.
+  - A game is selectable when the server offers it (`GET /api/modes`); the others are stamped "Coming later". So each
     mode becomes selectable by itself as it ships (M6–M10).
   - `POST /api/rooms` takes `mode`, checked against the `ModeRegistry` before the bot check (`422 unknown_mode`).
   - The browser games pick Shadow Duel this way and check that Spy Ring can't be picked.
@@ -422,3 +424,4 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
 | 2026-11-09 | Versions `vMAJOR.MINOR.PATCH`: `v0.1.0` = Shadow Duel; a minor bump per mode, a patch for fixes; `v1.0.0` after M11 |
 | 2026-11-09 | The owner cuts releases by hand (a GitHub Release); only releases deploy, merges to `main` don't |
 | 2026-11-09 | The game type is chosen on the home screen when hosting, and the VIP can still change it in the lobby |
+| 2026-11-09 | The home screen's game choice is our own styled drop-down (an index card), not a list and not the browser's select |

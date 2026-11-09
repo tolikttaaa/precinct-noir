@@ -40,10 +40,12 @@ describe('Home', () => {
       'POST /api/rooms': () => json(201, { code: 'BKTR', hostToken: 'host-token' }),
     })
     render(<Home />)
-    expect(await screen.findByRole('radio', { name: 'Shadow Duel, 2 players' })).toBeChecked()
+    const game = screen.getByRole('combobox', { name: 'Game' })
+    await waitFor(() => expect(game).not.toHaveAttribute('aria-disabled'))
+    expect(game).toHaveTextContent('Shadow Duel')
     fireEvent.click(screen.getByRole('button', { name: 'Open a room' }))
     expect(screen.getByRole('button', { name: 'Opening a room…' })).toBeDisabled()
-    expect(screen.getByRole('group', { name: 'Game' })).toBeDisabled()
+    expect(game).toHaveAttribute('aria-disabled', 'true')
     await waitFor(() => expect(window.location.pathname).toBe('/tv/BKTR'))
     // One look at the settings serves both the version line and the bot check.
     const urls = fetchMock.mock.calls.map(([url]) => String(url))
@@ -82,18 +84,20 @@ describe('Home', () => {
   it('lists every game, with the ones still being built marked and out of reach', async () => {
     stubFetch({ 'GET /api/modes': () => json(200, [shadowDuel]) })
     render(<Home />)
-    const later = await screen.findByRole('radio', {
-      name: 'Spy Ring, Coming later, 3–6, 8 or 9 players',
-    })
-    expect(later).toBeDisabled()
+    const game = screen.getByRole('combobox', { name: 'Game' })
+    await waitFor(() => expect(game).not.toHaveAttribute('aria-disabled'))
+    fireEvent.click(game)
     for (const name of [
+      'Spy Ring, Coming later, 3–6, 8 or 9 players',
       'The Hit List, Coming later, 2 players',
       'Cat Burglar, Coming later, 2 players',
       'Feds vs. Mob, Coming later, 6 or 8 players',
       'Casino Heist, Coming later, 5–7 players',
     ])
-      expect(screen.getByRole('radio', { name })).toBeDisabled()
-    expect(screen.getByRole('radio', { name: 'Shadow Duel, 2 players' })).toBeEnabled()
+      expect(screen.getByRole('option', { name })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('option', { name: 'Shadow Duel, 2 players' })).not.toHaveAttribute(
+      'aria-disabled',
+    )
   })
 
   it('opens the room in the game the host picked', async () => {
@@ -104,8 +108,11 @@ describe('Home', () => {
       'POST /api/rooms': () => json(201, { code: 'BKTR', hostToken: 'host-token' }),
     })
     render(<Home />)
-    fireEvent.click(await screen.findByRole('radio', { name: 'Spy Ring, 3–6, 8 or 9 players' }))
-    expect(screen.getByRole('radio', { name: 'Shadow Duel, 2 players' })).not.toBeChecked()
+    const game = screen.getByRole('combobox', { name: 'Game' })
+    await waitFor(() => expect(game).not.toHaveAttribute('aria-disabled'))
+    fireEvent.click(game)
+    fireEvent.click(screen.getByRole('option', { name: 'Spy Ring, 3–6, 8 or 9 players' }))
+    expect(game).toHaveTextContent('Spy Ring')
     fireEvent.click(screen.getByRole('button', { name: 'Open a room' }))
     await waitFor(() => expect(window.location.pathname).toBe('/tv/BKTR'))
     const create = fetchMock.mock.calls.find(([url]) => String(url) === '/api/rooms')!
@@ -121,9 +128,8 @@ describe('Home', () => {
     })
     render(<Home />)
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/modes', undefined))
-    // Nothing to pick yet, and nothing marked as coming later: the server hasn't said.
-    for (const radio of screen.getAllByRole('radio')) expect(radio).toBeDisabled()
-    expect(screen.queryByText('Coming later')).toBeNull()
+    // Nothing to pick yet: the server hasn't said which games it has.
+    expect(screen.getByRole('combobox', { name: 'Game' })).toHaveAttribute('aria-disabled', 'true')
     fireEvent.click(screen.getByRole('button', { name: 'Open a room' }))
     await waitFor(() => expect(window.location.pathname).toBe('/tv/BKTR'))
     const create = fetchMock.mock.calls.find(([url]) => String(url) === '/api/rooms')!
