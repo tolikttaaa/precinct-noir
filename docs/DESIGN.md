@@ -219,12 +219,45 @@ file.
 - **Pages** (`game/guides.ts`): each mode has its own walkthrough pages, in our own words. A page has a
   title, a few sentences and, optionally, a small picture of the city: you, your neighbours, a body, a
   row on the move.
+  - **Every mark is a colour and a sign:** the killer a red square with the role's initial (K / У), the
+    inspector a blue one (I / И), you a blue "You", a body a dark square with a red ✕, a cleared suspect a
+    light blue ✓, a row on the move brass arrows, your neighbours brass. The signs scale with the
+    picture, so they read on the TV.
+  - **A key under each picture** (the owner asked for a legend) names only the marks that picture uses.
+    Picture and key are hidden from screen readers; the page's text says the same.
 - **Where it shows:**
   - On any phone, from the lobby or during a game.
   - On the TV, when the VIP presses "Show on the board": the board shows a folder with the VIP's
     current page and follows it as they page through. Everyone else's phone says so.
+- **Typed sheets in a case file** (`game/PaperStack.tsx`, `game/paper.css`; the owner's request): the pages
+  are off-white typed sheets with a red margin rule, held by a steel fastener at the top of an open manila
+  file whose tab names the game.
+  - **A page turns like paper** (`Curl`, 0.8 s): its bottom edge lifts toward you and rolls up to the
+    fastener, showing the back of the sheet (plain paper, the margin rule faintly through it) and casting
+    a shadow on the page beneath, then goes over the top and fades out of sight. Going back unrolls the
+    page down again. The sheet is drawn as 32 bands hinged one below the other; a fold 10 bands deep
+    travels up the sheet, bending each hinge as it passes, with light catching the top of the bend.
+    The sheets still to read show their edges under the top one, so the stack thins as you go.
+  - **Every sheet is the same size,** as tall as the longest page (invisible copies of all the pages sit
+    under the top one and hold the room), so the file keeps still while the pages turn, on the TV too.
+  - Turn by swiping the sheet sideways, with the arrow or Page keys, or with Back and Next. A hint under
+    the file says so.
+  - On a phone, Back, Next, "Show on the board" and Close sit in the bar at the bottom of the screen,
+    where the game's own buttons go, so they never fall below the fold. While the rules are open they
+    take the place of the lobby's or the game's bar.
+  - On the TV the sheet is wide, with the picture beside the text, and follows the VIP's page with the
+    same turn.
+  - Reduced motion: the page changes without the turn.
 - **Adding a mode:** give it pages in `GUIDES` and texts under `guide.<mode>` in both languages. Tests
   fail when any page lacks a text.
+
+## 8a. Sound
+- **Synthesised, nothing downloaded** (`web/src/sound/sound.ts`, the Web Audio API), so the CSP stays as it
+  is: a typewriter key, a rubber stamp, a page turning forward or back, and a folder opening.
+- **Where:** the home screen types a key for each letter of a room code and stamps the Host and Join
+  choices; the rules open with the folder and turn with the paper.
+- **A switch beside the languages** (a speaker icon in the masthead) turns sound off on this device; the
+  choice is remembered. Browsers only start sound after a first tap, so nothing plays on arrival.
 
 ## 9. Layouts
 - **TV / board screen** (`/tv/CODE`, priority):

@@ -4,7 +4,7 @@
 > built, and what is next, so development can resume from any point (a new session, a new agent,
 > or after a break). Update it in every milestone PR.
 >
-> **Last updated:** 2026-11-09. Shadow Duel is playable and live (M5–M5c, PRs #14–#21). V (versioning, PR open) makes releases the only way to deploy; the owner then publishes `v0.1.0`. Next up: H (home screen), then Spy Ring (M6).
+> **Last updated:** 2026-11-09. **`v0.1.0` is released and live:** Shadow Duel (M5–M5c), versioning (V) and the new home screen (H). P3 (the rules as typed pages in a file, and sound) is in review. Next up: Spy Ring (M6).
 >
 > **Legend:** ✅ done and merged · 🟡 done on a branch / PR open · ⬜ not started · ⚠️ known issue or follow-up
 
@@ -77,8 +77,9 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M5c | Clearer turns: action tabs, reasons, drawn cards in the city, a full-screen file, a laptop layout; a collapse in the browser games | ✅ (live) | #19 |
 | P2 | Picture portraits (files, with a drawn fallback) and the brief and prompts for making them | ✅ (live) | #16 |
 | P2b | The 60 approved portrait pictures, and the drawing fixed to match | ✅ (live) | #17 |
-| V | Versioning: the deployed version on screen; releases (tags on GitHub) are the only deploys | 🟡 PR open | #22 |
-| H | Home: host and join folders the same size, and a game-type choice (owner's request) | 🟡 PR open | #23 |
+| V | Versioning: the deployed version on screen; releases (tags on GitHub) are the only deploys | ✅ (live, v0.1.0) | #22 |
+| H | Home: host and join folders the same size, and a game-type choice (owner's request) | ✅ (live, v0.1.0) | #23 |
+| P3 | The rules as typed pages in a case file, turned one by one with animation, and sound (owner's request) | 🟡 PR open | #24 |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
@@ -86,7 +87,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M10 | Casino Heist | ⬜ | – |
 | M11 | Hardening & polish, incl. remote-play polish | ⬜ | – |
 
-**Next action:** the owner answers the open questions under V and H (§5). Then V and H, the rules pages and sound (`p3/rules-pages`), a real session on the TV, and Spy Ring (M6).
+**Next action:** the owner reviews P3 (screenshots on phones, a tablet, laptops and the TV) and merges it, then publishes `v0.1.1`. Then a real session on the TV, and Spy Ring (M6), which starts with questions to the owner.
 
 **Order of the next steps** (owner's choice, 2026-11-06; changed 2026-11-07): portraits first after all, because the owner asked for an evidence-wall background with the suspects on it, then the playable board. M5 then makes Shadow Duel playable, with the portraits on its case-file cards. Every later mode ships with its own UI in its milestone. TV + phones get the polish first; remote play on one's own device is polished last (M11).
 
@@ -313,6 +314,24 @@ the suspects on it, and folders that look real. Design notes: [DESIGN.md](DESIGN
 - [ ] The owner makes the 60 pictures (an artist or an image generator); an agent converts them to
   512 × 512 WebP and adds them.
 
+### P3: the rules as pages in a file, and sound 🟡 (PR #24)
+The owner asked: rules that look like separate papers in a file, turned one by one, animated, with sounds in the main
+menu and on the page turns.
+- [x] **Typed sheets in a case file** (`game/PaperStack.tsx`, `game/paper.css`): a steel fastener at the top; a turned
+  page bends like paper (the owner asked for a more realistic flip): it rolls up from the bottom edge to the fastener,
+  showing its back and shading the page beneath, and going back unrolls it; the sheets still to read show their edges. Every sheet is as tall
+  as the longest page, so the file doesn't change size from page to page (the owner noticed it on the TV). Swipe, the arrow keys or
+  Back/Next turn the pages; reduced motion just changes the page. The TV shows a wide sheet that follows the VIP.
+- [x] **Pictures you can read, with a key** (owner's review): the killer and inspector squares had lost their colours on
+  the paper (a rule for plain squares covered them). Now every mark is a colour and a sign (K/I, ✕ for a body, ✓ for
+  cleared), and a key under each picture names the marks it uses, in EN and RU.
+- [x] **The buttons stay at the thumb:** on a phone, Back, Next, "Show on the board" and Close sit in the bar at the
+  bottom of the screen, in place of the lobby's or the game's bar (page 1's picture pushed them below the fold).
+- [x] **Sound** (`web/src/sound/`): synthesised with the Web Audio API, so nothing is downloaded and the CSP is
+  unchanged. Typewriter keys for the room code and stamps for the choices on the home screen; a folder and paper for
+  the rules. A speaker switch beside the languages turns sound off on this device, remembered.
+- [x] Built on a side branch while M5 was open, then moved onto `main` after `v0.1.0`.
+
 ### M6–M10: remaining modes ⬜
 Each mode follows the same recipe: engine rules + tests (every pinned ID) → projections → UI panels + tutorial (EN/RU) → E2E → deploy. Follow `CLAUDE.md` → *Engine conventions*.
 
@@ -334,7 +353,7 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 
 ### Owner's feature requests ⬜ (added 2026-11-09)
 
-#### V: versioning 🟡 (PR #22)
+#### V: versioning ✅ (PR #22, live in v0.1.0)
 The owner wants to see which version is deployed, and versions tagged on GitHub. Settled 2026-11-09:
 - [x] **Scheme:** `vMAJOR.MINOR.PATCH`. `v0.1.0` is Shadow Duel, the first playable game; a minor bump per mode
   (`v0.2.0` with Spy Ring); a patch for fixes and small improvements; `v1.0.0` after M11.
@@ -345,9 +364,10 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
   - home-infra still deploys by the full commit sha; afterwards the workflow checks `/api/config` reports the version.
 - [x] **Visible:** `GET /api/config` returns `version` and `commit` (absent in builds between releases). The home page
   and the TV lobby show "Version 0.1.0 · 1e96502", or "Development build".
-- [ ] **After merging:** the owner publishes `v0.1.0` (RUNBOOK §5), and optionally protects the version tags.
+- [x] **Published:** the owner released `v0.1.0` on 2026-11-09; production reports version 0.1.0, commit 2efa3c2.
+- [ ] Optional: protect the version tags with a tag ruleset (RUNBOOK §5).
 
-#### H: home screen 🟡 (PR #23, stacked on #22)
+#### H: home screen ✅ (PR #23, live in v0.1.0)
 - [x] **Host and Join folders the same size** side by side, with their buttons lined up along the bottom. Stacked on a
   phone they share the width, and each is as tall as what it holds (forcing equal heights left the Join folder
   half empty). The Join folder now also says the QR code on the board works.
@@ -378,7 +398,7 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
 | Turnstile widget + keys in `/srv/apps/precinctnoir/.env` (§4.1) | ✅ |
 | Cloudflare rate-limiting rule on `/api/*` (§4.2) | ⬜ optional (edge layer on top of the app's limits) |
 | Delete the history backup `~/Projects/Personal/noir-game-backup-20261106.git` | ⬜ optional |
-| Publish release `v0.1.0` once V is merged (§5) | ⬜ |
+| Publish release `v0.1.0` once V is merged (§5) | ✅ 2026-11-09 |
 | Protect the version tags with a tag ruleset (§5) | ⬜ optional |
 
 ---
@@ -427,3 +447,4 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
 | 2026-11-09 | The owner cuts releases by hand (a GitHub Release); only releases deploy, merges to `main` don't |
 | 2026-11-09 | The game type is chosen on the home screen when hosting, and the VIP can still change it in the lobby |
 | 2026-11-09 | The home screen's game choice is a top-secret page pulled out of the Host folder (every game, what it's about), not a list or a drop-down |
+| 2026-11-09 | The rules are typed sheets in a case file, turned one by one; sound is synthesised in the browser, on by default, with a switch per device |

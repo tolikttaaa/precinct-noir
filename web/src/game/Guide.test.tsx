@@ -1,8 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { GuideBoard, GuideSheet } from './Guide'
 
 const next = () => fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+/** The sheet on top, the one being read (the others are copies for size and for the turn). */
+const top = () => document.querySelector('.paper--current') as HTMLElement
 
 describe('GuideSheet', () => {
   it('pages through the walkthrough', () => {
@@ -12,10 +14,15 @@ describe('GuideSheet', () => {
     expect(screen.getByRole('heading', { name: 'Two hunters in one crowd' })).toBeInTheDocument()
     expect(screen.getByText('1 of 9')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled()
-    expect(document.querySelectorAll('.diagram__cell')).toHaveLength(25)
+    expect(top().querySelectorAll('.diagram .diagram__cell')).toHaveLength(25)
+    // The key names the two marks on this picture.
+    expect([...top().querySelectorAll('.legend li')].map((li) => li.textContent)).toEqual([
+      'KThe killer',
+      'IThe inspector',
+    ])
     next()
     expect(screen.getByRole('heading', { name: 'Your secret' })).toBeInTheDocument()
-    expect(document.querySelector('.diagram')).toBeNull()
+    expect(top().querySelector('.diagram')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     expect(screen.getByText('1 of 9')).toBeInTheDocument()
     for (let i = 0; i < 8; i++) next()
@@ -64,7 +71,16 @@ describe('GuideBoard', () => {
   it('shows the chosen page with the room code, keeping the page in range', () => {
     const { rerender } = render(<GuideBoard mode="killer_inspector" page={3} code="BKTR" />)
     expect(screen.getByRole('heading', { name: 'Next to you' })).toBeInTheDocument()
-    expect(screen.getByText('You')).toBeInTheDocument()
+    // The picture marks you, and its key says so.
+    expect(
+      within(top().querySelector('.diagram') as HTMLElement).getByText('You'),
+    ).toBeInTheDocument()
+    // The key is part of the picture, which screen readers skip: the page's text says it all.
+    expect([...top().querySelectorAll('.legend li')].map((li) => li.textContent)).toEqual([
+      'YouYou',
+      'Next to you',
+    ])
+    expect(top().querySelector('.paper__picture')).toHaveAttribute('aria-hidden', 'true')
     expect(screen.getByText('Room BKTR')).toBeInTheDocument()
     rerender(<GuideBoard mode="killer_inspector" page={99} code="BKTR" />)
     expect(screen.getByText('9 of 9')).toBeInTheDocument()

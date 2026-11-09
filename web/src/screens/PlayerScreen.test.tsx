@@ -213,6 +213,10 @@ describe('in the room', () => {
     const ws = await enter()
     fireEvent.click(screen.getByRole('button', { name: 'How to play' }))
     expect(screen.getByRole('heading', { name: 'Two hunters in one crowd' })).toBeInTheDocument()
+    // The rules bring their own bar of buttons; the lobby's steps aside until they're closed.
+    expect(screen.queryByRole('button', { name: 'Start game' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Leave room' })).toBeNull()
+    expect(document.querySelectorAll('.action-bar')).toHaveLength(1)
     fireEvent.click(screen.getByRole('button', { name: 'Show on the board' }))
     push(ws, { t: 'room', room: roomView({ guide: 0 }) })
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
@@ -223,6 +227,7 @@ describe('in the room', () => {
       { t: 'show_guide', clientSeq: 3 },
     ])
     expect(screen.getByRole('button', { name: 'Start game' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Leave room' })).toBeInTheDocument()
   })
 
   it('tells the others when the VIP is showing the walkthrough', async () => {

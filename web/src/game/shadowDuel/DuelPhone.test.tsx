@@ -378,6 +378,8 @@ describe('around the board', () => {
     expect(screen.getByText(/^Kill a living suspect in one of the eight tiles/)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'How to play' }))
     expect(screen.getByRole('heading', { name: 'How to play Shadow Duel' })).toBeInTheDocument()
+    // One bar at the bottom: the rules' own (Back, Next, Back to the game).
+    expect(document.querySelectorAll('.action-bar')).toHaveLength(1)
     fireEvent.click(screen.getByRole('button', { name: 'Back to the game' }))
     expect(screen.getByRole('group', { name: 'The city' })).toBeInTheDocument()
   })

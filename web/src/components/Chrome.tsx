@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Connection } from '../net/roomSocket'
 import { LanguageSwitch } from './LanguageSwitch'
+import { SoundSwitch } from './SoundSwitch'
 import { Link } from './Link'
 
-/** The strip at the top of every screen: the game's name (home link), the room code, languages. */
+/** The strip at the top of every screen: the game's name (home link), the room code, languages, sound. */
 export function Masthead({ code, named = true }: { code?: string; named?: boolean }) {
   const { t } = useTranslation()
   return (
@@ -16,6 +17,7 @@ export function Masthead({ code, named = true }: { code?: string; named?: boolea
       )}
       {code && <span className="masthead__code">{code}</span>}
       <LanguageSwitch />
+      <SoundSwitch />
     </header>
   )
 }

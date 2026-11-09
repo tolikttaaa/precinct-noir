@@ -2,6 +2,7 @@
 const en = {
   appName: 'Precinct Noir',
   language: 'Language',
+  sound: 'Sound',
   languages: { en: 'English', ru: 'Русский' },
   home: {
     tagline:
@@ -298,11 +299,21 @@ const en = {
     next: 'Next',
     close: 'Close',
     page: '{{n}} of {{total}}',
+    swipe: 'Swipe the page, or use the arrow keys, to turn it.',
     showOnBoard: 'Show on the board',
     hideFromBoard: 'Hide from the board',
     onBoard: '{{name}} is showing how to play on the board.',
     roomCode: 'Room {{code}}',
     you: 'You',
+    legend: {
+      you: 'You',
+      killer: 'The killer',
+      inspector: 'The inspector',
+      near: 'Next to you',
+      body: 'A body',
+      cleared: 'Cleared',
+      moving: 'A row on the move',
+    },
     killer_inspector: {
       crowd: {
         title: 'Two hunters in one crowd',

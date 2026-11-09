@@ -2,6 +2,7 @@
 const ru = {
   appName: 'Precinct Noir',
   language: 'Язык',
+  sound: 'Звук',
   languages: { en: 'English', ru: 'Русский' },
   home: {
     tagline:
@@ -313,11 +314,21 @@ const ru = {
     next: 'Дальше',
     close: 'Закрыть',
     page: '{{n}} из {{total}}',
+    swipe: 'Чтобы перевернуть страницу, проведите по ней пальцем или нажмите стрелку.',
     showOnBoard: 'Показать на поле',
     hideFromBoard: 'Убрать с поля',
     onBoard: '{{name}} показывает правила на игровом поле.',
     roomCode: 'Комната {{code}}',
     you: 'Вы',
+    legend: {
+      you: 'Вы',
+      killer: 'Убийца',
+      inspector: 'Инспектор',
+      near: 'Рядом с вами',
+      body: 'Тело',
+      cleared: 'Подозрение снято',
+      moving: 'Ряд сдвигается',
+    },
     killer_inspector: {
       crowd: {
         title: 'Два охотника в одной толпе',
