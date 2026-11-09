@@ -207,10 +207,13 @@ sealed interface ServerMessage {
     data class Game(val round: Int, val mode: String, val seat: Int? = null, val view: JsonElement, val legal: List<Opt>) :
         ServerMessage
 
-    /** New case-log events you may see, in order. */
+    /**
+     * New case-log events you may see, in order. [replay] marks the ones sent on connecting: they
+     * happened before you were here, so the board shows them without sound or animation.
+     */
     @Serializable
     @SerialName("events")
-    data class Events(val round: Int, val events: List<EventView>) : ServerMessage
+    data class Events(val round: Int, val events: List<EventView>, val replay: Boolean = false) : ServerMessage
 
     /** The turn timer ran out for the pending decision. Changes nothing. */
     @Serializable

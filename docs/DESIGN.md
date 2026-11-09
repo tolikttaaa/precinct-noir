@@ -258,6 +258,24 @@ file.
   choices; the rules open with the folder and turn with the paper.
 - **A switch beside the languages** (a speaker icon in the masthead) turns sound off on this device; the
   choice is remembered. Browsers only start sound after a first tap, so nothing plays on arrival.
+- **Music** (`web/src/sound/music.ts`, owner's request): a slow minor-key jazz loop written for this game and
+  played live by the browser. A walking upright bass, brushes and a ride cymbal, soft piano chords, and a
+  muted trumpet phrase every other time round, so it doesn't wear (eight bars at 66 bpm, about 29 s).
+  - **Only the board and the home screen play it**: phones in a room stay quiet, since ten phones out
+    of step would be noise. A note icon beside the speaker turns it off on this device; turning it on
+    turns sound on too. The music keeps playing when the home screen hands over to the board.
+  - **It sits under the game:** about 15 dB below the game sounds, and it steps back further for a
+    moment under a shot, a slam, the city closing up or the closing sting.
+- **Game sounds** (`game/sounds.ts`): each public event of a game has one: the room's stamp when a game
+  starts, a revolver shot for a kill, a fist on the desk for an accusation, a filing drawer for a shift,
+  a rumble when the city closes up, a coat for a disguise, cards dealt when drawing, a stamp when a
+  suspect is cleared, the station clock for a nudge, and a brass sting at the end (resolving when the
+  killer is caught, dark when the killer gets away).
+  - **The board plays them for the room.** Phones play them only while no board is connected (players
+    each at home on a call). They follow only public events, so a sound never tells anyone more than
+    the board shows.
+  - **Nothing old is replayed:** events a screen catches up on when it connects (the server marks them
+    `replay`) stay silent, so a reload doesn't fire a volley of old shots.
 
 ## 9. Layouts
 - **TV / board screen** (`/tv/CODE`, priority):

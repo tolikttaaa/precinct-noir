@@ -493,6 +493,9 @@ class RoomServiceTest {
         assertThat(resumed.sent.first()).isEqualTo(ServerMessage.Welcome(You(Role.PLAYER, 1)))
         assertThat(t.game(resumed)).isEqualTo(t.game(t.player(1)))
         assertThat(t.events(resumed)).isEqualTo(seen.drop(3))
+        // What a client catches up on is marked as such (no sound for it); live events are not.
+        assertThat(resumed.all<ServerMessage.Events>().map { it.replay }).containsOnly(true)
+        assertThat(t.player(1).all<ServerMessage.Events>().map { it.replay }).containsOnly(false)
         assertThat(t.events(t.connect(t.tokens.getValue(1)))).isEqualTo(seen)
         assertThat(t.connect(t.tokens.getValue(1), lastEventSeq = seen.last().seq).all<ServerMessage.Events>()).isEmpty()
     }

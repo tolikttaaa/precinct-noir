@@ -158,7 +158,9 @@ class RoomService(
             }
             connection.send(ServerMessage.Welcome(you))
             broadcastRoom(room)
-            if (room.game != null) pushGame(room, attached, room.events.filter { it.seq > (hello.lastEventSeq ?: 0) })
+            if (room.game != null) {
+                pushGame(room, attached, room.events.filter { it.seq > (hello.lastEventSeq ?: 0) }, replay = true)
+            }
             return true
         }
     }
@@ -434,7 +436,7 @@ class RoomService(
         room.connections.values.toList().forEach { pushGame(room, it, events) }
     }
 
-    private fun pushGame(room: Room, attached: Attached, events: List<StoredEvent>) {
+    private fun pushGame(room: Room, attached: Attached, events: List<StoredEvent>, replay: Boolean = false) {
         val game = room.game!!
         val mode = mode(game.modeId)
         val viewer = viewerOf(room.snap.game!!, attached.principal)
@@ -443,7 +445,7 @@ class RoomService(
         attached.connection.send(ServerMessage.Game(room.snap.round, game.modeId, seat, view.view, view.legal))
         val visible = events.filter { mode.isVisible(game, it.audience, viewer) }
         if (visible.isNotEmpty()) {
-            attached.connection.send(ServerMessage.Events(room.snap.round, visible.map { EventView(it.seq, it.event) }))
+            attached.connection.send(ServerMessage.Events(room.snap.round, visible.map { EventView(it.seq, it.event) }, replay))
         }
     }
 

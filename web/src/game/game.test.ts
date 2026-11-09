@@ -120,6 +120,7 @@ describe('the running duel', () => {
     connection: 'open',
     round: 2,
     events: [{ seq: 1, event: { t: 'turn_started', seat: 0, turn: 1 } }],
+    replayedTo: 0,
     nudges: 0,
     game: game && { t: 'game', round: 2, mode: 'killer_inspector', view: {}, legal: [], ...game },
   })

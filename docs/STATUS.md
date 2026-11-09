@@ -4,7 +4,7 @@
 > built, and what is next, so development can resume from any point (a new session, a new agent,
 > or after a break). Update it in every milestone PR.
 >
-> **Last updated:** 2026-11-09. **`v0.1.0` is released and live:** Shadow Duel (M5–M5c), versioning (V) and the new home screen (H). P3 (the rules as typed pages in a file, and sound) is in review. Next up: Spy Ring (M6).
+> **Last updated:** 2026-11-09. **`v0.1.0` is released and live:** Shadow Duel (M5–M5c), versioning (V) and the new home screen (H). P3 (the rules as typed pages in a file, and sound) and P4 (music and game sounds) are in review. Next up: Spy Ring (M6).
 >
 > **Legend:** ✅ done and merged · 🟡 done on a branch / PR open · ⬜ not started · ⚠️ known issue or follow-up
 
@@ -80,6 +80,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | V | Versioning: the deployed version on screen; releases (tags on GitHub) are the only deploys | ✅ (live, v0.1.0) | #22 |
 | H | Home: host and join folders the same size, and a game-type choice (owner's request) | ✅ (live, v0.1.0) | #23 |
 | P3 | The rules as typed pages in a case file, turned one by one with animation, and sound (owner's request) | 🟡 PR open | #24 |
+| P4 | Noir background music on the board and the home screen, and a sound for each action in the game (owner's request) | 🟡 PR open | #25 |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
@@ -87,7 +88,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M10 | Casino Heist | ⬜ | – |
 | M11 | Hardening & polish, incl. remote-play polish | ⬜ | – |
 
-**Next action:** the owner reviews P3 (screenshots on phones, a tablet, laptops and the TV) and merges it, then publishes `v0.1.1`. Then a real session on the TV, and Spy Ring (M6), which starts with questions to the owner.
+**Next action:** the owner reviews P3 (screenshots on phones, a tablet, laptops and the TV) and P4 (a recorded round with its sound) and merges them, P3 first, then publishes `v0.1.1`. Then a real session on the TV, and Spy Ring (M6), which starts with questions to the owner.
 
 **Order of the next steps** (owner's choice, 2026-11-06; changed 2026-11-07): portraits first after all, because the owner asked for an evidence-wall background with the suspects on it, then the playable board. M5 then makes Shadow Duel playable, with the portraits on its case-file cards. Every later mode ships with its own UI in its milestone. TV + phones get the polish first; remote play on one's own device is polished last (M11).
 
@@ -332,6 +333,20 @@ menu and on the page turns.
   the rules. A speaker switch beside the languages turns sound off on this device, remembered.
 - [x] Built on a side branch while M5 was open, then moved onto `main` after `v0.1.0`.
 
+### P4: music and game sounds 🟡 (PR #25, on top of #24)
+The owner asked for background music with a noir atmosphere, and during the game a shot and other sounds for actions.
+- [x] **Music** (`web/src/sound/music.ts`): an original slow jazz loop in D minor (bass, brushes, ride, piano, a muted
+  trumpet every other time round), synthesised live and written a few seconds ahead on the audio clock, so a busy page
+  never leaves a gap. It plays on the board and the home screen only, under its own switch (a note beside the speaker),
+  at about 15 dB below the game sounds, and ducks under loud ones.
+- [x] **Game sounds** (`game/sounds.ts`, `sound/useEventSounds.ts`): a sound per public Shadow Duel event (stamp, shot,
+  slam, drawer, rumble, coat, cards, clock, a closing sting for each outcome). The board plays them; phones only when no
+  board is connected. One action's sounds follow each other 0.4 s apart.
+- [x] **Protocol:** `events` carries `replay: true` for what a client catches up on when connecting, so screens show it
+  without sound (PROTOCOL §2.1).
+- [x] Checked by recording a round on a TV, a laptop and a phone with the TV's audio captured on the audio clock: no
+  gaps in the music, the game sounds stand clear of it, and each lands with what the board shows.
+
 ### M6–M10: remaining modes ⬜
 Each mode follows the same recipe: engine rules + tests (every pinned ID) → projections → UI panels + tutorial (EN/RU) → E2E → deploy. Follow `CLAUDE.md` → *Engine conventions*.
 
@@ -448,3 +463,4 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
 | 2026-11-09 | The game type is chosen on the home screen when hosting, and the VIP can still change it in the lobby |
 | 2026-11-09 | The home screen's game choice is a top-secret page pulled out of the Host folder (every game, what it's about), not a list or a drop-down |
 | 2026-11-09 | The rules are typed sheets in a case file, turned one by one; sound is synthesised in the browser, on by default, with a switch per device |
+| 2026-11-09 | Music is original and synthesised in the browser; it plays on the board and the home screen only, with its own switch. Game sounds play from the board; phones play them only when no board is connected |

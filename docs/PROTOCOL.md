@@ -50,7 +50,8 @@ The first frame must be a hello, within **5 s**:
 
 The server answers `welcome {you: {role: "host"|"player", playerId?}, protocol: 1}`, then the room, then,
 if a game exists, your `game` view and the case-log `events` after `lastEventSeq` (all of them if you
-leave it out). Reconnecting is the same hello again: there is no separate resume message.
+leave it out), marked `replay: true`: they happened before you connected, so clients show them without
+playing their sounds. Reconnecting is the same hello again: there is no separate resume message.
 
 ### 2.2 Client → server
 Every message after the hello is a command with a `clientSeq` that grows per sender (the TV and each
@@ -82,7 +83,7 @@ of `not_vip`, `not_a_player`, `wrong_status`, `unknown_mode`, `invalid_config`, 
 | `welcome` | who you are |
 | `room` | the room changed, or someone connected or disconnected: code, status, `version`, round, VIP, members (with `connected`), whether the TV is connected, mode, config, timer, seats (member ids by seat), last result, and the walkthrough page the board shows (`guide`, absent when hidden; starting a game or changing mode hides it) |
 | `game` | your projection of the game (`view`, mode-specific: `ShadowDuelView` …) and your `legal` options; `seat` is absent for the TV and spectators |
-| `events` | new case-log events you may see, each with its room-wide `seq` |
+| `events` | new case-log events you may see, each with its room-wide `seq`; `replay` is true for the ones caught up on when connecting |
 | `nudge` | the turn timer ran out for the pending decision; nothing changes |
 | `ack` / `rejected` / `error` | replies to your messages |
 | `closing` | sent just before the server closes the socket, with a reason |

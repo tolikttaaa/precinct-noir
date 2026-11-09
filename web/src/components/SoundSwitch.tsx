@@ -1,5 +1,6 @@
-import { useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
+import { musicOn, setMusicOn, startMusic, subscribeMusic } from '../sound/music'
 import { play, setSoundOn, soundOn, subscribeSound } from '../sound/sound'
 import './sound-switch.css'
 
@@ -29,6 +30,42 @@ export function SoundSwitch() {
         ) : (
           <path className="sound-switch__waves" d="m15.5 9.5 5 5m0-5-5 5" />
         )}
+      </svg>
+    </button>
+  )
+}
+
+/**
+ * Music on or off for this device. It shows on the screens that play music, and keeps the music going
+ * while it's there; switching the music on also switches sound on.
+ */
+export function MusicSwitch() {
+  const { t } = useTranslation()
+  const on = useSyncExternalStore(subscribeMusic, musicOn)
+  const sound = useSyncExternalStore(subscribeSound, soundOn)
+  useEffect(() => startMusic(), [])
+  const playing = on && sound
+  return (
+    <button
+      type="button"
+      className="sound-switch"
+      aria-label={t('music')}
+      title={t('music')}
+      aria-pressed={playing}
+      onClick={() => {
+        if (playing) {
+          setMusicOn(false)
+          return
+        }
+        setMusicOn(true)
+        setSoundOn(true)
+      }}
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path className="sound-switch__waves" d="M9.5 17V6.5l10-2V15" />
+        <circle className="sound-switch__speaker" cx="7" cy="17" r="2.5" />
+        <circle className="sound-switch__speaker" cx="17" cy="15" r="2.5" />
+        {!playing && <path className="sound-switch__waves" d="m4 4 16 16" />}
       </svg>
     </button>
   )

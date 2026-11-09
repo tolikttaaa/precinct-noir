@@ -204,6 +204,7 @@ export interface ServerMessageEvents {
   t: 'events'
   round: number
   events: EventView[]
+  replay: boolean
 }
 
 export interface EventView {

@@ -6,6 +6,7 @@ import { resetConfigForTests } from '../hooks/useConfig'
 import { resetModesForTests } from '../hooks/useModes'
 import { initI18n } from '../i18n'
 import { resetTurnstileForTests } from '../net/turnstile'
+import { resetMusicForTests } from '../sound/music'
 import { FakeWebSocket } from './fakeWebSocket'
 
 initI18n('en')
@@ -26,6 +27,7 @@ afterEach(async () => {
   resetModesForTests()
   resetConfigForTests()
   resetTurnstileForTests()
+  resetMusicForTests()
   delete window.turnstile
   await i18next.changeLanguage('en')
 })

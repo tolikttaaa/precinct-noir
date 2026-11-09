@@ -1,71 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { FakeContext, withAudio } from '../test/fakeAudio'
 import {
+  onLoudSound,
   play,
   resetSoundForTests,
+  sharedAudio,
   setSoundOn,
   soundOn,
   subscribeSound,
   type SoundName,
 } from './sound'
-
-/** Just enough of the Web Audio API to see what each sound builds. */
-class FakeContext {
-  static made = 0
-  static failing = false
-  state: AudioContextState = 'suspended'
-  readonly sampleRate = 100
-  readonly currentTime = 2
-  readonly destination = {}
-  readonly nodes: string[] = []
-  resume = vi.fn(() => Promise.reject(new Error('no gesture yet')))
-
-  constructor() {
-    if (FakeContext.failing) throw new Error('no audio device')
-    FakeContext.made++
-  }
-
-  private node(kind: string) {
-    this.nodes.push(kind)
-    const param = () => ({
-      value: 0,
-      setValueAtTime: vi.fn(),
-      exponentialRampToValueAtTime: vi.fn(),
-    })
-    return {
-      type: '',
-      buffer: null,
-      gain: param(),
-      frequency: param(),
-      Q: param(),
-      connect: vi.fn(),
-      start: vi.fn(),
-      stop: vi.fn(),
-    }
-  }
-
-  createGain = () => this.node('gain')
-  createBiquadFilter = () => this.node('filter')
-  createBufferSource = () => this.node('noise')
-  createOscillator = () => this.node('tone')
-  createBuffer = (_channels: number, length: number) => {
-    const data = new Float32Array(length)
-    return { getChannelData: () => data }
-  }
-}
-
-function withAudio(): FakeContext[] {
-  const made: FakeContext[] = []
-  vi.stubGlobal(
-    'AudioContext',
-    class extends FakeContext {
-      constructor() {
-        super()
-        made.push(this)
-      }
-    },
-  )
-  return made
-}
 
 afterEach(() => {
   resetSoundForTests()
@@ -109,6 +53,52 @@ describe('sound', () => {
     expect(made).toHaveLength(1)
     expect(made[0].nodes).toEqual(['gain', ...nodes]) // the master volume comes first
     expect(made[0].resume).toHaveBeenCalled()
+  })
+
+  it.each<SoundName>([
+    'shot',
+    'slam',
+    'slide',
+    'rumble',
+    'coat',
+    'deal',
+    'clock',
+    'caseClosed',
+    'killerWins',
+  ])('synthesises the game sound %s', (name) => {
+    const made = withAudio()
+    play(name)
+    const sources = made[0].made.filter((node) => node.kind === 'noise' || node.kind === 'tone')
+    expect(sources.length).toBeGreaterThan(0)
+    sources.forEach((source) => expect(source.start).toHaveBeenCalled())
+  })
+
+  it('plays a sound later on the audio clock when asked', () => {
+    const made = withAudio()
+    play('stamp', 1.5)
+    const tone = made[0].made.find((node) => node.kind === 'tone')
+    expect(tone?.start).toHaveBeenCalledWith(3.5) // the clock stands at 2
+  })
+
+  it('tells the music when a loud sound starts, and only then', () => {
+    withAudio()
+    const listener = vi.fn()
+    const stop = onLoudSound(listener)
+    play('key')
+    expect(listener).not.toHaveBeenCalled()
+    play('shot')
+    expect(listener).toHaveBeenCalledTimes(1)
+    stop()
+    play('slam')
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('shares its audio context and master level with the music', () => {
+    expect(sharedAudio()).toBeUndefined() // jsdom has no audio
+    const made = withAudio()
+    const audio = sharedAudio()
+    expect(audio?.context).toBe(made[0])
+    expect(audio?.output).toBe(made[0].made[0]) // the master gain, made first
   })
 
   it('keeps one audio context and one noise buffer for every sound', () => {
