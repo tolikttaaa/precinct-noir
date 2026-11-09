@@ -42,8 +42,9 @@ describe('music', () => {
     vi.advanceTimersByTime(250)
     const firstBar = oscillators(ctx).length
     expect(firstBar).toBeGreaterThan(0)
-    // Many times round the loop at once: bass, piano, and the trumpet's phrases and rests.
-    ctx.currentTime = 600
+    // Every part of the loop at once: four times round (about 116 s) covers the bass, the piano, and
+    // the trumpet's phrase, rest, answer and rest. (Just that: each bar makes many fake nodes.)
+    ctx.currentTime = 120
     vi.advanceTimersByTime(250)
     const waves = new Set(oscillators(ctx).map((osc) => osc.type))
     expect(waves).toEqual(new Set(['sine', 'triangle', 'sawtooth', '']))
