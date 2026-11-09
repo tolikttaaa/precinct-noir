@@ -709,16 +709,17 @@ select:disabled,
 }
 
 .home__title {
-  margin-top: clamp(2rem, 9vh, 7rem);
-  font: 850 var(--step-4) / 0.86 var(--font-display);
+  margin-top: clamp(1rem, 7vh, 6rem);
+  /* As tall as the width allows, but never so tall that the folders drop below the first screen. */
+  font: 850 min(var(--step-4), 11vh) / 0.86 var(--font-display);
   letter-spacing: -0.005em;
   text-shadow: 0 0.04em 0.12em rgb(0 0 0 / 0.6);
 }
 
 .home__tagline {
-  margin-top: 1.25rem;
+  margin-top: min(1.25rem, 2vh);
   max-width: 38ch;
-  font-size: var(--step-1);
+  font-size: clamp(var(--step-0), 2.6vh, var(--step-1));
   line-height: 1.4;
   color: var(--smoke-light);
 }
@@ -741,7 +742,29 @@ select:disabled,
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
   gap: 2rem 2.5rem;
-  margin-top: clamp(2.5rem, 6vh, 4.5rem);
+  margin-top: clamp(1.5rem, 5vh, 4.5rem);
+}
+
+/* Phones: a smaller title and tagline, so the first folder fits on the first screen whole. */
+@media (max-width: 30rem) {
+  .home__title {
+    margin-top: 0.75rem;
+    font-size: min(2.9rem, 13vw);
+  }
+
+  .home__tagline {
+    margin-top: 0.6rem;
+    font-size: var(--step-0);
+    line-height: 1.4;
+  }
+
+  .home__choices {
+    margin-top: 1.5rem;
+  }
+
+  .game-pick__value {
+    font-size: 1.2rem;
+  }
 }
 
 .home__choices > .folder {
@@ -767,42 +790,30 @@ select:disabled,
   }
 }
 
-/* The host's choice of game: a field inked on the folder's sheet. */
+/* The host's choice of game: a field inked on the folder's sheet that pulls out the secret page. */
 .game-pick {
   margin-bottom: 1.75rem;
 }
 
 .game-pick__field {
-  position: relative;
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.75rem;
+  gap: 0.2rem 0.75rem;
   width: min(100%, 28rem);
   min-height: 52px;
-  padding: 0.75rem 2.9rem 0.6rem 0.9rem;
+  padding: 0.7rem 0.9rem 0.6rem;
   border: 2px solid var(--ribbon);
   border-radius: var(--radius);
   background: rgb(255 250 235 / 0.55);
   color: var(--ribbon);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
-  user-select: none;
 }
 
-/* An inked chevron that turns over when the card is out. */
-.game-pick__field::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 1.1rem;
-  width: 0.55rem;
-  height: 0.55rem;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: translateY(-70%) rotate(45deg);
-}
-
-.game-pick__field[aria-expanded='true']::after {
-  transform: translateY(-20%) rotate(225deg);
+.game-pick__field:hover:not(:disabled) {
+  background: rgb(255 250 235 / 0.8);
 }
 
 .game-pick__field:focus-visible {
@@ -810,7 +821,7 @@ select:disabled,
   outline-offset: 2px;
 }
 
-.game-pick__field[aria-disabled='true'] {
+.game-pick__field:disabled {
   cursor: default;
   opacity: 0.7;
 }
@@ -820,9 +831,17 @@ select:disabled,
 }
 
 .game-pick__players {
-  margin-left: auto;
   color: var(--ribbon-faint);
   font: 400 var(--step--1) / 1.3 var(--font-typed);
+  white-space: nowrap;
+}
+
+/* What the field does: a typed note at its end. */
+.game-pick__browse {
+  margin-left: auto;
+  font: 400 var(--step--1) / 1.3 var(--font-typed);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
   white-space: nowrap;
 }
 
@@ -830,115 +849,239 @@ select:disabled,
   max-width: 46ch;
 }
 
-/* The open list: an index card from the case files, with a red rule at the top and blue ones below. */
-.game-menu {
+/* The secret page: pulled out of the folder over a darkened screen. */
+.secret {
   position: fixed;
+  inset: 0;
   z-index: 50;
-  container-type: inline-size;
+  display: grid;
+  justify-items: center;
+  align-items: start;
   overflow-y: auto;
-  margin: 0;
-  padding: 0.7rem 0 0.5rem;
-  list-style: none;
-  background: var(--fibre), #f3eddc;
+  overscroll-behavior: contain;
+  padding: max(1.75rem, env(safe-area-inset-top)) max(var(--gutter), env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(var(--gutter), env(safe-area-inset-left));
+  background: rgb(6 8 12 / 0.78);
+  backdrop-filter: blur(3px);
+}
+
+/* A typed sheet of case paper with a paperclip and a red stamp. */
+.secret__page {
+  position: relative;
+  width: min(100%, 44rem);
+  margin-block: auto;
+  padding: clamp(1.5rem, 4vw, 2.75rem) clamp(1.1rem, 4vw, 2.75rem) clamp(1.25rem, 3vw, 2rem);
+  background: var(--fibre), linear-gradient(180deg, #f6f1e2, #ece4cd);
   border-radius: 2px;
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.6),
-    0 22px 44px -8px rgb(0 0 0 / 0.7),
-    0 3px 8px rgb(0 0 0 / 0.35);
+    0 30px 60px -12px rgb(0 0 0 / 0.75),
+    0 4px 12px rgb(0 0 0 / 0.4);
   color: var(--ribbon);
 }
 
-.game-menu__option {
-  display: grid;
-  grid-template-columns: 1.1rem minmax(0, 1fr) auto;
-  align-items: center;
-  column-gap: 0.75rem;
-  min-height: 48px;
-  padding: 0.35rem 1rem 0.35rem 0.85rem;
-  border-bottom: 1px solid rgb(64 108 160 / 0.32);
-  cursor: pointer;
+.secret__page:focus {
+  outline: none;
 }
 
-.game-menu__option:first-child {
-  border-top: 2px solid rgb(176 38 44 / 0.6);
-}
-
-.game-menu__option[data-active] {
-  background: rgb(42 36 28 / 0.09);
-}
-
-.game-menu__option[aria-disabled='true'] {
-  cursor: default;
-}
-
-/* A red-pencil tick by the chosen game. */
-.game-menu__option[aria-selected='true'] .game-menu__tick::before {
+.secret__page::before {
   content: '';
-  display: block;
-  width: 0.42rem;
-  height: 0.85rem;
-  margin: -0.2rem 0 0 0.3rem;
-  border-right: 2.5px solid var(--stamp-red);
-  border-bottom: 2.5px solid var(--stamp-red);
-  transform: rotate(40deg);
+  position: absolute;
+  top: -1.4rem;
+  left: 2.2rem;
+  width: 0.95rem;
+  height: 3rem;
+  background: var(--paperclip) center / contain no-repeat;
+  filter: drop-shadow(1px 2px 1px rgb(0 0 0 / 0.35));
 }
 
-.game-menu__name {
+.secret__head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem 0.7rem;
-  font: 750 var(--step-1) / 1.1 var(--font-display);
+  gap: 0.75rem 1.25rem;
 }
 
-.game-menu__option[aria-disabled='true'] .game-menu__name {
-  color: var(--ribbon-faint);
-  font-weight: 600;
+.secret__title {
+  font: 800 var(--step-3) / 0.95 var(--font-display);
+  text-wrap: balance;
 }
 
-.game-menu__stamp {
+.secret__stamp {
   color: var(--stamp-red);
-  font-size: 0.78rem;
+  font-size: clamp(0.85rem, 0.7rem + 0.6vw, 1.15rem);
+  text-transform: uppercase;
+  transform: rotate(-7deg);
+}
+
+.secret__cases {
+  display: grid;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One game per entry: name and player count, what it's about, and the way to choose it. */
+.secret__case {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name action'
+    'players action'
+    'summary summary';
+  align-items: center;
+  /* Beside a taller neighbour, keep to the top instead of spreading out. */
+  align-content: start;
+  gap: 0.2rem 1.25rem;
+  padding-block: 1rem;
+  border-top: 1px dashed rgb(42 36 28 / 0.35);
+}
+
+.secret__case:last-child {
+  border-bottom: 1px dashed rgb(42 36 28 / 0.35);
+}
+
+.secret__name {
+  grid-area: name;
+  font: 800 var(--step-2) / 1 var(--font-display);
+}
+
+.secret__players {
+  grid-area: players;
+  color: var(--ribbon-faint);
+  font: 400 var(--step--1) / 1.3 var(--font-typed);
+}
+
+.secret__summary {
+  grid-area: summary;
+  max-width: 60ch;
+  margin-top: 0.35rem;
+  line-height: 1.45;
+}
+
+.secret__action {
+  grid-area: action;
+  justify-self: end;
+}
+
+.secret__action .button {
+  min-width: 7rem;
+}
+
+.secret__later {
+  color: var(--stamp-red);
+  font-size: 0.85rem;
   text-transform: uppercase;
 }
 
-.game-menu__players {
-  color: var(--ribbon-faint);
-  font: 400 var(--step--1) / 1.3 var(--font-typed);
-  text-align: right;
+/* The chosen game: a red-pencil tick. */
+.secret__chosen {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--stamp-red);
+  font: 400 var(--step--1) / 1 var(--font-typed);
 }
 
-/* A narrow card (phones): the player count goes under the game's name. */
-@container (max-width: 22rem) {
-  .game-menu__option {
-    grid-template-columns: 1.1rem minmax(0, 1fr);
-    row-gap: 0.15rem;
-    padding-block: 0.5rem;
+.secret__chosen::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.9rem;
+  margin-top: -0.3rem;
+  border-right: 2.5px solid currentColor;
+  border-bottom: 2.5px solid currentColor;
+  transform: rotate(40deg);
+}
+
+.secret__case[data-chosen] {
+  background: linear-gradient(90deg, rgb(176 38 44 / 0.07), transparent 70%);
+}
+
+.secret__case[data-later] :is(.secret__name, .secret__summary) {
+  color: var(--ribbon-faint);
+}
+
+.secret__close {
+  min-height: 48px;
+  margin-left: auto;
+  padding: 0 1.25rem;
+  border: 2px solid var(--ribbon);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ribbon);
+  font: 650 var(--step-0) / 1 var(--font-ui);
+  cursor: pointer;
+}
+
+.secret__close:focus-visible,
+.secret__action .button:focus-visible {
+  outline: 3px solid var(--ribbon);
+  outline-offset: 2px;
+}
+
+/* The second Close, at the end of the list. */
+.secret__close--end {
+  display: block;
+  margin-top: 1.25rem;
+}
+
+/* Wide screens: two columns of games, so the whole page fits without scrolling. */
+@media (min-width: 60rem) {
+  .secret__page {
+    width: min(100%, 74rem);
   }
 
-  .game-menu__tick {
-    grid-row: span 2;
+  .secret__cases {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2.5rem;
+    border-bottom: 1px dashed rgb(42 36 28 / 0.35);
   }
 
-  .game-menu__players {
-    text-align: left;
+  .secret__case:last-child {
+    border-bottom: 0;
+  }
+
+  .secret__close--end {
+    display: none;
+  }
+}
+
+/* Narrow pages: the way to choose goes under what the game is about. */
+@media (max-width: 34rem) {
+  .secret__case {
+    grid-template-areas:
+      'name name'
+      'players players'
+      'summary summary'
+      'action action';
+  }
+
+  .secret__action {
+    justify-self: start;
+    margin-top: 0.6rem;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .game-menu {
-    animation: card-out 140ms ease-out;
+  .secret {
+    animation: secret-dim 160ms ease-out;
   }
 
-  .game-pick__field::after {
-    transition: transform 150ms;
+  /* Pulled up out of the folder. */
+  .secret__page {
+    animation: secret-out 240ms cubic-bezier(0.2, 0.8, 0.3, 1);
   }
 }
 
-@keyframes card-out {
+@keyframes secret-dim {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+  }
+}
+
+@keyframes secret-out {
+  from {
+    opacity: 0;
+    transform: translateY(3rem) rotate(-1deg);
   }
 }
 

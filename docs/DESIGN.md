@@ -70,18 +70,22 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
 - **Home page:** the Host and Join folders sit side by side at the same size, with their buttons lined up
   along the bottom; stacked on a phone, each is as tall as what it holds. The page never scrolls sideways
   (the title's shadow pool is clipped).
-  - **Game picker** (`.game-pick`, in the Host folder): our own drop-down, not the browser's. Closed, it is a
-    field inked on the sheet (the game's name, its player count, a chevron), with what the game is under it.
-    Open, it drops an index card from the case files (`.game-menu`): a red rule at the top, blue rules between
-    rows, a red-pencil tick by the chosen game, and the player count, which drops under the name on a narrow
-    card. Games the server doesn't offer yet are in faint ink with a red "Coming later" rubber stamp, and
-    can't be picked.
-    - It works like a select: the ARIA select-only combobox, with arrows, Home, End, Enter, Space, Escape
-      and Tab, and the focus stays on the field.
-    - The card floats above the page (a portal), because the folder's front panel is masked for its thumb
-      cut and would clip it. It opens under the field when it fits whole, else over it, else on the roomier
-      side and scrolls; it follows the page on scroll and resize, and closes on a press elsewhere.
-    - Until the server has listed its games, the field can't be opened and the room opens in the default game.
+  - **The folders show whole on the first screen.** The title and tagline size to the screen's height as
+    well as its width (`min(step-4, 11vh)`), and phones get a smaller title, tagline and game name. Side by
+    side, both folders fit on every screen from an iPad sideways up; on a phone, the Host folder does, and
+    Join is a short scroll away. Only a phone on its side is too short for a folder.
+  - **Game picker** (`.game-pick`, in the Host folder): a field inked on the sheet with the game, its player
+    count and an "All games" note, and what the game is about under it. It pulls a **top-secret page** out
+    of the folder (`.secret`, a modal dialog): a typed sheet with a paperclip and a red "Top secret"
+    stamp, one entry per game with its name, player count and what it's about.
+    - The chosen game has a red-pencil tick; the others have a Choose button; the games still being built
+      are in faint ink with a red "Coming later" stamp.
+    - Wide screens (60 rem and up) get two columns of games, so the page fits without scrolling; narrow
+      ones get one column and a second Close at the end.
+    - It opens at its top with the focus on the page, keeps the focus inside, and goes back into the folder
+      with Close, Escape or a press beside it; the focus returns to the field. It slides up out of the
+      folder unless motion is reduced.
+    - Until the server has listed its games, the field can't be pressed and the room opens in the default game.
 - **Folders** (`.folder`) look like real manila folders:
   - the taller back panel carries the tab, with a typed label stuck on it;
   - two typed sheets peek out;

@@ -40,12 +40,11 @@ describe('Home', () => {
       'POST /api/rooms': () => json(201, { code: 'BKTR', hostToken: 'host-token' }),
     })
     render(<Home />)
-    const game = screen.getByRole('combobox', { name: 'Game' })
-    await waitFor(() => expect(game).not.toHaveAttribute('aria-disabled'))
-    expect(game).toHaveTextContent('Shadow Duel')
+    const game = screen.getByRole('button', { name: 'Game Shadow Duel' })
+    await waitFor(() => expect(game).toBeEnabled())
     fireEvent.click(screen.getByRole('button', { name: 'Open a room' }))
     expect(screen.getByRole('button', { name: 'Opening a room…' })).toBeDisabled()
-    expect(game).toHaveAttribute('aria-disabled', 'true')
+    expect(game).toBeDisabled()
     await waitFor(() => expect(window.location.pathname).toBe('/tv/BKTR'))
     // One look at the settings serves both the version line and the bot check.
     const urls = fetchMock.mock.calls.map(([url]) => String(url))
@@ -81,23 +80,15 @@ describe('Home', () => {
     expect(screen.getByRole('button', { name: 'Open a room' })).toBeEnabled()
   })
 
-  it('lists every game, with the ones still being built marked and out of reach', async () => {
+  it('lists every game on the secret page, with the ones still being built stamped', async () => {
     stubFetch({ 'GET /api/modes': () => json(200, [shadowDuel]) })
     render(<Home />)
-    const game = screen.getByRole('combobox', { name: 'Game' })
-    await waitFor(() => expect(game).not.toHaveAttribute('aria-disabled'))
+    const game = screen.getByRole('button', { name: 'Game Shadow Duel' })
+    await waitFor(() => expect(game).toBeEnabled())
     fireEvent.click(game)
-    for (const name of [
-      'Spy Ring, Coming later, 3–6, 8 or 9 players',
-      'The Hit List, Coming later, 2 players',
-      'Cat Burglar, Coming later, 2 players',
-      'Feds vs. Mob, Coming later, 6 or 8 players',
-      'Casino Heist, Coming later, 5–7 players',
-    ])
-      expect(screen.getByRole('option', { name })).toHaveAttribute('aria-disabled', 'true')
-    expect(screen.getByRole('option', { name: 'Shadow Duel, 2 players' })).not.toHaveAttribute(
-      'aria-disabled',
-    )
+    expect(screen.getByRole('dialog', { name: 'Choose a game' })).toBeInTheDocument()
+    expect(screen.getAllByText('Coming later')).toHaveLength(5)
+    expect(screen.queryByRole('button', { name: /^Choose / })).toBeNull()
   })
 
   it('opens the room in the game the host picked', async () => {
@@ -108,11 +99,11 @@ describe('Home', () => {
       'POST /api/rooms': () => json(201, { code: 'BKTR', hostToken: 'host-token' }),
     })
     render(<Home />)
-    const game = screen.getByRole('combobox', { name: 'Game' })
-    await waitFor(() => expect(game).not.toHaveAttribute('aria-disabled'))
+    const game = screen.getByRole('button', { name: 'Game Shadow Duel' })
+    await waitFor(() => expect(game).toBeEnabled())
     fireEvent.click(game)
-    fireEvent.click(screen.getByRole('option', { name: 'Spy Ring, 3–6, 8 or 9 players' }))
-    expect(game).toHaveTextContent('Spy Ring')
+    fireEvent.click(screen.getByRole('button', { name: 'Choose Spy Ring' }))
+    expect(game).toHaveAccessibleName('Game Spy Ring')
     fireEvent.click(screen.getByRole('button', { name: 'Open a room' }))
     await waitFor(() => expect(window.location.pathname).toBe('/tv/BKTR'))
     const create = fetchMock.mock.calls.find(([url]) => String(url) === '/api/rooms')!
@@ -129,7 +120,7 @@ describe('Home', () => {
     render(<Home />)
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/modes', undefined))
     // Nothing to pick yet: the server hasn't said which games it has.
-    expect(screen.getByRole('combobox', { name: 'Game' })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('button', { name: 'Game Shadow Duel' })).toBeDisabled()
     fireEvent.click(screen.getByRole('button', { name: 'Open a room' }))
     await waitFor(() => expect(window.location.pathname).toBe('/tv/BKTR'))
     const create = fetchMock.mock.calls.find(([url]) => String(url) === '/api/rooms')!

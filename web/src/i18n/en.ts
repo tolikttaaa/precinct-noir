@@ -14,6 +14,15 @@ const en = {
       action: 'Open a room',
       working: 'Opening a room…',
     },
+    cases: {
+      browse: 'All games',
+      title: 'Choose a game',
+      secret: 'Top secret',
+      choose: 'Choose',
+      chooseNamed: 'Choose {{name}}',
+      chosen: 'Chosen',
+      close: 'Close',
+    },
     join: {
       title: 'Join a game',
       body: 'Type the code the board shows, or point your phone’s camera at the QR code next to it.',
@@ -93,11 +102,36 @@ const en = {
         },
       },
     },
-    spy_games: { name: 'Spy Ring', players: '3–6, 8 or 9 players' },
-    hitman_sleuth: { name: 'The Hit List', players: '2 players' },
-    master_thief: { name: 'Cat Burglar', players: '2 players' },
-    fbi_mafia: { name: 'Feds vs. Mob', players: '6 or 8 players' },
-    heist: { name: 'Casino Heist', players: '5–7 players' },
+    spy_games: {
+      name: 'Spy Ring',
+      players: '3–6, 8 or 9 players',
+      summary:
+        'Three to nine players, each a spy hiding among the suspects. Catch the other spies to win trophies, and keep your own cover. From six players on, spies work in teams.',
+    },
+    hitman_sleuth: {
+      name: 'The Hit List',
+      players: '2 players',
+      summary:
+        'Two players. A hitman works down a secret list of targets; a sleuth has to unmask them before the list runs out.',
+    },
+    master_thief: {
+      name: 'Cat Burglar',
+      players: '2 players',
+      summary:
+        'Two players. A cat burglar steals from all over the city; the police chief and their officers try to catch them in the act.',
+    },
+    fbi_mafia: {
+      name: 'Feds vs. Mob',
+      players: '6 or 8 players',
+      summary:
+        "Six or eight players in two teams. The mob's killer, bomber and maniac pile up victims while the feds make arrests.",
+    },
+    heist: {
+      name: 'Casino Heist',
+      players: '5–7 players',
+      summary:
+        'Five to seven players. A crew of thieves, each with a special skill, cracks four vaults while the security chief and the officers close in.',
+    },
   },
   game: {
     inProgress: '{{mode}} is on',

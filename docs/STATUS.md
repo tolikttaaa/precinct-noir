@@ -354,8 +354,10 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
 - [x] **Choose the game type when hosting:** the Host folder lists all six games with their player counts (EN/RU names:
   Spy Ring / Шпионская сеть, The Hit List / Список целей, Cat Burglar / Домушник, Feds vs. Mob / Федералы против
   синдиката, Casino Heist / Налёт на казино).
-  - A drop-down in the game's style (owner, 2026-11-09: "not a native drop down"): an index card drops from an inked
-    field, keyboard- and screen-reader-friendly like a select. Reviewed on 11 devices before merging.
+  - The owner's idea (2026-11-09), after a list and a drop-down: the field pulls a **top-secret page** out of the
+    folder with every game and what it's about (summaries for all six, EN/RU). Reviewed on 11 devices before merging.
+  - The title and tagline shrink on small or short screens, so the folders show whole on the first screen (side by
+    side everywhere from an iPad sideways up; the Host folder on phones).
   - A game is selectable when the server offers it (`GET /api/modes`); the others are stamped "Coming later". So each
     mode becomes selectable by itself as it ships (M6–M10).
   - `POST /api/rooms` takes `mode`, checked against the `ModeRegistry` before the bot check (`422 unknown_mode`).
@@ -424,4 +426,4 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
 | 2026-11-09 | Versions `vMAJOR.MINOR.PATCH`: `v0.1.0` = Shadow Duel; a minor bump per mode, a patch for fixes; `v1.0.0` after M11 |
 | 2026-11-09 | The owner cuts releases by hand (a GitHub Release); only releases deploy, merges to `main` don't |
 | 2026-11-09 | The game type is chosen on the home screen when hosting, and the VIP can still change it in the lobby |
-| 2026-11-09 | The home screen's game choice is our own styled drop-down (an index card), not a list and not the browser's select |
+| 2026-11-09 | The home screen's game choice is a top-secret page pulled out of the Host folder (every game, what it's about), not a list or a drop-down |

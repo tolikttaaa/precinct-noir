@@ -80,25 +80,29 @@ export class Session {
     return session
   }
 
-  /** The TV picks Shadow Duel (the other games are still to come) and opens a room; returns its code. */
+  /**
+   * The TV looks through the secret page of games, sees the others stamped "Coming later", keeps Shadow
+   * Duel and opens a room; returns its code.
+   */
   async openRoom(): Promise<string> {
     const t = TEXTS.en
+    const duel = t.modes.killer_inspector.name
     await this.tv.goto('/')
-    const game = this.tv.getByRole('combobox', { name: t.home.host.game })
-    await expect(game).not.toHaveAttribute('aria-disabled')
+    const game = this.tv.getByRole('button', { name: `${t.home.host.game} ${duel}` })
+    await expect(game).toBeEnabled()
     await game.click()
-    const later = this.tv.getByRole('option', {
-      name: new RegExp(`^${t.modes.spy_games.name}, ${t.home.host.later}`),
-    })
-    await expect(later).toHaveAttribute('aria-disabled', 'true')
-    await this.tv.waitForTimeout(PACE)
-    await this.tv
-      .getByRole('option', {
-        name: `${t.modes.killer_inspector.name}, ${t.modes.killer_inspector.players}`,
-      })
-      .click()
-    await expect(this.tv.getByRole('listbox')).toBeHidden()
-    await expect(game).toContainText(t.modes.killer_inspector.name)
+    const secret = this.tv.getByRole('dialog', { name: t.home.cases.title })
+    await expect(secret).toBeVisible()
+    const spies = secret.getByRole('listitem').filter({ hasText: t.modes.spy_games.name })
+    await expect(spies.getByText(t.home.host.later)).toBeVisible()
+    await expect(spies.getByRole('button')).toHaveCount(0)
+    await expect(
+      secret.getByRole('listitem').filter({ hasText: duel }).getByText(t.home.cases.chosen),
+    ).toBeVisible()
+    await this.tv.waitForTimeout(PACE * 2)
+    await secret.getByRole('button', { name: t.home.cases.close }).first().click()
+    await expect(secret).toBeHidden()
+    await expect(game).toBeFocused()
     await this.tv.waitForTimeout(PACE)
     await this.tv.getByRole('button', { name: t.home.host.action }).click()
     await this.tv.waitForURL(/\/tv\/[A-Z]{4}$/)
