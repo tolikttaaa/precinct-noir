@@ -228,6 +228,8 @@ file.
   file whose tab names the game.
   - Turning a page lifts the top sheet up over the fastener; going back brings the last one down again.
     The sheets still to read show their edges under the top one, so the stack thins as you go.
+  - **Every sheet is the same size,** as tall as the longest page (invisible copies of all the pages sit
+    under the top one and hold the room), so the file keeps still while the pages turn, on the TV too.
   - Turn by swiping the sheet sideways, with the arrow or Page keys, or with Back and Next. A hint under
     the file says so.
   - On a phone, Back, Next, "Show on the board" and Close sit in the bar at the bottom of the screen,

@@ -119,6 +119,12 @@
   backface-visibility: hidden;
 }
 
+/* The invisible copies of every page that make the stack as tall as the longest one. */
+.paper--sizer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* The corner every thumb has worried. */
 .paper::after {
   content: '';

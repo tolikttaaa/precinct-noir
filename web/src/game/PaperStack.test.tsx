@@ -17,7 +17,8 @@ const motion = (allowed: boolean) =>
   vi.stubGlobal('matchMedia', (query: string) => ({
     matches: allowed && query.includes('no-preference'),
   }))
-const copies = () => document.querySelectorAll('.paper[aria-hidden="true"]')
+/** The copies drawn for a turn (not the sizers, which are always there). */
+const copies = () => document.querySelectorAll('.paper[aria-hidden="true"]:not(.paper--sizer)')
 
 beforeEach(() => vi.mocked(play).mockClear())
 afterEach(() => vi.useRealTimers())
@@ -32,6 +33,19 @@ describe('PaperStack', () => {
     expect(document.querySelectorAll('.paper-stack__edge')).toHaveLength(1)
     rerender(stack(8))
     expect(document.querySelectorAll('.paper-stack__edge')).toHaveLength(0)
+  })
+
+  it('makes every sheet as tall as the longest page, without saying anything twice', () => {
+    render(stack(3))
+    const sizers = document.querySelectorAll('.paper--sizer')
+    expect(sizers).toHaveLength(pages.length)
+    for (const sizer of sizers) {
+      expect(sizer).toHaveAttribute('aria-hidden', 'true')
+      expect(sizer.querySelector('.paper__number')).toHaveTextContent(/^\s*$/)
+    }
+    // Screen readers find one sheet and one page number.
+    expect(screen.getAllByRole('article')).toHaveLength(1)
+    expect(screen.getByText('4 of 9')).toBeInTheDocument()
   })
 
   it('lifts the top sheet away when turning forward, then tidies up', () => {

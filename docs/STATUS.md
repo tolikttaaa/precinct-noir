@@ -318,7 +318,8 @@ the suspects on it, and folders that look real. Design notes: [DESIGN.md](DESIGN
 The owner asked: rules that look like separate papers in a file, turned one by one, animated, with sounds in the main
 menu and on the page turns.
 - [x] **Typed sheets in a case file** (`game/PaperStack.tsx`, `game/paper.css`): a steel fastener at the top; a turned
-  page lifts over it, going back brings it down; the sheets still to read show their edges. Swipe, the arrow keys or
+  page lifts over it, going back brings it down; the sheets still to read show their edges. Every sheet is as tall
+  as the longest page, so the file doesn't change size from page to page (the owner noticed it on the TV). Swipe, the arrow keys or
   Back/Next turn the pages; reduced motion just changes the page. The TV shows a wide sheet that follows the VIP.
 - [x] **The buttons stay at the thumb:** on a phone, Back, Next, "Show on the board" and Close sit in the bar at the
   bottom of the screen, in place of the lobby's or the game's bar (page 1's picture pushed them below the fold).

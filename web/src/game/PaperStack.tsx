@@ -55,18 +55,21 @@ interface PaperProps {
   readonly className: string
   /** A copy drawn only for the turning animation; screen readers skip it. */
   readonly copy?: boolean
+  /** An invisible copy that only takes up room, so every sheet is as tall as the longest page. */
+  readonly sizer?: boolean
 }
 
 /** One typed sheet of the rules. */
-function Paper({ mode, spec, n, total, className, copy }: PaperProps) {
+function Paper({ mode, spec, n, total, className, copy, sizer }: PaperProps) {
   const { t } = useTranslation()
   return (
     <article
       className={className}
-      aria-hidden={copy || undefined}
+      aria-hidden={copy || sizer || undefined}
       data-pictured={spec.diagram ? true : undefined}
     >
-      <p className="paper__number">{t('guide.page', { n, total })}</p>
+      {/* A sizer keeps the number's line but not its words, so no page number shows up twice. */}
+      <p className="paper__number">{sizer ? '\u00a0' : t('guide.page', { n, total })}</p>
       <h2 className="paper__title">{guideText(t, mode, spec.id, 'title')}</h2>
       {spec.diagram && <Diagram rows={spec.diagram} />}
       <p className="paper__body">{guideText(t, mode, spec.id, 'body')}</p>
@@ -175,6 +178,18 @@ export function PaperStack({ mode, pages, page, onTurn, describedBy }: Props) {
         swipe.current = undefined
       }}
     >
+      {/* Real sheets are all one size: the file keeps still while the pages turn. */}
+      {pages.map((spec, n) => (
+        <Paper
+          key={`size-${n}`}
+          mode={mode}
+          spec={spec}
+          n={n + 1}
+          total={total}
+          className="paper paper--sizer"
+          sizer
+        />
+      ))}
       {Array.from({ length: edges }, (_, i) => (
         <span key={`edge-${i}`} className="paper-stack__edge" data-depth={edges - i} />
       ))}
