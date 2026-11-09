@@ -48,6 +48,7 @@ describe('RoomSocket', () => {
     })
     ws.receive({
       t: 'events',
+      replay: false,
       round: 1,
       events: [
         { seq: 5, event: 'a' },
@@ -56,6 +57,7 @@ describe('RoomSocket', () => {
     })
     ws.receive({
       t: 'events',
+      replay: false,
       round: 1,
       events: [
         { seq: 6, event: 'b' },
@@ -69,12 +71,19 @@ describe('RoomSocket', () => {
     expect(state.room?.code).toBe('BKTR')
     expect(state.game?.view).toEqual({ a: 2 })
     expect(state.events.map((e) => e.seq)).toEqual([5, 6, 7])
+    expect(state.replayedTo).toBe(0)
 
     // A new round replaces the log, whichever message announces it first.
-    ws.receive({ t: 'events', round: 2, events: [{ seq: 9, event: 'd' }] })
+    ws.receive({ t: 'events', replay: false, round: 2, events: [{ seq: 9, event: 'd' }] })
     expect(socket.getState()).toMatchObject({ round: 2, events: [{ seq: 9, event: 'd' }] })
     ws.receive({ t: 'game', round: 3, mode: 'killer_inspector', view: {}, legal: [] })
     expect(socket.getState()).toMatchObject({ round: 3, events: [] })
+
+    // Events caught up on when connecting are marked, so screens show them without sound.
+    ws.receive({ t: 'events', round: 3, events: [{ seq: 11, event: 'e' }], replay: true })
+    expect(socket.getState()).toMatchObject({ replayedTo: 11 })
+    ws.receive({ t: 'events', round: 3, events: [{ seq: 12, event: 'f' }], replay: false })
+    expect(socket.getState()).toMatchObject({ replayedTo: 11 })
 
     ws.receive({ t: 'nudge', event: {} })
     ws.receive({ t: 'error', code: 'server_error' })
@@ -109,7 +118,7 @@ describe('RoomSocket', () => {
     ws.receive({ t: 'ack', clientSeq: 5 })
     ws.receive({ t: 'rejected', clientSeq: 6, reason: 'not_vip' })
     expect(socket.getState().refusal).toEqual({ reason: 'not_vip', id: 1 })
-    ws.receive({ t: 'events', round: 1, events: [{ seq: 3, event: 'x' }] })
+    ws.receive({ t: 'events', replay: false, round: 1, events: [{ seq: 3, event: 'x' }] })
     socket.send({ t: 'leave' })
 
     ws.drop(1012)

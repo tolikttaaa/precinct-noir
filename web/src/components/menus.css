@@ -1,0 +1,250 @@
+/* ---------- The masthead's menus: the language and the sound ----------
+   Each is a control in the masthead that drops a slip of paper (the same paper as the rules sheets),
+   pinned to the right edge of its control so it never runs off a narrow screen. */
+
+.menu {
+  position: relative;
+  display: flex;
+}
+
+/* The language menu pushes the masthead's controls to the right. */
+.menu--language {
+  margin-left: auto;
+}
+
+.menu__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0.35rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--fog);
+  font: 600 var(--step--1) / 1 var(--font-ui);
+  cursor: pointer;
+}
+
+.menu__button[aria-expanded='true'] {
+  border-bottom-color: var(--brass);
+}
+
+.menu__button:focus-visible,
+.menu-card button:focus-visible,
+.volume__slider:focus-visible {
+  outline: 3px solid var(--brass-light);
+  outline-offset: 2px;
+}
+
+.menu svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.menu__button > svg:not(.menu__caret) {
+  width: 22px;
+  height: 22px;
+}
+
+.menu__caret {
+  width: 10px;
+  height: 10px;
+  stroke-width: 1.8;
+  transition: rotate 120ms ease-out;
+}
+
+.menu__button[aria-expanded='true'] .menu__caret {
+  rotate: 180deg;
+}
+
+.menu .menu__solid {
+  fill: currentColor;
+}
+
+/* The slip. */
+.menu-card {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  margin: 0;
+  padding: 0.4rem;
+  border-radius: 1px;
+  background: linear-gradient(172deg, #f6f3ea, #ece6d6);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.3),
+    0 16px 32px -10px rgb(0 0 0 / 0.75);
+  color: var(--ribbon);
+  list-style: none;
+}
+
+/* ---------- Languages ---------- */
+
+.menu-card--list {
+  min-width: 11rem;
+}
+
+.menu-card--list button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 0.8rem 0 0.6rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: 500 var(--step-0) / 1 var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-card--list button:hover {
+  background: rgb(42 36 28 / 0.07);
+}
+
+.menu-card--list svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  stroke-width: 2;
+  visibility: hidden;
+}
+
+.menu-card--list [aria-checked='true'] {
+  font-weight: 700;
+}
+
+.menu-card--list [aria-checked='true'] svg {
+  visibility: visible;
+  color: var(--stamp-red);
+}
+
+/* ---------- Sound ---------- */
+
+.menu-card--sound {
+  display: grid;
+  gap: 0.35rem;
+  width: min(19rem, calc(100vw - 2 * var(--gutter)));
+  padding: 0.6rem 0.8rem 0.7rem 0.5rem;
+}
+
+/* One channel: the mute, then its name and level over the slider. */
+.volume {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  grid-template-areas:
+    'mute name value'
+    'mute slider slider';
+  align-items: center;
+  column-gap: 0.4rem;
+}
+
+.volume__mute {
+  grid-area: mute;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ribbon);
+  cursor: pointer;
+}
+
+.volume__mute svg {
+  width: 24px;
+  height: 24px;
+}
+
+.volume__slash {
+  stroke: var(--stamp-red);
+  stroke-width: 2.2;
+}
+
+.volume__name {
+  grid-area: name;
+  font: 400 var(--step--1) / 1.2 var(--font-typed);
+  letter-spacing: 0.04em;
+}
+
+.volume__value {
+  grid-area: value;
+  font: 400 var(--step--1) / 1.2 var(--font-typed);
+  font-variant-numeric: tabular-nums;
+}
+
+.volume[data-off] .volume__name,
+.volume[data-off] .volume__value {
+  color: var(--ribbon-faint);
+}
+
+/* The slider: an inked groove filled up to the level, and a brass knob. */
+.volume__slider {
+  grid-area: slider;
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  background: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.volume__slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--ribbon) var(--fill),
+    rgb(42 36 28 / 0.18) var(--fill)
+  );
+}
+
+.volume__slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--ribbon) var(--fill),
+    rgb(42 36 28 / 0.18) var(--fill)
+  );
+}
+
+.volume__slider::-webkit-slider-thumb {
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  border: 2px solid var(--ribbon);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--brass-light), var(--brass) 70%);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+  -webkit-appearance: none;
+}
+
+.volume__slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--ribbon);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--brass-light), var(--brass) 70%);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+/* Muted, the slider keeps the level it will come back to, faded. */
+.volume[data-off] .volume__slider {
+  opacity: 0.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu__caret {
+    transition: none;
+  }
+}

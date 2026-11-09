@@ -10,11 +10,13 @@ import { GuideBoard } from '../game/Guide'
 import { hasGuide } from '../game/guides'
 import { DuelTv } from '../game/shadowDuel/DuelTv'
 import { duelOf } from '../game/shadowDuel/moves'
+import { cuesFor } from '../game/sounds'
 import { useModes } from '../hooks/useModes'
 import { useRoom } from '../hooks/useRoom'
 import { modeName, modeSummary } from '../i18n/text'
 import { forgetCredentials, loadCredentials, type Credentials } from '../net/credentials'
 import { navigate } from '../routing'
+import { useEventSounds } from '../sound/useEventSounds'
 import { Connecting, Ended, GameUnderway, RoundOver, StoppedEarly } from './RoomParts'
 
 /** The board screen at `/tv/CODE`. Only the screen that opened the room has its host token. */
@@ -43,6 +45,8 @@ function TvRoom({ code, credentials }: { code: string; credentials: Credentials 
   const { t } = useTranslation()
   const { state } = useRoom(code, 'host', credentials)
   const modes = useModes()
+  // The board is where the room hears the game: one speaker, in step with what it shows.
+  useEventSounds(state.events, state.replayedTo, cuesFor(state.game?.mode), true)
 
   useEffect(() => {
     if (state.ending) forgetCredentials(code, 'host')
@@ -70,7 +74,7 @@ function TvRoom({ code, credentials }: { code: string; credentials: Credentials 
   if (duel) {
     return (
       <div className="screen screen--tv">
-        <Masthead />
+        <Masthead music />
         <ConnectionNotice connection={state.connection} />
         <DuelTv room={room} duel={duel} status={room.status === 'finished' ? rematch : undefined} />
       </div>
@@ -79,7 +83,7 @@ function TvRoom({ code, credentials }: { code: string; credentials: Credentials 
 
   return (
     <div className="screen screen--tv">
-      <Masthead />
+      <Masthead music />
       <ConnectionNotice connection={state.connection} />
       <main className="tv">
         {room.status === 'in_game' ? (

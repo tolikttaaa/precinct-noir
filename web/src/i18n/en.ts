@@ -2,7 +2,9 @@
 const en = {
   appName: 'Precinct Noir',
   language: 'Language',
+  languageNow: 'Language: {{name}}',
   sound: 'Sound',
+  volume: { music: 'Music', effects: 'Effects', off: 'Off' },
   languages: { en: 'English', ru: 'Русский' },
   home: {
     tagline:

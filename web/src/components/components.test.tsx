@@ -4,7 +4,6 @@ import type { ModeInfo } from '../protocol/generated'
 import { member, roomView, shadowDuel } from '../test/fixtures'
 import { ConnectionNotice, Flash, Masthead } from './Chrome'
 import { ConfirmButton } from './ConfirmButton'
-import { LanguageSwitch } from './LanguageSwitch'
 import { Lineup } from './Lineup'
 import { playingIds } from './seats'
 import { Link } from './Link'
@@ -35,20 +34,25 @@ describe('QrCode', () => {
   })
 })
 
-describe('LanguageSwitch and Masthead', () => {
-  it('switch the whole page between English and Russian', () => {
+describe('Masthead', () => {
+  it('switches the whole page between English and Russian, and has the sound', () => {
     render(<Masthead code="BKTR" />)
     expect(screen.getByRole('link', { name: 'Precinct Noir' })).toHaveAttribute('href', '/')
     expect(screen.getByText('BKTR')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Русский' }))
-    expect(screen.getByRole('button', { name: 'Русский' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('group', { name: 'Язык' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Language: English' }))
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'Русский' }))
+    expect(screen.getByRole('link', { name: 'Precinct Noir' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Язык: Русский' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Звук' }))
+    expect(screen.queryByRole('slider', { name: 'Музыка' })).toBeNull()
+    expect(screen.getByRole('slider', { name: 'Эффекты' })).toBeInTheDocument()
   })
 
-  it('can leave out the name', () => {
-    render(<Masthead named={false} />)
+  it('can leave out the name, and adds the music where it plays', () => {
+    render(<Masthead named={false} music />)
     expect(screen.queryByRole('link')).toBeNull()
-    render(<LanguageSwitch />)
+    fireEvent.click(screen.getByRole('button', { name: 'Sound' }))
+    expect(screen.getByRole('slider', { name: 'Music' })).toBeInTheDocument()
   })
 })
 

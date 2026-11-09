@@ -25,6 +25,11 @@ export interface RoomState {
   readonly round: number
   /** This round's case log, in order. */
   readonly events: readonly EventView[]
+  /**
+   * Events up to this `seq` were caught up on when connecting, not seen as they happened: screens show
+   * them without their sounds.
+   */
+  readonly replayedTo: number
   /** The last refused command; `id` changes on every refusal. */
   readonly refusal?: { readonly reason: Refusal; readonly id: number }
   readonly error?: ProtocolError
@@ -68,7 +73,13 @@ export class RoomSocket {
   private readonly options: RoomSocketOptions
   private readonly listeners = new Set<() => void>()
   private readonly pending = new Map<number, ClientMessage>()
-  private state: RoomState = { connection: 'connecting', round: 0, events: [], nudges: 0 }
+  private state: RoomState = {
+    connection: 'connecting',
+    round: 0,
+    events: [],
+    replayedTo: 0,
+    nudges: 0,
+  }
   private socket?: WebSocket
   private retryTimer?: ReturnType<typeof setTimeout>
   private attempts = 0
@@ -157,6 +168,11 @@ export class RoomSocket {
         break
       case 'events':
         this.addEvents(message.round, message.events)
+        if (message.replay) {
+          this.update({
+            replayedTo: Math.max(this.state.replayedTo, ...message.events.map((e) => e.seq)),
+          })
+        }
         break
       case 'nudge':
         this.update({ nudges: this.state.nudges + 1 })

@@ -52,7 +52,7 @@ export function Home() {
 
   return (
     <div className="screen screen--home">
-      <Masthead named={false} />
+      <Masthead named={false} music />
       <main className="home">
         <h1 className="home__title">{t('appName')}</h1>
         <p className="home__tagline">{t('home.tagline')}</p>

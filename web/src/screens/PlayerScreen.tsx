@@ -10,6 +10,7 @@ import { hasGuide } from '../game/guides'
 import { DuelPhone } from '../game/shadowDuel/DuelPhone'
 import { duelOf } from '../game/shadowDuel/moves'
 import { useModes } from '../hooks/useModes'
+import { cuesFor } from '../game/sounds'
 import { useRoom } from '../hooks/useRoom'
 import { errorText, modeName } from '../i18n/text'
 import { api } from '../net/api'
@@ -21,6 +22,7 @@ import {
 } from '../net/credentials'
 import type { RoomSummary } from '../protocol/generated'
 import { navigate } from '../routing'
+import { useEventSounds } from '../sound/useEventSounds'
 import { Connecting, Ended, GameUnderway, RoundOver, StoppedEarly } from './RoomParts'
 
 /** A player's phone at `/CODE`: the join form, then the room. */
@@ -135,6 +137,14 @@ function PlayerRoom({
   const { state, send } = useRoom(code, 'player', credentials)
   const modes = useModes()
   const [guideOpen, setGuideOpen] = useState(false)
+  // Phones stay quiet while a board plays the game's sounds for the room; without one, each phone
+  // plays them itself (players on a call, each at home).
+  useEventSounds(
+    state.events,
+    state.replayedTo,
+    cuesFor(state.game?.mode),
+    state.room?.hostConnected === false,
+  )
 
   useEffect(() => {
     if (state.ending) forgetCredentials(code, 'player')

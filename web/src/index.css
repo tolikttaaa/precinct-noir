@@ -123,28 +123,6 @@ a {
   letter-spacing: 0.12em;
 }
 
-.language {
-  margin-left: auto;
-  display: flex;
-  gap: 2px;
-}
-
-.language button {
-  min-width: 44px;
-  min-height: 44px;
-  background: none;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  color: var(--smoke-light);
-  font: 600 var(--step--1) / 1 var(--font-ui);
-  cursor: pointer;
-}
-
-.language button[aria-pressed='true'] {
-  color: var(--fog);
-  border-bottom-color: var(--brass);
-}
-
 .connection {
   position: sticky;
   top: 0;

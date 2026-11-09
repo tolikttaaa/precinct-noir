@@ -72,6 +72,7 @@ describe('TvScreen', () => {
       { t: 'game', round: 1, mode: 'killer_inspector', view: duelView(), legal: [] },
       {
         t: 'events',
+        replay: false,
         round: 1,
         events: [{ seq: 1, event: { t: 'game_started', killer: 0, inspector: 1 } }],
       },
