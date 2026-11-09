@@ -117,6 +117,15 @@ class PlatformIT {
         assertThat(error(post("/api/rooms/$code/players", ""))).isEqualTo(400 to "malformed")
         assertThat(error(post("/api/rooms/ZZZZ/players", """{"name":"Bo"}"""))).isEqualTo(404 to "room_not_found")
         assertThat(error(get("/api/rooms/nope"))).isEqualTo(404 to "room_not_found")
+        assertThat(error(post("/api/rooms", """{"turnstileToken":"${TurnstileStub.PASS}","mode":"chess"}"""))).isEqualTo(422 to "unknown_mode")
+    }
+
+    @Test
+    fun `the host can pick the game when opening a room`() {
+        val res = post("/api/rooms", """{"turnstileToken":"${TurnstileStub.PASS}","mode":"killer_inspector"}""")
+        assertThat(res.statusCode()).isEqualTo(201)
+        val code = ProtocolJson.decodeFromString(CreateRoomResponse.serializer(), res.body()).code
+        assertThat(ProtocolJson.decodeFromString(RoomSummary.serializer(), get("/api/rooms/$code").body()).mode).isEqualTo("killer_inspector")
     }
 
     // --- WebSocket ---

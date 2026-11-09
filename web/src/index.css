@@ -687,6 +687,11 @@ select:disabled,
   padding-bottom: 4rem;
 }
 
+/* The title's shadow pool reaches past the edges; clip it so the page never scrolls sideways. */
+.screen--home {
+  overflow-x: clip;
+}
+
 /* A pool of shadow behind the title, so it reads over the wall. */
 .screen--home .home::before {
   content: '';
@@ -704,16 +709,17 @@ select:disabled,
 }
 
 .home__title {
-  margin-top: clamp(2rem, 9vh, 7rem);
-  font: 850 var(--step-4) / 0.86 var(--font-display);
+  margin-top: clamp(1rem, 7vh, 6rem);
+  /* As tall as the width allows, but never so tall that the folders drop below the first screen. */
+  font: 850 min(var(--step-4), 11vh) / 0.86 var(--font-display);
   letter-spacing: -0.005em;
   text-shadow: 0 0.04em 0.12em rgb(0 0 0 / 0.6);
 }
 
 .home__tagline {
-  margin-top: 1.25rem;
+  margin-top: min(1.25rem, 2vh);
   max-width: 38ch;
-  font-size: var(--step-1);
+  font-size: clamp(var(--step-0), 2.6vh, var(--step-1));
   line-height: 1.4;
   color: var(--smoke-light);
 }
@@ -726,14 +732,357 @@ select:disabled,
 
 .home > .version {
   margin-top: clamp(2.5rem, 6vh, 4rem);
+  /* It can land on a picture in the wall. */
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.9),
+    0 0 10px rgb(0 0 0 / 0.75);
 }
 
 .home__choices {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
   gap: 2rem 2.5rem;
-  margin-top: clamp(2.5rem, 6vh, 4.5rem);
+  margin-top: clamp(1.5rem, 5vh, 4.5rem);
+}
+
+/* Phones: a smaller title and tagline, so the first folder fits on the first screen whole. */
+@media (max-width: 30rem) {
+  .home__title {
+    margin-top: 0.75rem;
+    font-size: min(2.9rem, 13vw);
+  }
+
+  .home__tagline {
+    margin-top: 0.6rem;
+    font-size: var(--step-0);
+    line-height: 1.4;
+  }
+
+  .home__choices {
+    margin-top: 1.5rem;
+  }
+
+  .game-pick__value {
+    font-size: 1.2rem;
+  }
+}
+
+.home__choices > .folder {
+  display: flex;
+  flex-direction: column;
+}
+
+.home__choices .folder__front {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.home__choices .folder__front > .button {
+  align-self: start;
+}
+
+/* Side by side, the folders are the same size (the grid stretches them), and their buttons line up along the
+   bottom. Stacked on a phone, each is as tall as what it holds. */
+@media (min-width: 48rem) {
+  .home__choices .folder__front > .button {
+    margin-top: auto;
+  }
+}
+
+/* The host's choice of game: a field inked on the folder's sheet that pulls out the secret page. */
+.game-pick {
+  margin-bottom: 1.75rem;
+}
+
+.game-pick__field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.75rem;
+  width: min(100%, 28rem);
+  min-height: 52px;
+  padding: 0.7rem 0.9rem 0.6rem;
+  border: 2px solid var(--ribbon);
+  border-radius: var(--radius);
+  background: rgb(255 250 235 / 0.55);
+  color: var(--ribbon);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.game-pick__field:hover:not(:disabled) {
+  background: rgb(255 250 235 / 0.8);
+}
+
+.game-pick__field:focus-visible {
+  outline: 3px solid var(--ribbon);
+  outline-offset: 2px;
+}
+
+.game-pick__field:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.game-pick__value {
+  font: 750 var(--step-1) / 1.1 var(--font-display);
+}
+
+.game-pick__players {
+  color: var(--ribbon-faint);
+  font: 400 var(--step--1) / 1.3 var(--font-typed);
+  white-space: nowrap;
+}
+
+/* What the field does: a typed note at its end. */
+.game-pick__browse {
+  margin-left: auto;
+  font: 400 var(--step--1) / 1.3 var(--font-typed);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  white-space: nowrap;
+}
+
+.game-pick .hint {
+  max-width: 46ch;
+}
+
+/* The secret page: pulled out of the folder over a darkened screen. */
+.secret {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  justify-items: center;
   align-items: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: max(1.75rem, env(safe-area-inset-top)) max(var(--gutter), env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(var(--gutter), env(safe-area-inset-left));
+  background: rgb(6 8 12 / 0.78);
+  backdrop-filter: blur(3px);
+}
+
+/* A typed sheet of case paper with a paperclip and a red stamp. */
+.secret__page {
+  position: relative;
+  width: min(100%, 44rem);
+  margin-block: auto;
+  padding: clamp(1.5rem, 4vw, 2.75rem) clamp(1.1rem, 4vw, 2.75rem) clamp(1.25rem, 3vw, 2rem);
+  background: var(--fibre), linear-gradient(180deg, #f6f1e2, #ece4cd);
+  border-radius: 2px;
+  box-shadow:
+    0 30px 60px -12px rgb(0 0 0 / 0.75),
+    0 4px 12px rgb(0 0 0 / 0.4);
+  color: var(--ribbon);
+}
+
+.secret__page:focus {
+  outline: none;
+}
+
+.secret__page::before {
+  content: '';
+  position: absolute;
+  top: -1.4rem;
+  left: 2.2rem;
+  width: 0.95rem;
+  height: 3rem;
+  background: var(--paperclip) center / contain no-repeat;
+  filter: drop-shadow(1px 2px 1px rgb(0 0 0 / 0.35));
+}
+
+.secret__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.secret__title {
+  font: 800 var(--step-3) / 0.95 var(--font-display);
+  text-wrap: balance;
+}
+
+.secret__stamp {
+  color: var(--stamp-red);
+  font-size: clamp(0.85rem, 0.7rem + 0.6vw, 1.15rem);
+  text-transform: uppercase;
+  transform: rotate(-7deg);
+}
+
+.secret__cases {
+  display: grid;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One game per entry: name and player count, what it's about, and the way to choose it. */
+.secret__case {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name action'
+    'players action'
+    'summary summary';
+  align-items: center;
+  /* Beside a taller neighbour, keep to the top instead of spreading out. */
+  align-content: start;
+  gap: 0.2rem 1.25rem;
+  position: relative;
+  padding-block: 1rem;
+  border-top: 1px dashed rgb(42 36 28 / 0.35);
+}
+
+.secret__case:last-child {
+  border-bottom: 1px dashed rgb(42 36 28 / 0.35);
+}
+
+.secret__name {
+  grid-area: name;
+  font: 800 var(--step-2) / 1 var(--font-display);
+}
+
+.secret__players {
+  grid-area: players;
+  color: var(--ribbon-faint);
+  font: 400 var(--step--1) / 1.3 var(--font-typed);
+}
+
+.secret__summary {
+  grid-area: summary;
+  max-width: 60ch;
+  margin-top: 0.35rem;
+  line-height: 1.45;
+}
+
+.secret__action {
+  grid-area: action;
+  justify-self: end;
+}
+
+.secret__action .button {
+  min-width: 7rem;
+}
+
+/* A game that can be chosen: the whole entry is its Choose button. */
+.secret__action .button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.secret__case:has(.button):hover {
+  background: rgb(42 36 28 / 0.05);
+}
+
+/* A game still being built: light grey, a plain note, and nothing to press. */
+.secret__case[data-later] {
+  color: #a59f91;
+}
+
+.secret__case[data-later] :is(.secret__name, .secret__players, .secret__summary) {
+  color: inherit;
+}
+
+.secret__case[data-later] .secret__name {
+  font-weight: 700;
+}
+
+.secret__later {
+  font: 400 var(--step--1) / 1.3 var(--font-typed);
+}
+
+/* The chosen game: a big red rubber stamp, like the one at the page's top. */
+.secret__chosen {
+  color: var(--stamp-red);
+  font-size: clamp(1.1rem, 0.95rem + 0.6vw, 1.35rem);
+  text-transform: uppercase;
+  transform: rotate(-7deg);
+}
+
+.secret__close {
+  min-height: 48px;
+  margin-left: auto;
+  padding: 0 1.25rem;
+  border: 2px solid var(--ribbon);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ribbon);
+  font: 650 var(--step-0) / 1 var(--font-ui);
+  cursor: pointer;
+}
+
+.secret__close:focus-visible,
+.secret__action .button:focus-visible {
+  outline: 3px solid var(--ribbon);
+  outline-offset: 2px;
+}
+
+/* The second Close, at the end of a page taller than the screen. */
+.secret__close--end {
+  display: block;
+  margin-top: 1.25rem;
+}
+
+/* Wide screens: two columns of games, so the whole page fits without scrolling. */
+@media (min-width: 60rem) {
+  .secret__page {
+    width: min(100%, 74rem);
+  }
+
+  .secret__cases {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2.5rem;
+    border-bottom: 1px dashed rgb(42 36 28 / 0.35);
+  }
+
+  .secret__case:last-child {
+    border-bottom: 0;
+  }
+}
+
+/* Narrow pages: the way to choose goes under what the game is about. */
+@media (max-width: 34rem) {
+  .secret__case {
+    grid-template-areas:
+      'name name'
+      'players players'
+      'summary summary'
+      'action action';
+  }
+
+  .secret__action {
+    justify-self: start;
+    margin-top: 0.6rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .secret {
+    animation: secret-dim 160ms ease-out;
+  }
+
+  /* Pulled up out of the folder. */
+  .secret__page {
+    animation: secret-out 240ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+}
+
+@keyframes secret-dim {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes secret-out {
+  from {
+    opacity: 0;
+    transform: translateY(3rem) rotate(-1deg);
+  }
 }
 
 /* Phones: one column, actions in the thumb zone. */

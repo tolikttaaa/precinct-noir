@@ -1,8 +1,10 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Masthead } from '../components/Chrome'
+import { GamePicker } from '../components/GamePicker'
 import { Version } from '../components/Version'
 import { loadConfig } from '../hooks/useConfig'
+import { useModes } from '../hooks/useModes'
 import { errorText } from '../i18n/text'
 import { api, ApiError } from '../net/api'
 import { saveCredentials } from '../net/credentials'
@@ -17,6 +19,11 @@ export function Home() {
   const [hostError, setHostError] = useState<string>()
   const [code, setCode] = useState('')
   const [codeError, setCodeError] = useState(false)
+  const modes = useModes()
+  const [picked, setPicked] = useState<string>()
+  const offered = modes && new Set(modes.map((m) => m.id))
+  // The first game the server offers, until the host picks another.
+  const mode = picked ?? modes?.[0]?.id
 
   async function openRoom() {
     setOpening(true)
@@ -24,7 +31,7 @@ export function Home() {
     try {
       const { turnstileSiteKey } = await loadConfig()
       if (!turnstileSiteKey) throw new ApiError(503, 'captcha_unavailable')
-      const room = await api.createRoom(await humanToken(turnstileSiteKey, widget.current!))
+      const room = await api.createRoom(await humanToken(turnstileSiteKey, widget.current!), mode)
       saveCredentials(room.code, 'host', { token: room.hostToken, clientSeq: 0 })
       navigate(`/tv/${room.code}`)
     } catch (error) {
@@ -53,6 +60,7 @@ export function Home() {
             </h2>
             <div className="folder__front">
               <p>{t('home.host.body')}</p>
+              <GamePicker offered={offered} value={mode} onChange={setPicked} disabled={opening} />
               <button
                 type="button"
                 className="button"
@@ -74,6 +82,7 @@ export function Home() {
               <span className="folder__label">{t('home.join.title')}</span>
             </h2>
             <div className="folder__front">
+              <p>{t('home.join.body')}</p>
               <div className="field">
                 <label className="field__label" htmlFor={codeId}>
                   {t('home.join.code')}

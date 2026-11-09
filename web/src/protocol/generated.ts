@@ -380,6 +380,7 @@ export type Role = 'host' | 'player'
 
 export interface CreateRoomRequest {
   turnstileToken: string
+  mode?: string
 }
 
 export interface CreateRoomResponse {

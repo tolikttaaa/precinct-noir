@@ -16,7 +16,7 @@ How browsers talk to the server. The Kotlin `@Serializable` types in
 
 | Request | Success | Errors (`{"error": code}`) |
 |---|---|---|
-| `POST /api/rooms` `{turnstileToken}` | `201 {code, hostToken}` | `403 captcha_failed`, `503 captcha_unavailable`, `503 capacity` (300 rooms), `503 unavailable` (shutting down), `400 malformed` |
+| `POST /api/rooms` `{turnstileToken, mode?}` | `201 {code, hostToken}`. The room starts in `mode` (the host's pick on the home screen), or the first mode without one; the VIP can still change it in the lobby | `422 unknown_mode` (checked before the bot check), `403 captcha_failed`, `503 captcha_unavailable`, `503 capacity` (300 rooms), `503 unavailable` (shutting down), `400 malformed` |
 | `POST /api/rooms/{code}/players` `{name}` | `201 {playerId, playerToken}` | `404 room_not_found`, `409 room_locked` (game running), `409 room_full` (9 players), `409 name_taken`, `422 invalid_name`, `400 malformed`, `503 unavailable` |
 | `GET /api/rooms/{code}` | `200 {code, status, players, maxPlayers, mode}` | `404 room_not_found` |
 | `GET /api/modes` | `200 [{id, minPlayers, maxPlayers, config}]` | |

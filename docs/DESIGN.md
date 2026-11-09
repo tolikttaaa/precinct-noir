@@ -67,6 +67,28 @@ The game is dark-only on purpose: it is played in living rooms and on TVs.
   - On phones and plain pages it is dimmed to 36% and blurred, so text can sit straight on it.
 - **Version line** (`.version`): "Version 0.1.0 · 1e96502" (or "Development build") in small typed grey, under the
   home folders and at the foot of the TV lobby's slate. Nowhere during a game.
+- **Home page:** the Host and Join folders sit side by side at the same size, with their buttons lined up
+  along the bottom; stacked on a phone, each is as tall as what it holds. The page never scrolls sideways
+  (the title's shadow pool is clipped).
+  - **The folders show whole on the first screen.** The title and tagline size to the screen's height as
+    well as its width (`min(step-4, 11vh)`), and phones get a smaller title, tagline and game name. Side by
+    side, both folders fit on every screen from an iPad sideways up; on a phone, the Host folder does, and
+    Join is a short scroll away. Only a phone on its side is too short for a folder.
+  - **Game picker** (`.game-pick`, in the Host folder): a field inked on the sheet with the game, its player
+    count and an "All games" note, and what the game is about under it. It pulls a **top-secret page** out
+    of the folder (`.secret`, a modal dialog): a typed sheet with a paperclip and a red "Top secret"
+    stamp, one entry per game with its name, player count and what it's about.
+    - The chosen game gets a big red "Chosen" rubber stamp, like "Top secret" (no tint behind it). A game
+      that can be chosen has a Choose button that covers its whole entry, so a press anywhere on it
+      chooses, with a faint shade on hover. The games still being built are in light grey with a plain
+      typed "Coming later" note, and nothing on them can be pressed.
+    - Wide screens (60 rem and up) get two columns of games, so the page fits without scrolling; narrow
+      ones get one column. A page taller than the screen gets a second Close at its end, measured live (it
+      changes when the screen turns).
+    - It opens at its top with the focus on the page, keeps the focus inside, and goes back into the folder
+      with Close, Escape or a press beside it; the focus returns to the field. It slides up out of the
+      folder unless motion is reduced.
+    - Until the server has listed its games, the field can't be pressed and the room opens in the default game.
 - **Folders** (`.folder`) look like real manila folders:
   - the taller back panel carries the tab, with a typed label stuck on it;
   - two typed sheets peek out;

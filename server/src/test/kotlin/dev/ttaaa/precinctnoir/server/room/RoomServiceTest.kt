@@ -150,6 +150,16 @@ class RoomServiceTest {
     }
 
     @Test
+    fun `a room starts in the game the host picked, or the first one`() {
+        val rooms = service()
+        assertThat(rooms.modeFor(null).id).isEqualTo("killer_inspector")
+        val counter = rooms.create(rooms.modeFor("counter"))
+        assertThat(rooms.summary(counter.code).mode).isEqualTo("counter")
+        assertThat(repo.rooms.getValue(counter.code).room.config).isEqualTo(buildJsonObject { put("target", JsonPrimitive(3)); put("broken", JsonPrimitive(false)) })
+        assertApi(422, "unknown_mode") { rooms.modeFor("chess") }
+    }
+
+    @Test
     fun `room capacity and code exhaustion both answer 503`() {
         limits = RoomLimits(maxRooms = 1)
         val full = service()

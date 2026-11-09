@@ -42,12 +42,13 @@ class RoomController(private val rooms: RoomService, private val humans: HumanCh
     @PostMapping("/rooms")
     fun create(@RequestBody body: String): ResponseEntity<String> {
         val request = parse(CreateRoomRequest.serializer(), body)
+        val mode = rooms.modeFor(request.mode) // before the bot check: a bad request shouldn't use one up
         when (humans.verify(request.turnstileToken)) {
             Verdict.PASSED -> Unit
             Verdict.FAILED -> throw ApiException(FORBIDDEN, "captcha_failed")
             Verdict.UNAVAILABLE -> throw ApiException(SERVICE_UNAVAILABLE, "captcha_unavailable")
         }
-        val created = rooms.create()
+        val created = rooms.create(mode)
         return json(CREATED, CreateRoomResponse.serializer(), CreateRoomResponse(created.code, created.hostToken))
     }
 
