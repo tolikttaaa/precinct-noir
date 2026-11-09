@@ -77,7 +77,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M5c | Clearer turns: action tabs, reasons, drawn cards in the city, a full-screen file, a laptop layout; a collapse in the browser games | ✅ (live) | #19 |
 | P2 | Picture portraits (files, with a drawn fallback) and the brief and prompts for making them | ✅ (live) | #16 |
 | P2b | The 60 approved portrait pictures, and the drawing fixed to match | ✅ (live) | #17 |
-| V | Versioning: the deployed version on screen; releases (tags on GitHub) are the only deploys | 🟡 PR open | `v/versioning` |
+| V | Versioning: the deployed version on screen; releases (tags on GitHub) are the only deploys | 🟡 PR open | #22 |
 | H | Home: host and join folders the same size, and a game-type choice (owner's request) | ⬜ | – |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
@@ -334,7 +334,7 @@ Each mode follows the same recipe: engine rules + tests (every pinned ID) → pr
 
 ### Owner's feature requests ⬜ (added 2026-11-09)
 
-#### V: versioning 🟡 (branch `v/versioning`)
+#### V: versioning 🟡 (PR #22)
 The owner wants to see which version is deployed, and versions tagged on GitHub. Settled 2026-11-09:
 - [x] **Scheme:** `vMAJOR.MINOR.PATCH`. `v0.1.0` is Shadow Duel, the first playable game; a minor bump per mode
   (`v0.2.0` with Spy Ring); a patch for fixes and small improvements; `v1.0.0` after M11.
