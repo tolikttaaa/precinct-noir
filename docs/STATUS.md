@@ -84,7 +84,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | M10 | Casino Heist | ⬜ | – |
 | M11 | Hardening & polish, incl. remote-play polish | ⬜ | – |
 
-**Next action:** the owner adds `Browser games` to the ruleset's required checks (RUNBOOK §1.3) and answers the open questions under V and H (§5). Then V and H, the rules pages and sound (`p3/rules-pages`), a real session on the TV, and Spy Ring (M6).
+**Next action:** the owner answers the open questions under V and H (§5). Then V and H, the rules pages and sound (`p3/rules-pages`), a real session on the TV, and Spy Ring (M6).
 
 **Order of the next steps** (owner's choice, 2026-11-06; changed 2026-11-07): portraits first after all, because the owner asked for an evidence-wall background with the suspects on it, then the playable board. M5 then makes Shadow Duel playable, with the portraits on its case-file cards. Every later mode ships with its own UI in its milestone. TV + phones get the polish first; remote play on one's own device is polished last (M11).
 
@@ -365,7 +365,7 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
 | `new-app.sh precinctnoir` + Caddyfile commit (RUNBOOK §1.1) | ✅ |
 | `HOME_INFRA_DEPLOY_TOKEN` (fine-grained, home-infra only, Actions read/write) (§1.2) | ✅ |
 | Branch protection (§1.3): ruleset *Protect main* | ✅ |
-| Add `Browser games` to the ruleset's required checks (§1.3) | ⬜ after M5b's first CI run |
+| Add `Browser games` to the ruleset's required checks (§1.3) | ✅ 2026-11-09 |
 | Turnstile widget + keys in `/srv/apps/precinctnoir/.env` (§4.1) | ✅ |
 | Cloudflare rate-limiting rule on `/api/*` (§4.2) | ⬜ optional (edge layer on top of the app's limits) |
 | Delete the history backup `~/Projects/Personal/noir-game-backup-20261106.git` | ⬜ optional |
