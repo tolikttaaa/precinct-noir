@@ -252,22 +252,27 @@ function PlayerRoom({
             )}
             {room.status === 'finished' && <RoundOver room={room} />}
           </main>
-          <footer className="action-bar">
-            {room.status === 'lobby' &&
-              (isVip ? (
-                <button
-                  type="button"
-                  className="button"
-                  disabled={missing > 0}
-                  onClick={() => send({ t: 'start' })}
-                >
-                  {missing > 0 ? t('lobby.needMore', { count: missing }) : t('lobby.start')}
-                </button>
-              ) : (
-                <p className="action-bar__status">{t('lobby.waitingForVip', { name: vipName })}</p>
-              ))}
-            {roomButtons}
-          </footer>
+          {/* The rules bring their own bar. */}
+          {!(room.status === 'lobby' && guideOpen) && (
+            <footer className="action-bar">
+              {room.status === 'lobby' &&
+                (isVip ? (
+                  <button
+                    type="button"
+                    className="button"
+                    disabled={missing > 0}
+                    onClick={() => send({ t: 'start' })}
+                  >
+                    {missing > 0 ? t('lobby.needMore', { count: missing }) : t('lobby.start')}
+                  </button>
+                ) : (
+                  <p className="action-bar__status">
+                    {t('lobby.waitingForVip', { name: vipName })}
+                  </p>
+                ))}
+              {roomButtons}
+            </footer>
+          )}
         </>
       )}
       <Flash

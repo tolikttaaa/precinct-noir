@@ -2150,73 +2150,6 @@ button.suspect-card:focus-visible {
   gap: 0.5rem;
 }
 
-/* ---------- How to play ---------- */
-
-.guide {
-  display: grid;
-  gap: 1.25rem;
-}
-
-.guide__page {
-  display: grid;
-  gap: 1rem;
-}
-
-.guide__title {
-  font: 800 var(--step-2) / 1.05 var(--font-display);
-}
-
-.guide__body {
-  max-width: 42ch;
-  font-size: var(--step-1);
-  line-height: 1.45;
-}
-
-.guide__nav,
-.guide__more {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.guide__nav .button {
-  flex: 1;
-}
-
-.guide__code {
-  font: 400 var(--step-1) / 1 var(--font-typed);
-}
-
-.guide--tv .guide__page {
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-areas:
-    'title title'
-    'diagram body'
-    'diagram count';
-  align-items: start;
-  column-gap: 2.5rem;
-}
-
-.guide--tv .guide__title {
-  grid-area: title;
-  font-size: var(--step-3);
-}
-
-.guide--tv .diagram {
-  grid-area: diagram;
-  width: clamp(9rem, 13vw, 15rem);
-}
-
-.guide--tv .guide__body {
-  grid-area: body;
-  font-size: clamp(1.4rem, 1.7vw, 2.4rem);
-  max-width: 36ch;
-}
-
-.guide--tv .guide__count {
-  grid-area: count;
-}
-
 .diagram {
   display: grid;
   gap: 4px;
@@ -2230,10 +2163,6 @@ button.suspect-card:focus-visible {
   border-radius: 2px;
   background: rgb(221 225 230 / 0.16);
   font: 800 0.8rem / 1 var(--font-ui);
-}
-
-.folder .diagram__cell {
-  background: rgb(42 36 28 / 0.14);
 }
 
 .diagram__cell[data-cell='near'] {

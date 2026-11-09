@@ -223,8 +223,29 @@ file.
   - On any phone, from the lobby or during a game.
   - On the TV, when the VIP presses "Show on the board": the board shows a folder with the VIP's
     current page and follows it as they page through. Everyone else's phone says so.
+- **Typed sheets in a case file** (`game/PaperStack.tsx`, `game/paper.css`; the owner's request): the pages
+  are off-white typed sheets with a red margin rule, held by a steel fastener at the top of an open manila
+  file whose tab names the game.
+  - Turning a page lifts the top sheet up over the fastener; going back brings the last one down again.
+    The sheets still to read show their edges under the top one, so the stack thins as you go.
+  - Turn by swiping the sheet sideways, with the arrow or Page keys, or with Back and Next. A hint under
+    the file says so.
+  - On a phone, Back, Next, "Show on the board" and Close sit in the bar at the bottom of the screen,
+    where the game's own buttons go, so they never fall below the fold. While the rules are open they
+    take the place of the lobby's or the game's bar.
+  - On the TV the sheet is wide, with the picture beside the text, and follows the VIP's page with the
+    same turn.
+  - Reduced motion: the page changes without the turn.
 - **Adding a mode:** give it pages in `GUIDES` and texts under `guide.<mode>` in both languages. Tests
   fail when any page lacks a text.
+
+## 8a. Sound
+- **Synthesised, nothing downloaded** (`web/src/sound/sound.ts`, the Web Audio API), so the CSP stays as it
+  is: a typewriter key, a rubber stamp, a page turning forward or back, and a folder opening.
+- **Where:** the home screen types a key for each letter of a room code and stamps the Host and Join
+  choices; the rules open with the folder and turn with the paper.
+- **A switch beside the languages** (a speaker icon in the masthead) turns sound off on this device; the
+  choice is remembered. Browsers only start sound after a first tap, so nothing plays on arrival.
 
 ## 9. Layouts
 - **TV / board screen** (`/tv/CODE`, priority):

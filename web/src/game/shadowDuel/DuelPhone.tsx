@@ -154,7 +154,6 @@ export function DuelPhone({ room, duel, send, refusalId, footer }: Props) {
             closeLabel={t('duel.backToGame')}
           />
         </main>
-        <footer className="action-bar">{footer}</footer>
       </>
     )
   }

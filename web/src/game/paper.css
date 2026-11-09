@@ -1,0 +1,283 @@
+/* ---------- How to play: typed pages in a case file ----------
+   The rules are typed sheets fastened at the top of an open manila file. Turning a page lifts it up
+   over the fastener; going back brings the last one down again. The sheets still to read show their
+   edges under the top one, so the stack thins as you go. */
+
+.guide {
+  display: grid;
+  gap: 1rem;
+}
+
+.guide__tab {
+  position: relative;
+  z-index: 1;
+  justify-self: start;
+  height: 2.4rem;
+  margin: 0 0 -1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  background: var(--fibre), #dcc68f;
+  clip-path: polygon(0.85rem 0, calc(100% - 0.85rem) 0, 100% 100%, 0 100%);
+  color: var(--ribbon);
+  font: 700 var(--step-0) / 1.2 var(--font-ui);
+}
+
+/* The open file: the manila panel the sheets lie on. */
+.guide__file {
+  position: relative;
+  padding: 2.6rem clamp(0.8rem, 3vw, 2.2rem) clamp(1.1rem, 3vw, 2.2rem);
+  background: var(--fibre), linear-gradient(175deg, #dcc68f, var(--manila-back) 55%, #c4ac74);
+  border-radius: 3px 6px 4px 4px;
+  box-shadow:
+    0 28px 46px -16px rgb(0 0 0 / 0.85),
+    0 4px 8px rgb(0 0 0 / 0.45);
+  color: var(--ribbon);
+}
+
+/* The fastener: a metal strip across the top that holds the sheets. */
+.guide__file::before {
+  content: '';
+  position: absolute;
+  top: 2.2rem;
+  left: 50%;
+  z-index: 3;
+  width: min(9rem, 40%);
+  height: 0.85rem;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: linear-gradient(#e6e9ec, #9aa0a7 55%, #6c727a);
+  box-shadow:
+    0 2px 3px rgb(0 0 0 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.7);
+}
+
+.paper-stack {
+  --turn-ms: 650ms;
+  position: relative;
+  display: grid;
+  perspective: 1600px;
+}
+
+.paper-stack[data-turnable] {
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.paper-stack:focus-visible {
+  outline: 3px solid var(--ribbon);
+  outline-offset: 6px;
+}
+
+/* Every sheet lies in the same place; later ones on top. */
+.paper-stack > * {
+  grid-area: 1 / 1;
+}
+
+.paper-stack__edge {
+  background: #e9e3d3;
+  border-radius: 1px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+
+.paper-stack__edge[data-depth='1'] {
+  transform: translate(2px, 5px) rotate(0.5deg);
+}
+
+.paper-stack__edge[data-depth='2'] {
+  transform: translate(5px, 10px) rotate(-0.4deg);
+}
+
+.paper-stack__edge[data-depth='3'] {
+  transform: translate(1px, 15px) rotate(0.9deg);
+}
+
+/* A typed sheet: off-white paper with a red margin rule. */
+.paper {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+  min-height: 19rem;
+  padding: 1.4rem 1.3rem 1.8rem 2.6rem;
+  border-radius: 1px;
+  background:
+    linear-gradient(
+      to right,
+      transparent 1.75rem,
+      rgb(176 38 44 / 0.35) 1.75rem calc(1.75rem + 1px),
+      transparent calc(1.75rem + 1px)
+    ),
+    linear-gradient(172deg, #f6f3ea, #ece6d6);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.25),
+    0 12px 20px -14px rgb(0 0 0 / 0.7);
+  color: var(--ribbon);
+  transform-origin: 50% 0;
+  backface-visibility: hidden;
+}
+
+/* The corner every thumb has worried. */
+.paper::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 2.6rem;
+  height: 2.6rem;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    transparent 52%,
+    rgb(60 50 30 / 0.1) 52%,
+    rgb(255 255 255 / 0.55) 62%,
+    transparent 74%
+  );
+}
+
+.paper__number {
+  justify-self: end;
+  margin: 0;
+  color: var(--ribbon-faint);
+  font: 400 var(--step--1) / 1 var(--font-typed);
+}
+
+.paper__title {
+  margin: 0;
+  font: 800 var(--step-2) / 1.05 var(--font-display);
+}
+
+.paper__body {
+  margin: 0;
+  max-width: 40ch;
+  font-size: var(--step-1);
+  line-height: 1.45;
+}
+
+.paper .diagram__cell {
+  background: rgb(42 36 28 / 0.12);
+}
+
+/* Turning forward: the top sheet lifts over the fastener, and the one beneath comes out of its shadow. */
+.paper--leaving {
+  z-index: 2;
+  visibility: hidden;
+  pointer-events: none;
+  animation: paper-lift var(--turn-ms) cubic-bezier(0.45, 0.05, 0.35, 1) both;
+}
+
+.paper-stack[data-turning='forward'] .paper--current {
+  animation: paper-uncover var(--turn-ms) ease-out both;
+}
+
+/* Turning back: the last sheet comes down over the fastener onto the one you were reading. */
+.paper--returning {
+  z-index: 2;
+  animation: paper-drop var(--turn-ms) cubic-bezier(0.45, 0.05, 0.35, 1) both;
+}
+
+@keyframes paper-lift {
+  from {
+    visibility: visible;
+    transform: rotateX(0deg);
+  }
+  to {
+    visibility: visible;
+    transform: rotateX(178deg);
+  }
+}
+
+@keyframes paper-drop {
+  from {
+    transform: rotateX(178deg);
+  }
+  to {
+    transform: rotateX(0deg);
+  }
+}
+
+@keyframes paper-uncover {
+  from {
+    filter: brightness(0.8);
+  }
+  to {
+    filter: brightness(1);
+  }
+}
+
+.guide__nav,
+.guide__more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.guide__nav .button {
+  flex: 1;
+}
+
+/* In the bar at the bottom of the screen: Back and Next, then the board and Close side by side. */
+.guide__bar .guide__more {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}
+
+.guide__code {
+  margin: 1.4rem 0 0;
+  font: 400 var(--step-1) / 1 var(--font-typed);
+}
+
+/* On the TV: a wide sheet, the picture beside the text, big enough to read from the sofa. */
+.guide--tv .guide__tab {
+  font-size: var(--step-1);
+}
+
+.guide--tv .paper {
+  min-height: 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'number number'
+    'title title'
+    'diagram body';
+  align-items: start;
+  column-gap: 2.5rem;
+  padding: 1.8rem 2.2rem 2.4rem 3.4rem;
+  background:
+    linear-gradient(
+      to right,
+      transparent 2.4rem,
+      rgb(176 38 44 / 0.35) 2.4rem calc(2.4rem + 1px),
+      transparent calc(2.4rem + 1px)
+    ),
+    linear-gradient(172deg, #f6f3ea, #ece6d6);
+}
+
+.guide--tv .paper:not([data-pictured]) {
+  grid-template-areas:
+    'number number'
+    'title title'
+    'body body';
+}
+
+.guide--tv .paper__number {
+  grid-area: number;
+}
+
+.guide--tv .paper__title {
+  grid-area: title;
+  font-size: var(--step-3);
+}
+
+.guide--tv .diagram {
+  grid-area: diagram;
+  width: clamp(9rem, 13vw, 15rem);
+}
+
+.guide--tv .paper__body {
+  grid-area: body;
+  max-width: 36ch;
+  font-size: clamp(1.4rem, 1.7vw, 2.4rem);
+}

@@ -299,6 +299,7 @@ const en = {
     next: 'Next',
     close: 'Close',
     page: '{{n}} of {{total}}',
+    swipe: 'Swipe the page, or use the arrow keys, to turn it.',
     showOnBoard: 'Show on the board',
     hideFromBoard: 'Hide from the board',
     onBoard: '{{name}} is showing how to play on the board.',
