@@ -78,7 +78,7 @@ spec) in [RULES.md](RULES.md). This file summarises them and tracks progress aga
 | P2 | Picture portraits (files, with a drawn fallback) and the brief and prompts for making them | ✅ (live) | #16 |
 | P2b | The 60 approved portrait pictures, and the drawing fixed to match | ✅ (live) | #17 |
 | V | Versioning: the deployed version on screen; releases (tags on GitHub) are the only deploys | 🟡 PR open | #22 |
-| H | Home: host and join folders the same size, and a game-type choice (owner's request) | 🟡 PR open | `h/home-modes` |
+| H | Home: host and join folders the same size, and a game-type choice (owner's request) | 🟡 PR open | #23 |
 | M6 | Spy Ring | ⬜ | – |
 | M7 | The Hit List | ⬜ | – |
 | M8 | Cat Burglar | ⬜ | – |
@@ -347,7 +347,7 @@ The owner wants to see which version is deployed, and versions tagged on GitHub.
   and the TV lobby show "Version 0.1.0 · 1e96502", or "Development build".
 - [ ] **After merging:** the owner publishes `v0.1.0` (RUNBOOK §5), and optionally protects the version tags.
 
-#### H: home screen 🟡 (branch `h/home-modes`, stacked on V)
+#### H: home screen 🟡 (PR #23, stacked on #22)
 - [x] **Host and Join folders the same size** side by side, with their buttons lined up along the bottom. Stacked on a
   phone they share the width, and each is as tall as what it holds (forcing equal heights left the Join folder
   half empty). The Join folder now also says the QR code on the board works.
